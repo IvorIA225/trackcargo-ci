@@ -379,7 +379,7 @@ export default function HomePage() {
           data-sc-drift="#0D1119"
           aria-label="Constat quotidien des transitaires"
         >
-          <div data-sc-stage className="relative bg-[#0d1119]">
+          <div data-sc-stage className="bg-[#0d1119]">
             {/* Ground: clean architectural hairline coordinates present from p = 0 */}
             <div
               aria-hidden="true"
