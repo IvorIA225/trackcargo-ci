@@ -111,7 +111,7 @@ export const PARCEL_STATUS_META: Record<
     label: "Reçu à l'entrepôt d'origine",
     shortLabel: "Reçu Chine/Origine",
     description: "Colis réceptionné, pesé et étiqueté avant chargement.",
-    badgeClass: "bg-slate-100 text-slate-700 border-slate-200",
+    badgeClass: "bg-slate-100 text-slate-800 border-slate-300",
   },
   EN_TRANSIT: {
     step: 2,
@@ -154,7 +154,7 @@ export const PAYMENT_STATUS_META: Record<
   },
   PAYE_WAVE: {
     label: "Payé (Wave)",
-    badgeClass: "bg-cyan-100 text-cyan-800 border-cyan-200",
+    badgeClass: "bg-cyan-100 text-cyan-900 border-cyan-300",
     isPaid: true,
   },
   PAYE_OM: {

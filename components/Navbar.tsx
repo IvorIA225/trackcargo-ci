@@ -2,91 +2,93 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Lock } from "lucide-react";
+import { ArrowUpRight, Package } from "lucide-react";
 
 export default function Navbar({
   agencyName,
-  overlay = false,
+  activeCorridorLabel,
 }: {
   agencyName?: string;
-  overlay?: boolean;
+  activeCorridorLabel?: string;
 }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
-  const navLinkClass = (active: boolean) =>
-    `px-2 sm:px-3.5 py-2 rounded-[8px] text-[11px] sm:text-sm font-medium transition-colors whitespace-nowrap ${
-      active
-        ? "bg-[#1c2536] text-[#f3f1ec] border border-white/15"
-        : "text-[#c4cddb] hover:text-[#f3f1ec] hover:bg-white/[0.06]"
-    }`;
-
   return (
-    <header
-      className={`${
-        overlay
-          ? "fixed top-0 inset-x-0 bg-[#0a0d12]/80"
-          : "sticky top-0 bg-[#0a0d12]/94"
-      } backdrop-blur-md text-[#f3f1ec] border-b border-white/10 z-50 print:hidden`}
-    >
-      <div className="max-w-[82rem] mx-auto px-3 sm:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 sm:gap-3 group min-w-0 shrink focus-visible:outline-2 focus-visible:outline-[#e89b2d]"
-        >
-          <span
-            aria-hidden="true"
-            className="inline-flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#141b27] border border-white/15 text-[#e89b2d] shadow-xs"
+    <header className="sticky top-0 z-50 border-b border-[#09152b]/12 bg-[#f6f3ec]/92 backdrop-blur-md text-[#09152b] print:hidden">
+      <div className="max-w-[82rem] mx-auto px-3 sm:px-8 h-16 flex items-center justify-between gap-1.5 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-extrabold tracking-tight text-[15px] sm:text-lg text-[#09152b] min-w-0 no-underline"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="square"
-            >
-              <rect x="3" y="5" width="18" height="14" rx="1.5" />
-              <path d="M8 5v14M13 5v14M17.5 9l2.5 3-2.5 3" />
-            </svg>
-          </span>
-          <div className="leading-tight min-w-0">
-            <div className="font-bold tracking-tight text-[#f3f1ec] text-xs sm:text-base whitespace-nowrap truncate">
-              {agencyName || "TrackCargo CI"}
-            </div>
-            <div className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#9ca6b8] hidden md:block">
-              Abidjan · Groupage &amp; Transit
-            </div>
-          </div>
-        </Link>
+            <span className="h-8 w-8 sm:h-9 sm:w-9 rounded-[8px] bg-[#0a2e6e] text-white inline-flex items-center justify-center border border-[#09152b] shadow-xs shrink-0 relative">
+              <Package className="w-4 h-4" aria-hidden="true" />
+              <span
+                className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#ff5c1b] border border-[#f6f3ec]"
+                aria-hidden="true"
+              />
+            </span>
+            <span className="whitespace-nowrap font-[family-name:var(--font-archivo)]">
+              TrackCargo CI
+            </span>
+          </Link>
+
+          {activeCorridorLabel && (
+            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#0a2e6e] px-2.5 py-1 rounded-[6px] bg-[#dce7fa] border border-[#0a2e6e]/20 shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#ff5c1b]" aria-hidden="true" />
+              <span>{activeCorridorLabel}</span>
+            </span>
+          )}
+
+          {agencyName && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-[#09152b] px-2.5 py-1 rounded-[6px] bg-white border border-[#09152b]/15 truncate max-w-[200px]">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-[#10b981] shrink-0"
+                aria-hidden="true"
+              />
+              <span className="truncate">{agencyName}</span>
+            </span>
+          )}
+        </div>
 
         <nav
+          className="flex items-center gap-1 sm:gap-2 shrink-0"
           aria-label="Navigation principale"
-          className="flex items-center gap-1 sm:gap-2.5 shrink-0"
         >
-          {!isHome && (
-            <Link href="/" className={navLinkClass(false)}>
-              <span className="sm:hidden">Accueil</span>
-              <span className="hidden sm:inline">Présentation</span>
-            </Link>
+          {isHome && (
+            <a
+              href="#pont-controle"
+              className="hidden lg:inline-flex items-center px-3 py-2 rounded-[8px] text-sm font-semibold text-[#43506b] hover:text-[#0a2e6e] hover:bg-white transition-colors whitespace-nowrap no-underline"
+            >
+              Pont 3D
+            </a>
+          )}
+          {isHome && (
+            <a
+              href="#tarifs"
+              className="hidden md:inline-flex items-center px-3 py-2 rounded-[8px] text-sm font-semibold text-[#43506b] hover:text-[#0a2e6e] hover:bg-white transition-colors whitespace-nowrap no-underline"
+            >
+              Tarifs
+            </a>
           )}
           <Link
             href="/track"
-            className={navLinkClass(pathname.startsWith("/track"))}
+            className={`px-2.5 sm:px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap no-underline ${
+              pathname.startsWith("/track")
+                ? "bg-[#dce7fa] text-[#0a2e6e] border border-[#0a2e6e]/30 font-bold"
+                : "text-[#09152b] hover:text-[#0a2e6e] hover:bg-white"
+            }`}
           >
-            Suivi client
+            Suivi colis
           </Link>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-[8px] bg-[#e89b2d] hover:bg-[#f3aa3e] text-[#090b10] font-bold text-[11px] sm:text-sm transition-colors whitespace-nowrap shadow-xs"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 rounded-[8px] bg-[#ff5c1b] hover:bg-[#ff7136] text-[#09152b] font-extrabold text-xs sm:text-sm border border-[#09152b] shadow-[0_2px_0_#09152b] transition-all active:translate-y-0.5 whitespace-nowrap no-underline"
           >
-            <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" aria-hidden="true" />
-            <span className="min-[480px]:hidden">Espace agence</span>
-            <span className="hidden min-[480px]:inline">
-              Ouvrir l&apos;espace agence
-            </span>
-            <ArrowUpRight className="w-3.5 h-3.5 hidden sm:inline" aria-hidden="true" />
+            <span className="sm:hidden">Agence</span>
+            <span className="hidden sm:inline">Espace agence</span>
+            <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
           </Link>
         </nav>
       </div>

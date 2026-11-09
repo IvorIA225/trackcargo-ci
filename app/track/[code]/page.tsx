@@ -25,25 +25,26 @@ export default function TrackCodePage({
   const [agency, setAgency] = useState<PublicAgencyProfile | null>(null);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0d12] text-[#f3f1ec]">
+    <div className="min-h-screen flex flex-col bg-[#f6f3ec] text-[#09152b]">
       <Navbar agencyName={agency?.name} />
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 print:hidden">
           <div className="space-y-1">
             <Link
               href="/track"
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-[#9ca6b8] hover:text-[#e89b2d] transition-colors mb-2"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0a2e6e] hover:text-[#ff5c1b] transition-colors mb-2 no-underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Autre recherche</span>
             </Link>
-            <h1 className="sc-display sc-display--md text-[#f3f1ec]">
+            <h1 className="sc-display sc-display--md text-[#09152b] font-bold">
               Suivi du colis{" "}
-              <span className="font-mono text-[#e89b2d]">{decodedCode}</span>
+              <span className="font-mono text-[#0a2e6e]">{decodedCode}</span>
             </h1>
             {agency && (
-              <p className="text-sm text-[#9ca6b8]">
-                Expédié par <strong className="text-[#f3f1ec]">{agency.name}</strong> à{" "}
+              <p className="text-sm text-[#43506b]">
+                Expédié par{" "}
+                <strong className="text-[#09152b]">{agency.name}</strong> à{" "}
                 {agency.commune}
               </p>
             )}

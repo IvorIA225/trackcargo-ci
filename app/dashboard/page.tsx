@@ -361,7 +361,7 @@ export default function DashboardPage() {
 
   if (loading || !agency) {
     return (
-      <div className="min-h-screen bg-[#0a0d12] flex items-center justify-center text-[#9ca6b8]">
+      <div className="min-h-screen bg-[#f6f3ec] flex items-center justify-center text-[#43506b] font-semibold">
         {loading
           ? "Chargement de l'espace agence..."
           : "Redirection vers la connexion sécurisée..."}
@@ -370,26 +370,26 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0d12] text-[#f3f1ec]">
+    <div className="min-h-screen flex flex-col bg-[#f6f3ec] text-[#09152b]">
       <Navbar agencyName={agency?.name} />
 
       {toast && (
         <div
           role="status"
-          className="fixed bottom-5 right-5 z-50 bg-[#121721] text-[#f3f1ec] px-4 py-3 rounded-[10px] shadow-2xl border border-[#e89b2d]/60 text-sm font-semibold flex items-center gap-2"
+          className="fixed bottom-5 right-5 z-50 bg-[#0a2e6e] text-white px-4 py-3 rounded-[10px] shadow-2xl border border-[#ff5c1b] text-sm font-bold flex items-center gap-2"
         >
-          <Check className="w-4 h-4 text-[#e89b2d]" aria-hidden="true" />
+          <Check className="w-4 h-4 text-[#ff5c1b]" aria-hidden="true" />
           <span>{toast}</span>
         </div>
       )}
 
-      {/* Prospect Pitch Demo Bar */}
-      <div className="bg-[#121721] border-b border-white/10">
+      {/* Prospect Pitch Demo Bar — Cargo Cobalt */}
+      <div className="bg-[#0a2e6e] text-white border-b border-[#09152b]">
         <div className="max-w-[82rem] mx-auto px-4 sm:px-8 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs sm:text-sm">
-          <div className="flex items-center gap-2 text-[#d6dce7]">
-            <Target className="w-4 h-4 text-[#e89b2d] shrink-0" aria-hidden="true" />
+          <div className="flex items-center gap-2 text-[#dce7fa]">
+            <Target className="w-4 h-4 text-[#ff5c1b] shrink-0" aria-hidden="true" />
             <span>
-              Espace actif pour <strong className="text-[#f3f1ec]">{agency?.name}</strong> (
+              Espace actif pour <strong className="text-white">{agency?.name}</strong> (
               {agency?.commune})
             </span>
           </div>
@@ -397,14 +397,14 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => setDemoOpen((v) => !v)}
-              className="px-3 py-1.5 rounded-[8px] bg-[#1c2536] hover:bg-[#253147] text-[#f3f1ec] border border-white/15 font-semibold text-xs cursor-pointer"
+              className="px-3 py-1.5 rounded-[8px] bg-[#16428f] hover:bg-[#1e53af] text-white border border-white/25 font-bold text-xs cursor-pointer"
             >
               {demoOpen ? "Fermer" : "Rebrander pour un prospect"}
             </button>
             <button
               type="button"
               onClick={handleResetDemo}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-[#0b0f17] border border-white/15 text-[#d6dce7] font-semibold text-xs hover:border-white/30 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-[#071f4a] border border-white/25 text-white font-semibold text-xs hover:bg-[#113b86] cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Réinitialiser démo</span>
@@ -412,7 +412,7 @@ export default function DashboardPage() {
             <Link
               href="/track"
               target="_blank"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#0b0f17] border border-[#e89b2d]/40 text-[#e89b2d] font-semibold text-xs hover:bg-[#e89b2d]/10"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#ff5c1b] hover:bg-[#ff7136] text-[#09152b] font-extrabold text-xs border border-[#09152b] no-underline"
             >
               <span>Voir portail client</span>
               <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -420,7 +420,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-rose-950/60 border border-rose-500/40 text-rose-200 font-semibold text-xs hover:bg-rose-900/60 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-rose-600 hover:bg-rose-500 border border-rose-800 text-white font-bold text-xs cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Déconnexion</span>
@@ -431,22 +431,22 @@ export default function DashboardPage() {
         {demoOpen && (
           <form
             onSubmit={handleApplyProspectDemo}
-            className="max-w-[82rem] mx-auto px-4 sm:px-8 pb-4 pt-2 flex flex-col sm:flex-row gap-3 items-end border-t border-white/10"
+            className="max-w-[82rem] mx-auto px-4 sm:px-8 pb-4 pt-2 flex flex-col sm:flex-row gap-3 items-end border-t border-white/15"
           >
             <div className="flex-1 w-full">
-              <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+              <label className="block text-xs font-mono text-[#c7d9f7] mb-1">
                 Nom du prospect (ex: A-Cargo Logistique, World Transit)
               </label>
               <input
                 type="text"
                 value={demoName}
                 onChange={(e) => setDemoName(e.target.value)}
-                className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                className="w-full h-10 px-3 rounded-[8px] border border-white/25 bg-white text-[#09152b] text-sm font-semibold"
                 required
               />
             </div>
             <div className="w-full sm:w-56">
-              <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+              <label className="block text-xs font-mono text-[#c7d9f7] mb-1">
                 Commune Abidjan
               </label>
               <input
@@ -454,12 +454,12 @@ export default function DashboardPage() {
                 value={demoCommune}
                 onChange={(e) => setDemoCommune(e.target.value)}
                 placeholder="Treichville / Adjamé / Cocody"
-                className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                className="w-full h-10 px-3 rounded-[8px] border border-white/25 bg-white text-[#09152b] text-sm font-semibold"
               />
             </div>
             <button
               type="submit"
-              className="h-10 px-5 rounded-[8px] bg-[#e89b2d] hover:bg-[#f3aa3e] text-[#090b10] font-bold text-sm cursor-pointer whitespace-nowrap"
+              className="h-10 px-5 rounded-[8px] bg-[#ff5c1b] hover:bg-[#ff7136] text-[#09152b] font-extrabold text-sm border border-[#09152b] cursor-pointer whitespace-nowrap"
             >
               Appliquer le branding
             </button>
@@ -470,57 +470,57 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-[82rem] w-full mx-auto px-4 sm:px-8 py-8 space-y-6">
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#121721] rounded-[12px] border border-white/12 p-4 sm:p-5">
-            <div className="text-xs font-mono text-[#9ca6b8] uppercase">
+          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 sm:p-5 shadow-[var(--sc-e1)]">
+            <div className="text-xs font-mono font-bold text-[#43506b] uppercase">
               Total colis actifs
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#f3f1ec] mt-1 font-mono tabular-nums">
+            <div className="text-2xl sm:text-3xl font-extrabold text-[#09152b] mt-1 font-mono tabular-nums">
               {stats.totalParcels}
             </div>
-            <div className="text-xs text-[#9ca6b8] mt-1">
+            <div className="text-xs text-[#43506b] mt-1">
               Sur {batches.length} lots / conteneurs
             </div>
           </div>
 
-          <div className="bg-[#121721] rounded-[12px] border border-white/12 p-4 sm:p-5">
-            <div className="text-xs font-mono text-emerald-300 uppercase">
+          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 sm:p-5 shadow-[var(--sc-e1)]">
+            <div className="text-xs font-mono font-bold text-emerald-800 uppercase">
               Prêts au retrait Abidjan
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-300 mt-1 font-mono tabular-nums">
+            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1 font-mono tabular-nums">
               {stats.readyCount}
             </div>
-            <div className="text-xs text-[#9ca6b8] mt-1">
+            <div className="text-xs text-[#43506b] mt-1">
               À notifier sur WhatsApp
             </div>
           </div>
 
-          <div className="bg-[#121721] rounded-[12px] border border-white/12 p-4 sm:p-5">
-            <div className="text-xs font-mono text-rose-300 uppercase">
+          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 sm:p-5 shadow-[var(--sc-e1)]">
+            <div className="text-xs font-mono font-bold text-rose-800 uppercase">
               Reste à encaisser
             </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-rose-300 mt-1 font-mono tabular-nums">
+            <div className="text-xl sm:text-2xl font-extrabold text-rose-700 mt-1 font-mono tabular-nums">
               {formatFcfa(stats.unpaidFcfa)}
             </div>
-            <div className="text-xs text-[#9ca6b8] mt-1">
+            <div className="text-xs text-[#43506b] mt-1">
               Frais de fret en attente
             </div>
           </div>
 
-          <div className="bg-[#18202e] rounded-[12px] border border-[#e89b2d]/40 p-4 sm:p-5">
-            <div className="text-xs font-mono text-[#e89b2d] uppercase">
+          <div className="bg-[#0a2e6e] text-white rounded-[14px] border border-[#09152b] p-4 sm:p-5 shadow-[var(--sc-e2)]">
+            <div className="text-xs font-mono font-bold text-[#ff966b] uppercase">
               Déjà encaissé
             </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-[#f3f1ec] mt-1 font-mono tabular-nums">
+            <div className="text-xl sm:text-2xl font-extrabold text-white mt-1 font-mono tabular-nums">
               {formatFcfa(stats.collectedFcfa)}
             </div>
-            <div className="text-xs text-[#9ca6b8] mt-1">
+            <div className="text-xs text-[#c7d9f7] mt-1">
               Wave, Orange Money et espèces
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+        <div className="flex flex-wrap gap-2 border-b border-[#09152b]/12 pb-3">
           {(
             [
               ["batches", "1. Lots & Conteneurs (1 clic)"],
@@ -533,10 +533,10 @@ export default function DashboardPage() {
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
-              className={`px-4 py-2 rounded-[8px] text-sm font-bold transition-colors cursor-pointer ${
+              className={`px-4 py-2 rounded-[8px] text-sm font-bold transition-colors cursor-pointer border ${
                 activeTab === id
-                  ? "bg-[#e89b2d] text-[#090b10]"
-                  : "bg-[#121721] text-[#d6dce7] border border-white/12 hover:bg-[#18202e]"
+                  ? "bg-[#ff5c1b] text-[#09152b] border-[#09152b] shadow-[0_2px_0_#09152b]"
+                  : "bg-white text-[#09152b] border-[#09152b]/16 hover:bg-[#dce7fa]/50"
               }`}
             >
               {label}
@@ -561,54 +561,54 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={batch.id}
-                    className="bg-[#121721] rounded-[12px] border border-white/12 p-5 space-y-4"
+                    className="bg-white rounded-[14px] border border-[#09152b]/14 p-5 space-y-4 shadow-[var(--sc-e1)]"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2.5 flex-wrap">
-                          <span className="font-mono font-bold text-lg text-[#f3f1ec]">
+                          <span className="font-mono font-extrabold text-lg text-[#0a2e6e]">
                             {batch.code}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-xs font-mono uppercase px-2.5 py-0.5 rounded-[6px] bg-[#0b0f17] border border-white/15 text-[#d6dce7]">
+                          <span className="inline-flex items-center gap-1 text-xs font-mono font-bold uppercase px-2.5 py-0.5 rounded-[6px] bg-[#f6f3ec] border border-[#09152b]/15 text-[#09152b]">
                             {batch.mode === "maritime" ? (
-                              <Ship className="w-3.5 h-3.5 text-[#e89b2d]" aria-hidden="true" />
+                              <Ship className="w-3.5 h-3.5 text-[#ff5c1b]" aria-hidden="true" />
                             ) : (
-                              <Plane className="w-3.5 h-3.5 text-[#e89b2d]" aria-hidden="true" />
+                              <Plane className="w-3.5 h-3.5 text-[#0a2e6e]" aria-hidden="true" />
                             )}
                             <span>
                               {batch.mode === "maritime" ? "Maritime" : "Aérien"}
                             </span>
                           </span>
                           <span
-                            className={`text-xs font-semibold px-2.5 py-0.5 rounded-[6px] border ${meta.badgeClass}`}
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-[6px] border ${meta.badgeClass}`}
                           >
                             {meta.shortLabel}
                           </span>
                         </div>
-                        <div className="text-sm text-[#9ca6b8] mt-1">
+                        <div className="text-sm text-[#43506b] mt-1">
                           {batch.origin} vers{" "}
-                          <strong className="text-[#f3f1ec]">{batch.destination}</strong>
+                          <strong className="text-[#09152b]">{batch.destination}</strong>
                         </div>
                       </div>
                       <div className="text-left sm:text-right">
-                        <div className="text-sm font-bold text-[#f3f1ec]">
+                        <div className="text-sm font-extrabold text-[#09152b]">
                           {batchParcels.length} colis dans ce lot
                         </div>
-                        <div className="text-xs text-rose-300 font-semibold font-mono">
+                        <div className="text-xs text-rose-700 font-bold font-mono">
                           Reste à encaisser : {formatFcfa(unpaidTotal)}
                         </div>
                       </div>
                     </div>
 
                     {batch.notes && (
-                      <p className="text-xs text-[#b6c0d0] bg-[#0b0f17] px-3 py-2 rounded-[8px] border border-white/10">
+                      <p className="text-xs text-[#43506b] bg-[#f6f3ec] px-3 py-2 rounded-[8px] border border-[#09152b]/10">
                         {batch.notes}
                       </p>
                     )}
 
                     {/* 1-Click Bulk Update Buttons */}
-                    <div className="pt-2 border-t border-white/10 space-y-2.5">
-                      <div className="text-xs font-mono text-[#9ca6b8] uppercase">
+                    <div className="pt-2 border-t border-[#09152b]/10 space-y-2.5">
+                      <div className="text-xs font-mono font-bold text-[#43506b] uppercase">
                         Mise à jour de masse (met à jour tous les colis du lot) :
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -626,8 +626,8 @@ export default function DashboardPage() {
                             onClick={() => handleBulkStatus(batch.id, st)}
                             className={`px-3 py-1.5 rounded-[8px] text-xs font-bold border transition-colors cursor-pointer ${
                               batch.status === st
-                                ? "bg-[#e89b2d] text-[#090b10] border-[#e89b2d]"
-                                : "bg-[#0b0f17] hover:border-[#e89b2d]/60 text-[#d6dce7] border-white/15"
+                                ? "bg-[#0a2e6e] text-white border-[#0a2e6e]"
+                                : "bg-[#f6f3ec] hover:border-[#0a2e6e] text-[#09152b] border-[#09152b]/18"
                             }`}
                           >
                             Passer à : {PARCEL_STATUS_META[st].shortLabel}
@@ -639,7 +639,7 @@ export default function DashboardPage() {
                             setFilterBatch(batch.id);
                             setActiveTab("parcels");
                           }}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-xs font-bold bg-[#10b981] hover:bg-[#34d399] text-[#052318] cursor-pointer ml-auto"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-xs font-extrabold bg-[#10b981] hover:bg-[#34d399] text-[#042318] cursor-pointer ml-auto"
                         >
                           <span>Notifier les {batchParcels.length} clients</span>
                           <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -654,26 +654,26 @@ export default function DashboardPage() {
             {/* New Batch Form */}
             <form
               onSubmit={handleCreateBatch}
-              className="bg-[#121721] rounded-[12px] border border-white/12 p-5 space-y-3.5"
+              className="bg-white rounded-[14px] border border-[#09152b]/14 p-5 space-y-3.5 shadow-[var(--sc-e1)]"
             >
-              <h3 className="font-bold text-[#f3f1ec] text-lg flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#e89b2d]" aria-hidden="true" />
+              <h3 className="font-extrabold text-[#09152b] text-lg flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#ff5c1b]" aria-hidden="true" />
                 <span>Nouveau lot / conteneur</span>
               </h3>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Code du lot / conteneur
                 </label>
                 <input
                   type="text"
                   value={batchCode}
                   onChange={(e) => setBatchCode(e.target.value)}
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono font-semibold"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Mode de transport
                 </label>
                 <select
@@ -681,39 +681,39 @@ export default function DashboardPage() {
                   onChange={(e) =>
                     setBatchMode(e.target.value as TransportMode)
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-semibold"
                 >
                   <option value="aerien">Aérien (Facturation au kg)</option>
                   <option value="maritime">Maritime (Conteneur / CBM)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Origine
                 </label>
                 <input
                   type="text"
                   value={batchOrigin}
                   onChange={(e) => setBatchOrigin(e.target.value)}
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Entrepôt de destination
                 </label>
                 <input
                   type="text"
                   value={batchDest}
                   onChange={(e) => setBatchDest(e.target.value)}
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-[8px] bg-[#e89b2d] hover:bg-[#f3aa3e] text-[#090b10] font-bold text-sm cursor-pointer"
+                className="tc-btn-primary w-full"
               >
                 Créer le lot
               </button>
@@ -726,18 +726,18 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2 space-y-4">
               {/* Filters */}
-              <div className="bg-[#121721] rounded-[12px] border border-white/12 p-4 flex flex-col sm:flex-row gap-3">
+              <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 flex flex-col sm:flex-row gap-3 shadow-[var(--sc-e1)]">
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="Rechercher par code (TC-...), nom client ou téléphone..."
-                  className="flex-1 h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="flex-1 h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                 />
                 <select
                   value={filterBatch}
                   onChange={(e) => setFilterBatch(e.target.value)}
-                  className="h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-semibold"
                 >
                   <option value="ALL">Tous les lots ({parcels.length})</option>
                   {batches.map((b) => (
@@ -757,7 +757,7 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={parcel.id}
-                      className="bg-[#121721] rounded-[12px] border border-white/12 p-4 sm:p-5 space-y-3"
+                      className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 sm:p-5 space-y-3 shadow-[var(--sc-e1)]"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div>
@@ -765,29 +765,29 @@ export default function DashboardPage() {
                             <Link
                               href={`/track/${parcel.trackingCode}`}
                               target="_blank"
-                              className="inline-flex items-center gap-1 font-mono font-bold text-base text-[#e89b2d] hover:underline"
+                              className="inline-flex items-center gap-1 font-mono font-extrabold text-base text-[#0a2e6e] hover:text-[#ff5c1b] hover:underline"
                             >
                               <span>{parcel.trackingCode}</span>
                               <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
                             </Link>
                             <span
-                              className={`text-xs font-semibold px-2.5 py-0.5 rounded-[6px] border ${stMeta.badgeClass}`}
+                              className={`text-xs font-bold px-2.5 py-0.5 rounded-[6px] border ${stMeta.badgeClass}`}
                             >
                               {stMeta.shortLabel}
                             </span>
                             <span
-                              className={`text-xs font-semibold px-2.5 py-0.5 rounded-[6px] border ${payMeta.badgeClass}`}
+                              className={`text-xs font-bold px-2.5 py-0.5 rounded-[6px] border ${payMeta.badgeClass}`}
                             >
                               {payMeta.label}
                             </span>
                           </div>
-                          <div className="text-sm font-bold text-[#f3f1ec] mt-1.5">
+                          <div className="text-sm font-bold text-[#09152b] mt-1.5">
                             {parcel.clientName} ·{" "}
-                            <span className="font-mono font-normal text-[#9ca6b8]">
+                            <span className="font-mono font-normal text-[#43506b]">
                               {parcel.clientPhone}
                             </span>
                           </div>
-                          <div className="text-xs text-[#b6c0d0]">
+                          <div className="text-xs text-[#43506b]">
                             {parcel.description} ({parcel.weightKg} kg
                             {parcel.volumeCbm > 0
                               ? ` · ${parcel.volumeCbm} CBM`
@@ -797,11 +797,11 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="text-left sm:text-right">
-                          <div className="text-lg font-extrabold text-[#f3f1ec] font-mono tabular-nums">
+                          <div className="text-lg font-extrabold text-[#09152b] font-mono tabular-nums">
                             {formatFcfa(parcel.amountFcfa)}
                           </div>
                           {parcel.notifiedWhatsappAt && (
-                            <div className="inline-flex items-center gap-1 text-[11px] text-emerald-300 font-medium">
+                            <div className="inline-flex items-center gap-1 text-[11px] text-emerald-800 font-bold">
                               <Check className="w-3 h-3" aria-hidden="true" />
                               <span>Notifié WhatsApp</span>
                             </div>
@@ -809,11 +809,11 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#09152b]/10">
                         <button
                           type="button"
                           onClick={() => openWhatsappForParcel(parcel)}
-                          className="px-3.5 py-1.5 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#052318] font-bold text-xs cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#042318] font-extrabold text-xs cursor-pointer"
                         >
                           Envoyer alerte WhatsApp
                         </button>
@@ -821,7 +821,7 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={() => handleCopyTrackLink(parcel.trackingCode)}
-                          className="px-3 py-1.5 rounded-[8px] border border-white/20 bg-[#0b0f17] hover:bg-white/[0.06] text-[#d6dce7] font-semibold text-xs cursor-pointer"
+                          className="px-3 py-1.5 rounded-[8px] border border-[#09152b]/20 bg-[#f6f3ec] hover:bg-[#ebe5d8] text-[#09152b] font-semibold text-xs cursor-pointer"
                         >
                           Copier lien
                         </button>
@@ -835,7 +835,7 @@ export default function DashboardPage() {
                                   paymentStatus: "PAYE_WAVE",
                                 })
                               }
-                              className="px-3 py-1.5 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#090b10] font-bold text-xs cursor-pointer"
+                              className="px-3 py-1.5 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#09152b] font-extrabold text-xs cursor-pointer"
                             >
                               Encaisser Wave
                             </button>
@@ -846,7 +846,7 @@ export default function DashboardPage() {
                                   paymentStatus: "PAYE_OM",
                                 })
                               }
-                              className="px-3 py-1.5 rounded-[8px] bg-[#f97316] hover:bg-[#fb923c] text-[#090b10] font-bold text-xs cursor-pointer"
+                              className="px-3 py-1.5 rounded-[8px] bg-[#ff5c1b] hover:bg-[#ff7136] text-[#09152b] font-extrabold text-xs cursor-pointer"
                             >
                               Encaisser OM
                             </button>
@@ -857,7 +857,7 @@ export default function DashboardPage() {
                                   paymentStatus: "PAYE_CASH",
                                 })
                               }
-                              className="px-3 py-1.5 rounded-[8px] border border-white/20 hover:bg-white/[0.06] text-[#d6dce7] font-semibold text-xs cursor-pointer"
+                              className="px-3 py-1.5 rounded-[8px] border border-[#09152b]/20 bg-[#f6f3ec] hover:bg-[#ebe5d8] text-[#09152b] font-semibold text-xs cursor-pointer"
                             >
                               Cash
                             </button>
@@ -871,7 +871,7 @@ export default function DashboardPage() {
                               status: e.target.value as ParcelStatus,
                             })
                           }
-                          className="ml-auto h-8 px-2 rounded-[6px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-xs"
+                          className="ml-auto h-8 px-2 rounded-[6px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-xs font-semibold"
                         >
                           {Object.entries(PARCEL_STATUS_META).map(([k, v]) => (
                             <option key={k} value={k}>
@@ -889,20 +889,20 @@ export default function DashboardPage() {
             {/* New Parcel Form */}
             <form
               onSubmit={handleCreateParcel}
-              className="bg-[#121721] rounded-[12px] border border-white/12 p-5 space-y-3.5"
+              className="bg-white rounded-[14px] border border-[#09152b]/14 p-5 space-y-3.5 shadow-[var(--sc-e1)]"
             >
-              <h3 className="font-bold text-[#f3f1ec] text-lg flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#e89b2d]" aria-hidden="true" />
+              <h3 className="font-extrabold text-[#09152b] text-lg flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#ff5c1b]" aria-hidden="true" />
                 <span>Enregistrer un colis</span>
               </h3>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Lot / Conteneur
                 </label>
                 <select
                   value={parcelBatchId}
                   onChange={(e) => setParcelBatchId(e.target.value)}
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-semibold"
                 >
                   {batches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -912,7 +912,7 @@ export default function DashboardPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Nom complet du client
                 </label>
                 <input
@@ -920,12 +920,12 @@ export default function DashboardPage() {
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   placeholder="ex: Mariam Coulibaly"
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Téléphone WhatsApp (CI)
                 </label>
                 <input
@@ -933,12 +933,12 @@ export default function DashboardPage() {
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
                   placeholder="+22507..."
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Description du colis
                 </label>
                 <input
@@ -946,13 +946,13 @@ export default function DashboardPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="ex: 2 cartons chaussures femme"
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                  <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                     Poids (kg)
                   </label>
                   <input
@@ -962,12 +962,12 @@ export default function DashboardPage() {
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                    className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                  <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                     Volume (CBM)
                   </label>
                   <input
@@ -977,13 +977,13 @@ export default function DashboardPage() {
                     step="0.01"
                     value={volumeCbm}
                     onChange={(e) => setVolumeCbm(e.target.value)}
-                    className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                    className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                   />
                 </div>
               </div>
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-[8px] bg-[#e89b2d] hover:bg-[#f3aa3e] text-[#090b10] font-bold text-sm cursor-pointer"
+                className="tc-btn-primary w-full"
               >
                 Enregistrer et calculer le tarif FCFA
               </button>
@@ -993,26 +993,30 @@ export default function DashboardPage() {
 
         {/* TAB 3: BULK EXCEL IMPORT */}
         {activeTab === "import" && (
-          <div className="bg-[#121721] rounded-[12px] border border-white/12 p-6 space-y-5 max-w-4xl">
+          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-6 space-y-5 max-w-4xl shadow-[var(--sc-e1)]">
             <div>
-              <h3 className="text-lg font-bold text-[#f3f1ec]">
+              <h3 className="text-lg font-extrabold text-[#09152b]">
                 Import express depuis Excel / WhatsApp
               </h3>
-              <p className="text-sm text-[#9ca6b8] mt-1">
+              <p className="text-sm text-[#43506b] mt-1">
                 Copiez directement vos colonnes depuis Excel (séparées par
-                tabulation ou point-virgule <code className="bg-[#0b0f17] px-1 rounded">;</code>) au format :{" "}
-                <strong className="text-[#f3f1ec]">Nom ; Téléphone ; Description ; Poids(kg)</strong>
+                tabulation ou point-virgule{" "}
+                <code className="bg-[#f6f3ec] px-1.5 py-0.5 rounded font-mono">;</code>
+                ) au format :{" "}
+                <strong className="text-[#09152b]">
+                  Nom ; Téléphone ; Description ; Poids(kg)
+                </strong>
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+              <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                 Lot de destination
               </label>
               <select
                 value={importBatchId}
                 onChange={(e) => setImportBatchId(e.target.value)}
-                className="w-full sm:w-80 h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                className="w-full sm:w-80 h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-semibold"
               >
                 {batches.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -1026,12 +1030,12 @@ export default function DashboardPage() {
               rows={6}
               value={excelText}
               onChange={(e) => setExcelText(e.target.value)}
-              className="w-full p-3 rounded-[10px] border border-white/20 font-mono text-xs sm:text-sm bg-[#0b0f17] text-[#f3f1ec]"
+              className="w-full p-3 rounded-[10px] border border-[#09152b]/22 font-mono text-xs sm:text-sm bg-[#f6f3ec] text-[#09152b]"
             />
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="text-sm text-[#d6dce7]">
-                <strong className="font-mono text-[#e89b2d]">
+              <div className="text-sm text-[#09152b]">
+                <strong className="font-mono text-[#0a2e6e]">
                   {parsedImportRows.length}
                 </strong>{" "}
                 lignes valides détectées prêtes à recevoir un code TC.
@@ -1040,7 +1044,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={handleBulkImport}
                 disabled={parsedImportRows.length === 0}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#052318] font-bold text-sm cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#042318] font-extrabold text-sm cursor-pointer disabled:opacity-50"
               >
                 <span>Importer {parsedImportRows.length} colis maintenant</span>
                 <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
@@ -1053,14 +1057,14 @@ export default function DashboardPage() {
         {activeTab === "settings" && (
           <form
             onSubmit={handleSaveSettings}
-            className="bg-[#121721] rounded-[12px] border border-white/12 p-6 space-y-4 max-w-3xl"
+            className="bg-white rounded-[14px] border border-[#09152b]/14 p-6 space-y-4 max-w-3xl shadow-[var(--sc-e1)]"
           >
-            <h3 className="text-lg font-bold text-[#f3f1ec]">
+            <h3 className="text-lg font-extrabold text-[#09152b]">
               Configuration agence, tarifs et paiements Mobile Money
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Nom de l&apos;agence
                 </label>
                 <input
@@ -1069,11 +1073,11 @@ export default function DashboardPage() {
                   onChange={(e) =>
                     setSettingsForm({ ...settingsForm, name: e.target.value })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Commune (Abidjan)
                 </label>
                 <input
@@ -1085,11 +1089,11 @@ export default function DashboardPage() {
                       commune: e.target.value,
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Adresse complète de l&apos;entrepôt de retrait
                 </label>
                 <input
@@ -1101,11 +1105,11 @@ export default function DashboardPage() {
                       address: e.target.value,
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Numéro WhatsApp support
                 </label>
                 <input
@@ -1117,11 +1121,11 @@ export default function DashboardPage() {
                       whatsappPhone: e.target.value,
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Numéro Orange Money / MTN MoMo
                 </label>
                 <input
@@ -1133,11 +1137,11 @@ export default function DashboardPage() {
                       orangeMoneyNumber: e.target.value,
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Lien marchand Wave Business
                 </label>
                 <input
@@ -1149,11 +1153,11 @@ export default function DashboardPage() {
                       waveLink: e.target.value,
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Tarif aérien (FCFA / kg)
                 </label>
                 <input
@@ -1167,11 +1171,11 @@ export default function DashboardPage() {
                       ratePerKgAirFcfa: Number(e.target.value),
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-[#9ca6b8] mb-1">
+                <label className="block text-xs font-mono font-bold text-[#43506b] mb-1">
                   Tarif maritime (FCFA / CBM)
                 </label>
                 <input
@@ -1185,13 +1189,13 @@ export default function DashboardPage() {
                       ratePerCbmSeaFcfa: Number(e.target.value),
                     })
                   }
-                  className="w-full h-10 px-3 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] text-sm font-mono"
+                  className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] text-sm font-mono"
                 />
               </div>
             </div>
             <button
               type="submit"
-              className="px-6 py-3 rounded-[8px] bg-[#e89b2d] hover:bg-[#f3aa3e] text-[#090b10] font-bold text-sm cursor-pointer"
+              className="tc-btn-primary"
             >
               Enregistrer la configuration
             </button>

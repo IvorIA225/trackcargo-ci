@@ -2,26 +2,40 @@
 @import "../styles/scrollcraft.css" layer(base);
 
 /* ============================================================================
-   TrackCargo CI — Harbor Graphite & Port Amber Design System
+   TrackCargo CI v2 — Audacious Daylight Coastal & Cargo Cobalt Design System
    ----------------------------------------------------------------------------
-   Overrides scrollcraft.css tokens inside @layer base and places bespoke
-   components inside @layer components so Tailwind @layer utilities always win
-   on explicit surface, ink, and button classes.
+   High-key Alabaster Stone (#F6F3EC), Deep Cargo Cobalt (#0A2E6E),
+   Signal Tangerine (#FF5C1B) and Ink Navy (#09152B).
+   Overrides scrollcraft.css tokens inside @layer base and places custom
+   components inside @layer components so Tailwind @layer utilities win.
    ========================================================================== */
 
 @layer base {
   :root {
-    --sc-canvas: #0a0d12;
-    --sc-surface: #121721;
-    --sc-surface-elevated: #18202e;
-    --sc-ink: #f3f1ec;
-    --sc-ink-soft: #9ca6b8;
-    --sc-accent: #e89b2d;
-    --sc-accent-hover: #f3aa3e;
-    --sc-accent-ink: #090b10;
+    --sc-canvas: #f6f3ec;
+    --sc-surface: #ffffff;
+    --sc-surface-elevated: #ebe5d8;
+    --sc-ink: #09152b;
+    --sc-ink-soft: #43506b;
+    --sc-accent: #ff5c1b;
+    --sc-accent-hover: #ff7136;
+    --sc-accent-ink: #09152b;
+
+    --sc-cobalt: #0a2e6e;
+    --sc-cobalt-mid: #124eb5;
+    --sc-cobalt-soft: #dce7fa;
 
     --sc-hairline: color-mix(in oklab, var(--sc-ink) 12%, transparent);
     --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 24%, transparent);
+
+    --sc-shadow-color: 220 48% 14%;
+    --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.08),
+             0 4px 10px -2px hsl(var(--sc-shadow-color) / 0.1);
+    --sc-e2: 0 2px 6px hsl(var(--sc-shadow-color) / 0.09),
+             0 12px 26px -6px hsl(var(--sc-shadow-color) / 0.14);
+    --sc-e3: 0 6px 14px hsl(var(--sc-shadow-color) / 0.1),
+             0 24px 48px -12px hsl(var(--sc-shadow-color) / 0.18);
+    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 
     --sc-font-display: var(--font-archivo), "Geist", system-ui, sans-serif;
     --sc-font-text: var(--font-geist-sans), system-ui, sans-serif;
@@ -29,7 +43,7 @@
 
     --sc-r-sm: 6px;
     --sc-r-md: 10px;
-    --sc-r-lg: 14px;
+    --sc-r-lg: 16px;
   }
 }
 
@@ -42,14 +56,20 @@
 }
 
 @layer components {
-  /* Reveal transition pacing so fast jumps settle cleanly without half-fades */
+  /* Crisp fast settle for programmatic reveal checks and rapid jumps */
   [data-sc-in],
   [data-sc-stagger] > * {
     transition-duration: 300ms;
   }
 
-  /* Guarantee .sc-copy--center stays dead-center even below 860px where base
-     .sc-copy sets inset-inline: var(--sc-gutter). */
+  /* Pin stage flush below the 64px fixed navbar so top copy & mobile CTAs never slip under or off-fold */
+  .sc-stage.tc-stage-below-nav {
+    top: 4rem;
+    height: calc(100vh - 4rem);
+    height: calc(100svh - 4rem);
+  }
+
+  /* Guarantee .sc-copy--center stays dead-center even below 860px */
   .sc-copy.sc-copy--center {
     inset-inline: auto;
     left: 50%;
@@ -60,7 +80,12 @@
     text-align: center;
   }
 
-  /* Parallax & Layering: keep planes full-bleed across mobile widths */
+  /* Daylight subtle atmospheric paper grain (lighter than dark mode) */
+  .sc-grain {
+    opacity: 0.025;
+  }
+
+  /* Parallax Planes & Full-bleed Hero */
   .tc-hero-plane {
     position: absolute;
     inset: 0;
@@ -75,64 +100,94 @@
     max-width: none;
   }
 
-  .tc-hero-floor {
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: clamp(180px, 28vh, 280px);
-    z-index: 4;
-    pointer-events: none;
-    background: linear-gradient(
-      to top,
-      var(--sc-canvas) 0%,
-      color-mix(in oklab, var(--sc-canvas) 82%, transparent) 38%,
-      transparent 100%
-    );
-  }
-
-  /* Hero corner scrim + strengthened mobile bottom band for 4.5:1+ AA legibility */
-  .tc-hero-scrim {
+  /* Localized frosted Alabaster gradient left-side only — keeps sunlit harbor & 3D luminous */
+  .tc-day-scrim {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 6;
     background: linear-gradient(
+      90deg,
+      rgba(246, 243, 236, 0.96) 0%,
+      rgba(246, 243, 236, 0.91) 36%,
+      rgba(246, 243, 236, 0.45) 54%,
+      rgba(246, 243, 236, 0.04) 72%,
+      transparent 84%
+    );
+  }
+
+  .tc-day-floor {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: clamp(72px, 12vh, 130px);
+    z-index: 8;
+    pointer-events: none;
+    background: linear-gradient(
+      to top,
+      #f6f3ec 0%,
+      rgba(246, 243, 236, 0.85) 38%,
+      transparent 100%
+    );
+  }
+
+  /* Darkened Cobalt Scrub Scrim (Act 3) anchored bottom-left behind control text */
+  .tc-cobalt-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background: linear-gradient(
       to top right,
-      color-mix(in oklab, #0a0d12 97%, transparent) 0%,
-      color-mix(in oklab, #0a0d12 88%, transparent) 34%,
-      color-mix(in oklab, #0a0d12 50%, transparent) 56%,
-      transparent 76%
+      rgba(8, 28, 69, 0.92) 0%,
+      rgba(10, 46, 110, 0.72) 38%,
+      rgba(10, 46, 110, 0.22) 64%,
+      rgba(10, 46, 110, 0.08) 100%
     );
   }
 
   @media (max-width: 860px) {
-    .tc-hero-scrim {
+    .tc-day-scrim {
       background: linear-gradient(
         to top,
-        color-mix(in oklab, #0a0d12 98%, transparent) 0%,
-        color-mix(in oklab, #0a0d12 93%, transparent) 44%,
-        color-mix(in oklab, #0a0d12 66%, transparent) 64%,
-        transparent 82%
+        #f6f3ec 0%,
+        rgba(246, 243, 236, 0.97) 42%,
+        rgba(246, 243, 236, 0.76) 58%,
+        rgba(246, 243, 236, 0.18) 74%,
+        transparent 88%
+      );
+    }
+
+    .tc-cobalt-scrim {
+      background: linear-gradient(
+        to top,
+        rgba(8, 28, 69, 0.96) 0%,
+        rgba(10, 46, 110, 0.86) 46%,
+        rgba(10, 46, 110, 0.45) 68%,
+        rgba(10, 46, 110, 0.14) 100%
       );
     }
 
     .tc-hero-title.sc-display--xl {
-      font-size: var(--sc-t-2xl);
-      line-height: 1.05;
+      font-size: clamp(1.68rem, 6.2vw, 2.35rem);
+      line-height: 1.03;
     }
 
     .tc-act2-title.sc-display--lg {
-      font-size: clamp(1.85rem, 6.5vw, 2.6rem);
+      font-size: clamp(1.8rem, 6.2vw, 2.5rem);
       line-height: 1.06;
-    }
-
-    .tc-act2-quote.sc-display--md {
-      font-size: clamp(1.55rem, 5.5vw, 2.1rem);
-      line-height: 1.1;
     }
   }
 
-  /* UI Buttons */
+  /* Desktop architectural cap so 3-line Hero statement never collides with 64px header */
+  @media (min-width: 861px) {
+    .tc-hero-title.sc-display--xl {
+      font-size: clamp(2.5rem, 1.5rem + 2.45vw, 4rem);
+      line-height: 1.02;
+    }
+  }
+
+  /* High-impact Signal Tangerine CTA with stencil Navy ink (6.1:1 WCAG AA contrast) */
   .tc-btn-primary {
     display: inline-flex;
     align-items: center;
@@ -144,12 +199,12 @@
     background: var(--sc-accent);
     color: var(--sc-accent-ink);
     font-family: var(--sc-font-text);
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid color-mix(in oklab, #ffffff 18%, var(--sc-accent));
-    box-shadow: var(--sc-e2), var(--sc-edge);
+    border: 1px solid #09152b;
+    box-shadow: 0 3px 0 #09152b, var(--sc-e2);
     transition: background-color 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out),
       box-shadow 150ms var(--sc-ease-out);
@@ -160,13 +215,51 @@
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-primary:hover {
       background: var(--sc-accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 0 #09152b, var(--sc-e2);
     }
   }
 
   .tc-btn-primary:active {
-    transform: scale(0.97);
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #09152b;
   }
 
+  /* Saturated Cargo Cobalt Authority CTA (12.1:1 contrast) */
+  .tc-btn-cobalt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 48px;
+    padding: 0.78rem 1.4rem;
+    border-radius: var(--sc-r-md);
+    background: #0a2e6e;
+    color: #ffffff;
+    font-family: var(--sc-font-text);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    line-height: 1;
+    text-decoration: none;
+    border: 1px solid #071e49;
+    box-shadow: var(--sc-e2), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    transition: background-color 150ms var(--sc-ease-out),
+      transform 120ms var(--sc-ease-out);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tc-btn-cobalt:hover {
+      background: #124eb5;
+    }
+  }
+
+  .tc-btn-cobalt:active {
+    transform: scale(0.98);
+  }
+
+  /* Clean Architectural Secondary Ghost Button */
   .tc-btn-ghost {
     display: inline-flex;
     align-items: center;
@@ -175,13 +268,14 @@
     min-height: 48px;
     padding: 0.78rem 1.25rem;
     border-radius: var(--sc-r-md);
-    background: color-mix(in oklab, var(--sc-surface) 88%, transparent);
-    color: var(--sc-ink);
-    font-weight: 600;
+    background: rgba(255, 255, 255, 0.92);
+    color: #09152b;
+    font-weight: 700;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid var(--sc-hairline-strong);
+    border: 1px solid color-mix(in oklab, #09152b 24%, transparent);
+    box-shadow: var(--sc-e1);
     transition: background-color 150ms var(--sc-ease-out),
       border-color 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out);
@@ -191,16 +285,62 @@
 
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-ghost:hover {
-      background: var(--sc-surface-elevated);
-      border-color: color-mix(in oklab, var(--sc-ink) 38%, transparent);
+      background: #ffffff;
+      border-color: #0a2e6e;
     }
   }
 
   .tc-btn-ghost:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
 
-  /* Horizontal Pan Corridors: align cards cleanly without hollow vertical voids */
+  /* Ghost variant inside Cobalt bands */
+  .tc-cobalt-band .tc-btn-ghost {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.34);
+    box-shadow: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tc-cobalt-band .tc-btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  /* Alternating Cobalt Architectural Band — restates color directly for inherited specificity safety */
+  .tc-cobalt-band {
+    --sc-canvas: #0a2e6e;
+    --sc-surface: #113b86;
+    --sc-surface-elevated: #17469a;
+    --sc-ink: #f8fafc;
+    --sc-ink-soft: #cdddf8;
+    --sc-accent: #ff5c1b;
+    --sc-accent-ink: #09152b;
+    --sc-hairline: rgba(255, 255, 255, 0.16);
+    --sc-hairline-strong: rgba(255, 255, 255, 0.32);
+    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: var(--sc-canvas);
+    color: var(--sc-ink);
+  }
+
+  /* Light Alabaster Band inside overall document */
+  .tc-daylight-band {
+    --sc-canvas: #f6f3ec;
+    --sc-surface: #ffffff;
+    --sc-surface-elevated: #ebe5d8;
+    --sc-ink: #09152b;
+    --sc-ink-soft: #43506b;
+    --sc-accent: #ff5c1b;
+    --sc-accent-ink: #09152b;
+    --sc-hairline: color-mix(in oklab, #09152b 12%, transparent);
+    --sc-hairline-strong: color-mix(in oklab, #09152b 24%, transparent);
+    background: var(--sc-canvas);
+    color: var(--sc-ink);
+  }
+
+  /* Horizontal Pan Corridors (Act 5 Cobalt Rail) */
   .tc-rail-track {
     display: flex;
     align-items: center;
@@ -226,11 +366,12 @@
     max-height: calc(100svh - 6.25rem);
     display: flex;
     flex-direction: column;
-    background: var(--sc-surface);
-    border: 1px solid var(--sc-hairline);
+    background: #ffffff;
+    color: #09152b;
+    border: 1px solid rgba(9, 21, 43, 0.14);
     border-radius: var(--sc-r-lg);
     overflow: hidden;
-    box-shadow: var(--sc-e2), var(--sc-edge);
+    box-shadow: var(--sc-e3);
     transition: border-color 180ms var(--sc-ease-out);
   }
 
@@ -241,11 +382,12 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: var(--sc-surface-elevated);
-    border: 1px solid var(--sc-hairline-strong);
+    background: #ff5c1b;
+    color: #09152b;
+    border: 2px solid #09152b;
     border-radius: var(--sc-r-lg);
     padding: clamp(1.25rem, 2.5vw, 1.85rem);
-    box-shadow: var(--sc-e2), var(--sc-edge);
+    box-shadow: 0 6px 0 #09152b, var(--sc-e3);
   }
 
   @media (min-width: 768px) {
@@ -260,21 +402,6 @@
       flex: 0 0 clamp(18rem, 24vw, 22rem);
       min-height: 380px;
     }
-  }
-
-  /* Architectural Daylight Paper Band */
-  .tc-daylight-band {
-    --sc-canvas: #f3f0ea;
-    --sc-surface: #ffffff;
-    --sc-surface-elevated: #e8e3d9;
-    --sc-ink: #11151e;
-    --sc-ink-soft: #475063;
-    --sc-accent: #9a5504;
-    --sc-accent-ink: #ffffff;
-    --sc-hairline: color-mix(in oklab, #11151e 12%, transparent);
-    --sc-hairline-strong: color-mix(in oklab, #11151e 24%, transparent);
-    background: var(--sc-canvas);
-    color: var(--sc-ink);
   }
 
   /* Reduced spacing when flow follows a pinned act (devices.md §8) */
