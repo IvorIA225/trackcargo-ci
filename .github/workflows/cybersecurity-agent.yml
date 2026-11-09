@@ -1,0 +1,124 @@
+name: Agent Cybersécurité Continue (24/7)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Audit de sécurité continu toutes les 6 heures en décalé (même PC éteint)
+    - cron: "30 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: secops-agent-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-autonomous-loop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies (frozen lockfile)
+        run: npm ci
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Run Static OWASP, Auth Guard & npm audit Scan
+        id: sec_scan
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run security:scan 2>&1 | tee reports/security-failure.log
+
+      - name: Build & Run Security Intrusion E2E Suite
+        id: sec_e2e
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          {
+            npm run build
+            node tests/security-e2e.mjs
+          } 2>&1 | tee -a reports/security-failure.log
+
+      - name: Run Autonomous AI SecOps Fixer (if security issues found)
+        id: ai_sec_fix
+        if: steps.sec_scan.outcome == 'failure' || steps.sec_e2e.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/ai-agent-runner.mjs --mode=security
+
+      - name: Detect modified files
+        id: git_changes
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain -- app components lib tests)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open Pull Request with verified security fixes
+        id: cpr
+        if: steps.git_changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "security(secops-agent): durcissement sécurité vérifié"
+          branch: agent/security-autofix
+          delete-branch: true
+          title: "[SecOps Agent] Correctifs cybersécurité OWASP vérifiés"
+          body: |
+            Pull Request générée automatiquement par l'agent Cybersécurité (`cybersecurity-agent.yml`).
+            Les correctifs ont passé la suite complète de validation qualité et tests d'intrusion E2E.
+          labels: security,automated
+
+      - name: Determine Telegram security status
+        id: meta
+        if: always()
+        env:
+          SCAN_OUTCOME: ${{ steps.sec_scan.outcome }}
+          E2E_OUTCOME: ${{ steps.sec_e2e.outcome }}
+          AI_OUTCOME: ${{ steps.ai_sec_fix.outcome }}
+          HAS_CHANGES: ${{ steps.git_changes.outputs.has_changes }}
+        run: |
+          if [ "$SCAN_OUTCOME" = "success" ] && [ "$E2E_OUTCOME" = "success" ]; then
+            echo "status=PASS" >> "$GITHUB_OUTPUT"
+            echo "summary=Audit OWASP, npm audit, en-têtes HTTP, auth 401, rate-limiting 429 et masquage PII tous validés." >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_CHANGES" = "true" ] && [ "$AI_OUTCOME" = "success" ]; then
+            echo "status=FIXED" >> "$GITHUB_OUTPUT"
+            echo "summary=Alerte sécurité détectée, corrigée et re-validée automatiquement par Pull Request." >> "$GITHUB_OUTPUT"
+          else
+            echo "status=ALERT" >> "$GITHUB_OUTPUT"
+            echo "summary=Alerte cybersécurité détectée ! Vérifiez immédiatement le rapport et les logs GitHub Actions." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send Telegram Security Report
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AGENT_NAME: "Agent Cybersécurité OWASP (TrackCargo CI)"
+          AGENT_STATUS: ${{ steps.meta.outputs.status }}
+          AGENT_SUMMARY: ${{ steps.meta.outputs.summary }}
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/notify-telegram.mjs
+
+      - name: Fail job on unresolved security alerts
+        if: (steps.sec_scan.outcome == 'failure' || steps.sec_e2e.outcome == 'failure') && steps.meta.outputs.status != 'FIXED'
+        run: exit 1

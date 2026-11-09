@@ -1,0 +1,32 @@
+{
+  "name": "trackcargo-ci",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "tsc -p tsconfig.test.json && node --test \".tmp-test/tests/**/*.test.js\"",
+    "test:security-e2e": "node scripts/security-audit.mjs && node tests/security-e2e.mjs",
+    "security:scan": "node scripts/security-audit.mjs --npm-audit",
+    "verify:all": "npm run typecheck && npm run lint && npm run test:unit && npm run build && npm run test:security-e2e",
+    "setup:env": "node scripts/init-local-env.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

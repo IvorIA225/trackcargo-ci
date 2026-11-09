@@ -1,0 +1,124 @@
+name: Agent QA & Cohérence Continue (24/7)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Exécution automatique toutes les 6 heures (même PC éteint)
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: qa-agent-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa-autonomous-loop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies (frozen lockfile)
+        run: npm ci
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Run full QA & consistency verification
+        id: qa_gate
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          {
+            echo "=== TYPECHECK ==="
+            npm run typecheck
+            echo "=== LINT ==="
+            npm run lint
+            echo "=== UNIT TESTS ==="
+            npm run test:unit
+            echo "=== PRODUCTION BUILD ==="
+            npm run build
+            echo "=== E2E & CONSISTENCY ==="
+            npm run test:security-e2e
+          } 2>&1 | tee reports/qa-failure.log
+
+      - name: Run Autonomous AI QA Fixer (if checks failed)
+        id: ai_fix
+        if: steps.qa_gate.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/ai-agent-runner.mjs --mode=qa
+
+      - name: Detect modified files
+        id: git_changes
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain -- app components lib tests)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open Pull Request with verified QA fixes
+        id: cpr
+        if: steps.git_changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "fix(qa-agent): correctifs qualité vérifiés automatiquement"
+          branch: agent/qa-autofix
+          delete-branch: true
+          title: "[QA Agent] Correctifs qualité & cohérence vérifiés"
+          body: |
+            Pull Request générée automatiquement par l'agent QA continu (`qa-continuous-agent.yml`).
+            Tous les contrôles (`typecheck`, `lint`, `test:unit`, `build`, `test:security-e2e`) ont réussi après application.
+          labels: automated,qa-agent
+
+      - name: Determine Telegram status & summary
+        id: meta
+        if: always()
+        env:
+          QA_OUTCOME: ${{ steps.qa_gate.outcome }}
+          AI_OUTCOME: ${{ steps.ai_fix.outcome }}
+          HAS_CHANGES: ${{ steps.git_changes.outputs.has_changes }}
+        run: |
+          if [ "$QA_OUTCOME" = "success" ]; then
+            echo "status=PASS" >> "$GITHUB_OUTPUT"
+            echo "summary=Tous les contrôles (TypeScript, ESLint, Unit Tests, Build, E2E) sont 100 % au vert." >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_CHANGES" = "true" ] && [ "$AI_OUTCOME" = "success" ]; then
+            echo "status=FIXED" >> "$GITHUB_OUTPUT"
+            echo "summary=Une anomalie QA a été détectée puis corrigée et validée automatiquement par une Pull Request." >> "$GITHUB_OUTPUT"
+          else
+            echo "status=ALERT" >> "$GITHUB_OUTPUT"
+            echo "summary=Anomalie QA détectée nécessitant vérification (consultez les logs GitHub Actions)." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send Telegram Report
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AGENT_NAME: "Agent QA & Cohérence (TrackCargo CI)"
+          AGENT_STATUS: ${{ steps.meta.outputs.status }}
+          AGENT_SUMMARY: ${{ steps.meta.outputs.summary }}
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/notify-telegram.mjs
+
+      - name: Fail job if QA failed without verified fix
+        if: steps.qa_gate.outcome == 'failure' && steps.meta.outputs.status != 'FIXED'
+        run: exit 1
