@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 export default function LoginPage() {
@@ -50,26 +51,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex flex-col bg-[#0a0d12] text-[#f3f1ec]">
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
-          <div className="space-y-2">
-            <span className="inline-block text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
-              Accès Agence Sécurisé
+        <div className="w-full max-w-md bg-[#121721] rounded-[14px] border border-white/15 shadow-2xl p-6 sm:p-8 space-y-6">
+          <div className="space-y-2.5">
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold uppercase tracking-[0.06em] text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-[6px]">
+              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Accès agence protégé</span>
             </span>
-            <h1 className="text-2xl font-extrabold text-slate-950">
-              Connexion Espace Agence
+            <h1 className="sc-display sc-display--md text-[#f3f1ec]">
+              Connexion espace agence
             </h1>
-            <p className="text-sm text-slate-600">
-              Protégé par cookie <code className="font-mono">httpOnly</code>{" "}
+            <p className="text-sm text-[#9ca6b8] leading-relaxed">
+              Session protégée par cookie <code className="font-mono text-[#d6dce7]">httpOnly</code>{" "}
               signé HMAC-SHA256 et limitation anti-brute-force.
             </p>
           </div>
 
           {!configured && (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-950 space-y-1">
-              <div className="font-bold">Configuration serveur requise</div>
+            <div className="p-3.5 rounded-[10px] bg-amber-950/50 border border-amber-500/40 text-xs text-amber-100 space-y-1">
+              <div className="font-bold text-[#e89b2d]">Configuration serveur requise</div>
               <p>
                 Définissez <code className="font-mono">TRACKCARGO_SESSION_SECRET</code>{" "}
                 et <code className="font-mono">TRACKCARGO_ADMIN_PASSWORD</code>{" "}
@@ -80,7 +82,10 @@ export default function LoginPage() {
           )}
 
           {error && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800 font-medium">
+            <div
+              role="alert"
+              className="p-3.5 rounded-[10px] bg-rose-950/60 border border-rose-500/40 text-sm text-rose-200 font-medium"
+            >
               {error}
             </div>
           )}
@@ -89,7 +94,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="admin-password"
-                className="block text-xs font-bold text-slate-700 mb-1"
+                className="block text-xs font-mono font-semibold uppercase tracking-[0.05em] text-[#b6c0d0] mb-1.5"
               >
                 Mot de passe administrateur agence
               </label>
@@ -99,8 +104,8 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="Entrez votre mot de passe..."
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                placeholder="Entrez votre mot de passe"
+                className="w-full h-11 px-3.5 rounded-[8px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] placeholder:text-[#7f8ba0] focus:outline-none focus:ring-2 focus:ring-[#e89b2d] focus:border-[#e89b2d] text-sm"
                 required
               />
             </div>
@@ -108,15 +113,19 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !configured}
-              className="w-full h-11 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-sm transition-colors cursor-pointer disabled:opacity-50"
+              className="tc-btn-primary w-full disabled:opacity-50"
             >
-              {loading ? "Vérification..." : "Se connecter au Dashboard →"}
+              <span>{loading ? "Vérification..." : "Ouvrir l'espace agence"}</span>
+              <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </form>
 
-          <div className="pt-2 border-t border-slate-100 text-center text-xs text-slate-500">
+          <div className="pt-3 border-t border-white/10 text-center text-xs text-[#9ca6b8]">
             Client cherchant un colis ?{" "}
-            <Link href="/track" className="text-amber-700 font-semibold hover:underline">
+            <Link
+              href="/track"
+              className="text-[#e89b2d] font-semibold hover:underline"
+            >
               Aller sur le suivi public
             </Link>
           </div>

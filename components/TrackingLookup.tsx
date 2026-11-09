@@ -2,6 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  Check,
+  MapPin,
+  MessageSquare,
+  Package,
+  Printer,
+  Search,
+  Ship,
+  Plane,
+  Smartphone,
+  X,
+} from "lucide-react";
+import {
   PARCEL_STATUS_META,
   ParcelStatus,
   PAYMENT_STATUS_META,
@@ -136,29 +148,34 @@ export default function TrackingLookup({
   const quickExamples = ["TC-8841", "TC-8842", "TC-8844", "0708123456"];
 
   return (
-    <div className="w-full space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 print:hidden">
+    <div className="w-full space-y-5">
+      <div className="bg-[#121721] text-[#f3f1ec] rounded-[14px] border border-white/15 shadow-lg p-4 sm:p-6 print:hidden">
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
+            <Search
+              className="w-4 h-4 text-[#9ca6b8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+              aria-hidden="true"
+            />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Code colis (ex: TC-8841) ou numéro de téléphone (ex: 0708123456)..."
-              className="w-full h-12 pl-4 pr-4 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white text-sm sm:text-base"
+              aria-label="Code de suivi colis ou numéro WhatsApp"
+              placeholder="Code colis (ex: TC-8841) ou numéro WhatsApp (ex: 0708123456)"
+              className="w-full h-12 pl-10 pr-4 rounded-[10px] border border-white/20 bg-[#0b0f17] text-[#f3f1ec] placeholder:text-[#7f8ba0] focus:outline-none focus:ring-2 focus:ring-[#e89b2d] focus:border-[#e89b2d] text-sm sm:text-base font-mono"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="h-12 px-6 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm sm:text-base transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
+            className="tc-btn-primary shrink-0 disabled:opacity-60"
           >
             {loading ? "Recherche..." : "Suivre mon colis"}
           </button>
         </form>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span>Tester en direct :</span>
+        <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs text-[#9ca6b8]">
+          <span>Codes de démonstration en direct :</span>
           {quickExamples.map((ex) => (
             <button
               key={ex}
@@ -167,7 +184,11 @@ export default function TrackingLookup({
                 setQuery(ex);
                 runSearch(ex);
               }}
-              className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 font-mono transition-colors cursor-pointer"
+              className={`px-2.5 py-1 rounded-[6px] font-mono transition-colors cursor-pointer border ${
+                query.toUpperCase() === ex
+                  ? "bg-[#e89b2d] text-[#090b10] border-[#e89b2d] font-bold"
+                  : "bg-[#0b0f17] text-[#d4dbe6] border-white/15 hover:border-[#e89b2d]/60 hover:text-white"
+              }`}
             >
               {ex}
             </button>
@@ -176,18 +197,18 @@ export default function TrackingLookup({
       </div>
 
       {searched && !loading && errorMsg && (
-        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5 text-sm text-amber-900">
+        <div className="bg-amber-950/60 rounded-[14px] border border-amber-500/40 p-5 text-sm text-amber-100">
           {errorMsg}
         </div>
       )}
 
       {searched && !loading && !errorMsg && parcels.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-          <div className="text-lg font-semibold text-slate-900">
+        <div className="bg-[#121721] rounded-[14px] border border-white/15 p-8 text-center text-[#f3f1ec]">
+          <div className="text-lg font-semibold">
             Aucun colis trouvé pour « {query} »
           </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Vérifiez votre code de suivi (ex: <span className="font-mono">TC-8841</span>) ou entrez les 8 à 10 chiffres de votre numéro WhatsApp.
+          <p className="text-sm text-[#9ca6b8] mt-1.5">
+            Vérifiez votre code de suivi (ex: <span className="font-mono text-[#e89b2d]">TC-8841</span>) ou entrez les 8 à 10 chiffres de votre numéro WhatsApp.
           </p>
         </div>
       )}
@@ -200,40 +221,43 @@ export default function TrackingLookup({
         return (
           <div
             key={parcel.id}
-            className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+            className="bg-[#121721] text-[#f3f1ec] rounded-[14px] border border-white/15 shadow-xl overflow-hidden print:bg-white print:text-black print:border-slate-300"
           >
             {/* Header */}
-            <div className="bg-slate-950 text-white px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="bg-[#0b0f17] px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-white/10 print:bg-slate-100 print:border-slate-300">
               <div>
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="font-mono text-lg sm:text-xl font-bold text-amber-400">
+                  <span className="font-mono text-lg sm:text-xl font-bold text-[#e89b2d] print:text-black">
                     {parcel.trackingCode}
                   </span>
                   <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${currentMeta.badgeClass}`}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-[6px] border ${currentMeta.badgeClass}`}
                   >
                     {currentMeta.shortLabel}
                   </span>
                   <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${paymentMeta.badgeClass}`}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-[6px] border ${paymentMeta.badgeClass}`}
                   >
                     {paymentMeta.label}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                  Client : <strong className="text-white">{parcel.clientName}</strong> • {parcel.clientPhone}
+                <p className="text-xs sm:text-sm text-[#9ca6b8] mt-1.5 print:text-slate-700">
+                  Client : <strong className="text-[#f3f1ec] print:text-black">{parcel.clientName}</strong> ·{" "}
+                  <span className="font-mono">{parcel.clientPhone}</span>
                 </p>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-xs text-slate-400">Frais de fret</div>
-                <div className="text-xl font-extrabold text-white">
+                <div className="text-xs font-mono uppercase tracking-[0.06em] text-[#9ca6b8] print:text-slate-600">
+                  Frais de fret
+                </div>
+                <div className="text-xl font-extrabold text-[#f3f1ec] font-mono tabular-nums print:text-black">
                   {formatFcfa(parcel.amountFcfa)}
                 </div>
               </div>
             </div>
 
             {/* Stepper */}
-            <div className="p-5 sm:p-6 border-b border-slate-100">
+            <div className="p-5 sm:p-6 border-b border-white/10 print:border-slate-200">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {ORDERED_STEPS.map((st) => {
                   const meta = PARCEL_STATUS_META[st];
@@ -242,31 +266,35 @@ export default function TrackingLookup({
                   return (
                     <div
                       key={st}
-                      className={`rounded-xl p-3 border transition-all ${
+                      className={`rounded-[10px] p-3 border transition-colors ${
                         active
-                          ? "bg-amber-50 border-amber-400 ring-1 ring-amber-400"
+                          ? "bg-[#e89b2d]/15 border-[#e89b2d] text-[#f3f1ec]"
                           : done
-                          ? "bg-emerald-50/70 border-emerald-200"
-                          : "bg-slate-50 border-slate-200 opacity-60"
+                          ? "bg-emerald-950/50 border-emerald-500/40 text-[#f3f1ec]"
+                          : "bg-[#0b0f17] border-white/10 text-[#9ca6b8]"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-1.5">
                         <span
-                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-[6px] text-xs font-bold font-mono ${
                             active
-                              ? "bg-amber-500 text-slate-950"
+                              ? "bg-[#e89b2d] text-[#090b10]"
                               : done
-                              ? "bg-emerald-600 text-white"
-                              : "bg-slate-200 text-slate-600"
+                              ? "bg-emerald-500 text-[#052318]"
+                              : "bg-white/10 text-[#b6c0d0]"
                           }`}
                         >
-                          {done && !active ? "✓" : meta.step}
+                          {done && !active ? (
+                            <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                          ) : (
+                            meta.step
+                          )}
                         </span>
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#9ca6b8]">
                           Étape {meta.step}
                         </span>
                       </div>
-                      <div className="text-xs font-bold text-slate-900">
+                      <div className="text-xs font-bold leading-snug">
                         {meta.shortLabel}
                       </div>
                     </div>
@@ -277,24 +305,34 @@ export default function TrackingLookup({
 
             {/* Details + Actions */}
             <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 rounded-xl p-4 border border-slate-200/80 text-sm">
+              <div className="lg:col-span-2 space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0b0f17] rounded-[10px] p-4 border border-white/10 text-sm print:bg-slate-50 print:border-slate-300">
                   <div>
-                    <div className="text-xs text-slate-500">Contenu déclaré</div>
-                    <div className="font-semibold text-slate-900 mt-0.5">
+                    <div className="text-xs font-mono text-[#9ca6b8] flex items-center gap-1.5">
+                      <Package className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Contenu déclaré</span>
+                    </div>
+                    <div className="font-semibold text-[#f3f1ec] mt-1 print:text-black">
                       {parcel.description}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500">Poids / Volume</div>
-                    <div className="font-semibold text-slate-900 mt-0.5">
+                    <div className="text-xs font-mono text-[#9ca6b8]">Poids / Volume</div>
+                    <div className="font-semibold text-[#f3f1ec] mt-1 font-mono tabular-nums print:text-black">
                       {parcel.weightKg} kg
-                      {parcel.volumeCbm > 0 ? ` • ${parcel.volumeCbm} CBM` : ""}
+                      {parcel.volumeCbm > 0 ? ` · ${parcel.volumeCbm} CBM` : ""}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500">Lot / Transport</div>
-                    <div className="font-semibold text-slate-900 mt-0.5">
+                    <div className="text-xs font-mono text-[#9ca6b8] flex items-center gap-1.5">
+                      {parcel.batch?.mode === "maritime" ? (
+                        <Ship className="w-3.5 h-3.5" aria-hidden="true" />
+                      ) : (
+                        <Plane className="w-3.5 h-3.5" aria-hidden="true" />
+                      )}
+                      <span>Lot / Transport</span>
+                    </div>
+                    <div className="font-semibold text-[#f3f1ec] mt-1 font-mono print:text-black">
                       {parcel.batch
                         ? `${parcel.batch.code} (${
                             parcel.batch.mode === "maritime"
@@ -308,22 +346,22 @@ export default function TrackingLookup({
 
                 {!compact && (
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 mb-3">
+                    <h4 className="text-sm font-bold text-[#f3f1ec] mb-3 print:text-black">
                       Historique d&apos;acheminement
                     </h4>
-                    <div className="space-y-3 border-l-2 border-slate-200 ml-2 pl-4">
+                    <div className="space-y-3 border-l-2 border-white/15 ml-2 pl-4 print:border-slate-300">
                       {[...parcel.history].reverse().map((ev, idx) => (
                         <div key={`${ev.timestamp}-${idx}`} className="relative">
                           <span
                             className={`absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full ${
-                              idx === 0 ? "bg-amber-500" : "bg-emerald-500"
+                              idx === 0 ? "bg-[#e89b2d]" : "bg-emerald-400"
                             }`}
                           />
-                          <div className="text-sm font-semibold text-slate-900">
+                          <div className="text-sm font-semibold text-[#f3f1ec] print:text-black">
                             {ev.label}
                           </div>
-                          <div className="text-xs text-slate-600">
-                            {ev.location} • {formatDateFr(ev.timestamp)}
+                          <div className="text-xs text-[#9ca6b8] print:text-slate-600">
+                            {ev.location} · {formatDateFr(ev.timestamp)}
                           </div>
                         </div>
                       ))}
@@ -333,21 +371,22 @@ export default function TrackingLookup({
               </div>
 
               {/* Payment & Pickup Card */}
-              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex flex-col justify-between gap-4">
+              <div className="bg-[#0b0f17] rounded-[10px] border border-white/10 p-4 flex flex-col justify-between gap-4 print:bg-slate-50 print:border-slate-300">
                 <div className="space-y-2">
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Point de retrait Abidjan
+                  <div className="text-xs font-mono font-semibold uppercase tracking-wider text-[#9ca6b8] flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#e89b2d]" aria-hidden="true" />
+                    <span>Point de retrait Abidjan</span>
                   </div>
-                  <div className="text-sm font-bold text-slate-900">
+                  <div className="text-sm font-bold text-[#f3f1ec] print:text-black">
                     {agency?.name || "Ivoire Cargo Express"}
                   </div>
-                  <div className="text-xs text-slate-600">
+                  <div className="text-xs text-[#b6c0d0] print:text-slate-700">
                     {agency?.address || "Treichville, Abidjan"}
                   </div>
                   {parcel.batch?.etaDate && (
-                    <div className="text-xs text-slate-600 pt-1">
+                    <div className="text-xs text-[#9ca6b8] pt-1 print:text-slate-700">
                       Arrivée estimée :{" "}
-                      <strong className="text-slate-900">
+                      <strong className="text-[#f3f1ec] font-mono print:text-black">
                         {parcel.batch.etaDate}
                       </strong>
                     </div>
@@ -359,9 +398,10 @@ export default function TrackingLookup({
                     <button
                       type="button"
                       onClick={() => setShowPayModal(parcel)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-sm transition-colors cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#090b10] font-bold text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
-                      Régler par Wave / Orange Money
+                      <Smartphone className="w-4 h-4" aria-hidden="true" />
+                      <span>Régler par Wave / Orange Money</span>
                     </button>
                   )}
 
@@ -370,22 +410,24 @@ export default function TrackingLookup({
                       href={`https://wa.me/${normalizePhoneClient(
                         agency.whatsappPhone
                       ).replace(/^\+/, "")}?text=${encodeURIComponent(
-                        `Bonjour ${agency.name}, je souhaite des informations / organiser le retrait pour mon colis ${parcel.trackingCode}.`
+                        `Bonjour ${agency.name}, je souhaite des informations pour mon colis ${parcel.trackingCode}.`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full text-center py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors"
+                      className="w-full py-2.5 px-4 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#052318] font-bold text-sm transition-colors flex items-center justify-center gap-2"
                     >
-                      Contacter sur WhatsApp
+                      <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                      <span>Contacter sur WhatsApp</span>
                     </a>
                   )}
 
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="w-full py-2 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-medium text-xs transition-colors cursor-pointer"
+                    className="w-full py-2 px-4 rounded-[8px] border border-white/20 bg-transparent hover:bg-white/[0.06] text-[#d4dbe6] font-medium text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Imprimer le bordereau / Reçu
+                    <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Imprimer le bordereau</span>
                   </button>
                 </div>
               </div>
@@ -396,16 +438,24 @@ export default function TrackingLookup({
 
       {/* Mobile Money Payment Modal */}
       {showPayModal && agency && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-start justify-between">
+        <div
+          className="fixed inset-0 z-50 bg-[#090b10]/80 backdrop-blur-xs flex items-center justify-center p-4 print:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pay-modal-title"
+        >
+          <div className="bg-[#121721] text-[#f3f1ec] rounded-[14px] max-w-md w-full p-6 shadow-2xl border border-white/20 space-y-4">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Régler le colis {showPayModal.trackingCode}
+                <h3 id="pay-modal-title" className="text-lg font-bold">
+                  Régler le colis{" "}
+                  <span className="font-mono text-[#e89b2d]">
+                    {showPayModal.trackingCode}
+                  </span>
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#9ca6b8] mt-1">
                   Montant dû :{" "}
-                  <strong className="text-slate-900">
+                  <strong className="text-[#f3f1ec] font-mono">
                     {formatFcfa(showPayModal.amountFcfa)}
                   </strong>
                 </p>
@@ -413,9 +463,10 @@ export default function TrackingLookup({
               <button
                 type="button"
                 onClick={() => setShowPayModal(null)}
-                className="text-slate-400 hover:text-slate-700 text-lg font-bold cursor-pointer"
+                aria-label="Fermer la fenêtre de paiement"
+                className="p-1.5 rounded-[6px] text-[#9ca6b8] hover:text-white hover:bg-white/10 cursor-pointer"
               >
-                ✕
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
@@ -425,24 +476,24 @@ export default function TrackingLookup({
                   href={agency.waveLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full text-center py-3 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-sm transition-colors"
+                  className="block w-full text-center py-3 px-4 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#090b10] font-bold text-sm transition-colors"
                 >
-                  Payer avec Wave ({formatFcfa(showPayModal.amountFcfa)}) →
+                  Payer avec Wave ({formatFcfa(showPayModal.amountFcfa)})
                 </a>
               )}
 
-              <div className="p-3.5 rounded-xl bg-orange-50 border border-orange-200 text-sm">
-                <div className="font-bold text-orange-900">
+              <div className="p-3.5 rounded-[10px] bg-amber-950/50 border border-amber-500/30 text-sm">
+                <div className="font-bold text-[#e89b2d]">
                   Option Orange Money / MTN MoMo
                 </div>
-                <div className="text-orange-800 mt-1">
+                <div className="text-[#f3f1ec] mt-1">
                   Envoyez <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
                   numéro :{" "}
                   <span className="font-mono font-bold">
                     {agency.orangeMoneyNumber}
                   </span>
                 </div>
-                <div className="text-xs text-orange-700 mt-1">
+                <div className="text-xs text-[#b6c0d0] mt-1 font-mono">
                   Référence à indiquer : {showPayModal.trackingCode}
                 </div>
               </div>
@@ -457,9 +508,10 @@ export default function TrackingLookup({
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors"
+                className="w-full py-2.5 px-4 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#052318] font-bold text-sm transition-colors flex items-center justify-center gap-2"
               >
-                Envoyer la capture sur WhatsApp ✓
+                <Check className="w-4 h-4" aria-hidden="true" />
+                <span>Envoyer la capture sur WhatsApp</span>
               </a>
             </div>
           </div>
