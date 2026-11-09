@@ -130,5 +130,5 @@
 
 ### Checkpoint 4 : Mise en production complète
 - [x] `npm run verify:all` + `npm run security:scan` au vert
-- [ ] Schéma poussé/initialisé et seed exécuté sur Neon Postgres en production
-- [ ] Parcours complet vérifié sur `https://trackcargo-ci.vercel.app`
+- [x] Schéma poussé/initialisé et seed exécuté sur Neon Postgres en production
+- [x] Parcours complet vérifié sur `https://trackcargo-ci.vercel.app`
