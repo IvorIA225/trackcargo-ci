@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/auth";
-import { createParcelRecord, readDb } from "@/lib/store";
+import { requireActiveAgencySession } from "@/lib/auth";
+import { createParcelsForTenant } from "@/lib/repository";
 import { validateSingleParcel } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const MAX_BULK_IMPORT_ITEMS = 500;
 
 export async function POST(request: NextRequest) {
-  const auth = requireAdminSession(request);
+  const auth = await requireActiveAgencySession(request);
   if (!auth.ok) return auth.response;
 
   try {
@@ -44,22 +44,24 @@ export async function POST(request: NextRequest) {
         validatedItems.push(res.data);
       }
 
-      const db = readDb();
-      const batchIds = new Set(db.batches.map((b) => b.id));
-      for (const item of validatedItems) {
-        if (!batchIds.has(item.batchId)) {
+      try {
+        const created = await createParcelsForTenant(
+          auth.session.agencyId,
+          validatedItems
+        );
+        return NextResponse.json(
+          { created, count: created.length },
+          { status: 201 }
+        );
+      } catch (err) {
+        if (err instanceof Error && err.message === "BATCH_NOT_FOUND") {
           return NextResponse.json(
             { error: "Lot introuvable pour l'import." },
             { status: 404 }
           );
         }
+        throw err;
       }
-
-      const created = validatedItems.map((item) => createParcelRecord(item));
-      return NextResponse.json(
-        { created, count: created.length },
-        { status: 201 }
-      );
     }
 
     const validated = validateSingleParcel(body);
@@ -71,7 +73,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const parcel = createParcelRecord(validated.data);
+      const [parcel] = await createParcelsForTenant(auth.session.agencyId, [
+        validated.data,
+      ]);
       return NextResponse.json(parcel, { status: 201 });
     } catch (err) {
       if (err instanceof Error && err.message === "BATCH_NOT_FOUND") {

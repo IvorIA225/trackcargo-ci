@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Check,
   MapPin,
   MessageSquare,
@@ -40,17 +41,28 @@ function isSafeHttpsLink(raw: string): boolean {
 
 export default function TrackingLookup({
   initialQuery = "",
+  agencySlug,
   compact = false,
   onAgencyLoaded,
+  onPortalStateChange,
 }: {
   initialQuery?: string;
+  agencySlug?: string;
   compact?: boolean;
   onAgencyLoaded?: (agency: PublicAgencyProfile) => void;
+  onPortalStateChange?: (state: "OK" | "NOT_FOUND" | "SUSPENDED", info?: string) => void;
 }) {
   const [query, setQuery] = useState(initialQuery);
-  const [loading, setLoading] = useState(Boolean(initialQuery.trim()));
+  const [loading, setLoading] = useState(
+    Boolean(initialQuery.trim() || agencySlug)
+  );
   const [searched, setSearched] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [hintMsg, setHintMsg] = useState("");
+  const [portalBlocked, setPortalBlocked] = useState<{
+    state: "NOT_FOUND" | "SUSPENDED";
+    message: string;
+  } | null>(null);
   const [agency, setAgency] = useState<PublicAgencyProfile | null>(null);
   const [parcels, setParcels] = useState<PublicTrackedParcel[]>([]);
   const [showPayModal, setShowPayModal] = useState<PublicTrackedParcel | null>(
@@ -58,9 +70,18 @@ export default function TrackingLookup({
   );
 
   const onAgencyLoadedRef = useRef(onAgencyLoaded);
+  const onPortalStateRef = useRef(onPortalStateChange);
   useEffect(() => {
     onAgencyLoadedRef.current = onAgencyLoaded;
-  }, [onAgencyLoaded]);
+    onPortalStateRef.current = onPortalStateChange;
+  }, [onAgencyLoaded, onPortalStateChange]);
+
+  const buildTrackEndpoint = (q: string) =>
+    agencySlug
+      ? `/api/public/${encodeURIComponent(agencySlug)}/track?q=${encodeURIComponent(
+          q
+        )}`
+      : `/api/track?q=${encodeURIComponent(q)}`;
 
   const runSearch = async (searchText: string) => {
     const clean = searchText.trim();
@@ -68,19 +89,51 @@ export default function TrackingLookup({
     setLoading(true);
     setSearched(true);
     setErrorMsg("");
+    setHintMsg("");
+    setPortalBlocked(null);
+
     try {
-      const res = await fetch(`/api/track?q=${encodeURIComponent(clean)}`, {
+      const res = await fetch(buildTrackEndpoint(clean), {
         cache: "no-store",
       });
       const data = await res.json();
+
+      if (res.status === 404 && agencySlug) {
+        setPortalBlocked({
+          state: "NOT_FOUND",
+          message: "Aucune agence TrackCargo CI ne correspond à ce lien.",
+        });
+        setAgency(null);
+        setParcels([]);
+        onPortalStateRef.current?.("NOT_FOUND");
+        return;
+      }
+
+      if (res.status === 403 && data.suspended) {
+        setPortalBlocked({
+          state: "SUSPENDED",
+          message:
+            data.error ||
+            "Ce portail agence est temporairement suspendu par l'administration.",
+        });
+        setAgency(null);
+        setParcels([]);
+        onPortalStateRef.current?.("SUSPENDED", data.agencyName);
+        return;
+      }
+
       setAgency(data.agency || null);
       setParcels(data.parcels || []);
+      if (data.hint) {
+        setHintMsg(String(data.hint));
+      }
       if (!res.ok && data.error) {
         setErrorMsg(String(data.error));
       }
       if (data.agency) {
         onAgencyLoadedRef.current?.(data.agency);
       }
+      onPortalStateRef.current?.("OK");
     } catch {
       setParcels([]);
       setErrorMsg("Erreur réseau lors de la recherche.");
@@ -93,58 +146,103 @@ export default function TrackingLookup({
     let active = true;
     const clean = initialQuery.trim();
 
-    if (clean) {
-      fetch(`/api/track?q=${encodeURIComponent(clean)}`, {
-        cache: "no-store",
-      })
-        .then(async (res) => ({ ok: res.ok, data: await res.json() }))
-        .then(({ ok, data }) => {
-          if (!active) return;
-          setAgency(data.agency || null);
+    const initialUrl = clean
+      ? agencySlug
+        ? `/api/public/${encodeURIComponent(agencySlug)}/track?q=${encodeURIComponent(
+            clean
+          )}`
+        : `/api/track?q=${encodeURIComponent(clean)}`
+      : agencySlug
+      ? `/api/public/${encodeURIComponent(agencySlug)}/track`
+      : "/api/agency";
+
+    fetch(initialUrl, { cache: "no-store" })
+      .then(async (res) => ({ status: res.status, ok: res.ok, data: await res.json() }))
+      .then(({ status, ok, data }) => {
+        if (!active) return;
+
+        if (status === 404 && agencySlug) {
+          setPortalBlocked({
+            state: "NOT_FOUND",
+            message: "Aucune agence TrackCargo CI ne correspond à ce lien.",
+          });
+          setAgency(null);
+          setParcels([]);
+          onPortalStateRef.current?.("NOT_FOUND");
+          return;
+        }
+
+        if (status === 403 && data.suspended) {
+          setPortalBlocked({
+            state: "SUSPENDED",
+            message:
+              data.error ||
+              "Ce portail agence est temporairement suspendu par l'administration.",
+          });
+          setAgency(null);
+          setParcels([]);
+          onPortalStateRef.current?.("SUSPENDED", data.agencyName);
+          return;
+        }
+
+        const resolvedAgency = clean || agencySlug ? data.agency : data;
+        if (resolvedAgency && resolvedAgency.name) {
+          setAgency(resolvedAgency);
+          onAgencyLoadedRef.current?.(resolvedAgency);
+        }
+
+        if (clean) {
           setParcels(data.parcels || []);
           setSearched(true);
+          if (data.hint) setHintMsg(String(data.hint));
           if (!ok && data.error) {
             setErrorMsg(String(data.error));
           }
-          if (data.agency) {
-            onAgencyLoadedRef.current?.(data.agency);
-          }
-        })
-        .catch(() => {
-          if (!active) return;
+        }
+        onPortalStateRef.current?.("OK");
+      })
+      .catch(() => {
+        if (!active) return;
+        if (clean) {
           setParcels([]);
           setSearched(true);
           setErrorMsg("Erreur réseau lors de la recherche.");
-        })
-        .finally(() => {
-          if (active) setLoading(false);
-        });
-    } else {
-      fetch("/api/agency", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((ag) => {
-          if (!active) return;
-          if (ag && ag.name) {
-            setAgency(ag);
-            onAgencyLoadedRef.current?.(ag);
-          }
-        })
-        .catch(() => {})
-        .finally(() => {
-          if (active) setLoading(false);
-        });
-    }
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
     return () => {
       active = false;
     };
-  }, [initialQuery]);
+  }, [initialQuery, agencySlug]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     runSearch(query);
   };
 
+  if (portalBlocked) {
+    return (
+      <div className="bg-white rounded-[16px] border-2 border-[#09152b]/20 p-8 text-center text-[#09152b] shadow-[var(--sc-e2)] space-y-3">
+        <div className="mx-auto h-11 w-11 rounded-[10px] bg-amber-100 border border-amber-400 text-amber-800 flex items-center justify-center">
+          <AlertTriangle className="w-5 h-5" aria-hidden="true" />
+        </div>
+        <h2 className="text-xl font-extrabold">
+          {portalBlocked.state === "NOT_FOUND"
+            ? "Portail agence introuvable"
+            : "Portail momentanément indisponible"}
+        </h2>
+        <p className="text-sm text-[#43506b] max-w-md mx-auto">
+          {portalBlocked.message}
+        </p>
+      </div>
+    );
+  }
+
+  const showDemoQuickExamples =
+    !agencySlug || agencySlug === "ivoire-cargo-express";
   const quickExamples = ["TC-8841", "TC-8842", "TC-8844", "0708123456"];
 
   return (
@@ -161,7 +259,11 @@ export default function TrackingLookup({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Code de suivi colis ou numéro WhatsApp"
-              placeholder="Code colis (ex: TC-8841) ou numéro WhatsApp (ex: 0708123456)"
+              placeholder={
+                agencySlug
+                  ? "Code colis (ex: TC-1042) ou votre numéro WhatsApp"
+                  : "Code colis (ex: TC-8841) ou numéro WhatsApp démo (0708123456)"
+              }
               className="w-full h-12 pl-10 pr-4 rounded-[10px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] focus:border-[#0a2e6e] text-sm sm:text-base font-mono"
             />
           </div>
@@ -174,26 +276,30 @@ export default function TrackingLookup({
           </button>
         </form>
 
-        <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs text-[#43506b]">
-          <span className="font-semibold">Codes de démonstration en direct :</span>
-          {quickExamples.map((ex) => (
-            <button
-              key={ex}
-              type="button"
-              onClick={() => {
-                setQuery(ex);
-                runSearch(ex);
-              }}
-              className={`px-2.5 py-1 rounded-[6px] font-mono transition-colors cursor-pointer border ${
-                query.toUpperCase() === ex
-                  ? "bg-[#0a2e6e] text-white border-[#0a2e6e] font-bold"
-                  : "bg-[#f6f3ec] text-[#09152b] border-[#09152b]/18 hover:border-[#0a2e6e] hover:bg-[#dce7fa]/50"
-              }`}
-            >
-              {ex}
-            </button>
-          ))}
-        </div>
+        {showDemoQuickExamples && (
+          <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs text-[#43506b]">
+            <span className="font-semibold">
+              Codes de démonstration en direct :
+            </span>
+            {quickExamples.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => {
+                  setQuery(ex);
+                  runSearch(ex);
+                }}
+                className={`px-2.5 py-1 rounded-[6px] font-mono transition-colors cursor-pointer border ${
+                  query.toUpperCase() === ex
+                    ? "bg-[#0a2e6e] text-white border-[#0a2e6e] font-bold"
+                    : "bg-[#f6f3ec] text-[#09152b] border-[#09152b]/18 hover:border-[#0a2e6e] hover:bg-[#dce7fa]/50"
+                }`}
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {searched && !loading && errorMsg && (
@@ -208,9 +314,8 @@ export default function TrackingLookup({
             Aucun colis trouvé pour « {query} »
           </div>
           <p className="text-sm text-[#43506b] mt-1.5">
-            Vérifiez votre code de suivi (ex:{" "}
-            <span className="font-mono font-bold text-[#0a2e6e]">TC-8841</span>) ou
-            entrez les 8 à 10 chiffres de votre numéro WhatsApp.
+            {hintMsg ||
+              "Vérifiez votre code de suivi complet (ex: TC-8841) ou vérifiez vos 8 à 10 chiffres WhatsApp."}
           </p>
         </div>
       )}
@@ -244,8 +349,11 @@ export default function TrackingLookup({
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-[#dce7fa] mt-1.5 print:text-slate-700">
-                  Client : <strong className="text-white print:text-black">{parcel.clientName}</strong> ·{" "}
-                  <span className="font-mono">{parcel.clientPhone}</span>
+                  Client :{" "}
+                  <strong className="text-white print:text-black">
+                    {parcel.clientName}
+                  </strong>{" "}
+                  · <span className="font-mono">{parcel.clientPhone}</span>
                 </p>
               </div>
               <div className="text-left sm:text-right">
@@ -311,7 +419,10 @@ export default function TrackingLookup({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#f6f3ec] rounded-[10px] p-4 border border-[#09152b]/12 text-sm print:bg-slate-50 print:border-slate-300">
                   <div>
                     <div className="text-xs font-mono text-[#43506b] flex items-center gap-1.5">
-                      <Package className="w-3.5 h-3.5 text-[#0a2e6e]" aria-hidden="true" />
+                      <Package
+                        className="w-3.5 h-3.5 text-[#0a2e6e]"
+                        aria-hidden="true"
+                      />
                       <span>Contenu déclaré</span>
                     </div>
                     <div className="font-bold text-[#09152b] mt-1 print:text-black">
@@ -319,7 +430,9 @@ export default function TrackingLookup({
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-mono text-[#43506b]">Poids / Volume</div>
+                    <div className="text-xs font-mono text-[#43506b]">
+                      Poids / Volume
+                    </div>
                     <div className="font-bold text-[#09152b] mt-1 font-mono tabular-nums print:text-black">
                       {parcel.weightKg} kg
                       {parcel.volumeCbm > 0 ? ` · ${parcel.volumeCbm} CBM` : ""}
@@ -328,9 +441,15 @@ export default function TrackingLookup({
                   <div>
                     <div className="text-xs font-mono text-[#43506b] flex items-center gap-1.5">
                       {parcel.batch?.mode === "maritime" ? (
-                        <Ship className="w-3.5 h-3.5 text-[#0a2e6e]" aria-hidden="true" />
+                        <Ship
+                          className="w-3.5 h-3.5 text-[#0a2e6e]"
+                          aria-hidden="true"
+                        />
                       ) : (
-                        <Plane className="w-3.5 h-3.5 text-[#0a2e6e]" aria-hidden="true" />
+                        <Plane
+                          className="w-3.5 h-3.5 text-[#0a2e6e]"
+                          aria-hidden="true"
+                        />
                       )}
                       <span>Lot / Transport</span>
                     </div>
@@ -376,14 +495,17 @@ export default function TrackingLookup({
               <div className="bg-[#f6f3ec] rounded-[12px] border border-[#09152b]/14 p-4 flex flex-col justify-between gap-4 print:bg-slate-50 print:border-slate-300">
                 <div className="space-y-2">
                   <div className="text-xs font-mono font-bold uppercase tracking-wider text-[#0a2e6e] flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#ff5c1b]" aria-hidden="true" />
+                    <MapPin
+                      className="w-3.5 h-3.5 text-[#ff5c1b]"
+                      aria-hidden="true"
+                    />
                     <span>Point de retrait Abidjan</span>
                   </div>
                   <div className="text-sm font-extrabold text-[#09152b] print:text-black">
-                    {agency?.name || "Ivoire Cargo Express"}
+                    {agency?.name || "Agence TrackCargo CI"}
                   </div>
                   <div className="text-xs text-[#43506b] print:text-slate-700">
-                    {agency?.address || "Treichville, Abidjan"}
+                    {agency?.address || "Abidjan"}
                   </div>
                   {parcel.batch?.etaDate && (
                     <div className="text-xs text-[#43506b] pt-1 print:text-slate-700">
@@ -489,7 +611,8 @@ export default function TrackingLookup({
                   Option Orange Money / MTN MoMo
                 </div>
                 <div className="text-[#09152b] mt-1">
-                  Envoyez <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
+                  Envoyez{" "}
+                  <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
                   numéro :{" "}
                   <span className="font-mono font-extrabold">
                     {agency.orangeMoneyNumber}

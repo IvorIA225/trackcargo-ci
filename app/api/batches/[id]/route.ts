@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/auth";
-import { bulkUpdateBatchStatus } from "@/lib/store";
+import { requireActiveAgencySession } from "@/lib/auth";
+import { bulkUpdateBatchStatusForTenant } from "@/lib/repository";
 import { ParcelStatus, PARCEL_STATUS_META } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +9,16 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminSession(request);
+  const auth = await requireActiveAgencySession(request);
   if (!auth.ok) return auth.response;
 
   try {
     const { id } = await context.params;
     if (!id || id.length > 64) {
-      return NextResponse.json({ error: "Identifiant de lot invalide." }, { status: 422 });
+      return NextResponse.json(
+        { error: "Identifiant de lot invalide." },
+        { status: 422 }
+      );
     }
 
     const body = await request.json();
@@ -25,7 +28,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Statut invalide." }, { status: 422 });
     }
 
-    const result = bulkUpdateBatchStatus(id, status);
+    const result = await bulkUpdateBatchStatusForTenant(
+      auth.session.agencyId,
+      id,
+      status
+    );
     if (!result.batch) {
       return NextResponse.json({ error: "Lot introuvable." }, { status: 404 });
     }

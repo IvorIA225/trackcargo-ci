@@ -15,7 +15,9 @@
     "setup:env": "node scripts/init-local-env.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
     "@types/three": "^0.187.0",
+    "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.70.0",
     "next": "16.4.5",
     "react": "19.3.0",
@@ -27,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",

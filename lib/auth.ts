@@ -1,14 +1,33 @@
 import crypto from "node:crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getAgencyById, getSuperAdminEmail } from "./repository";
+import { resolveEffectiveSubscription } from "./subscription";
+import type {
+  Agency,
+  ResolvedSubscriptionState,
+  UserRole,
+} from "./types";
 
 export const SESSION_COOKIE_NAME = "tc_admin_session";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 heures
 
 export interface AdminSessionPayload {
   sub: "agency-admin";
+  userId: string;
+  agencyId: string | null;
+  role: UserRole;
+  email: string;
   iat: number;
   exp: number;
+}
+
+export interface SessionCreateInput {
+  userId?: string;
+  agencyId?: string | null;
+  role?: UserRole;
+  email?: string;
+  now?: number;
 }
 
 function getSessionSecret(): string | null {
@@ -17,6 +36,10 @@ function getSessionSecret(): string | null {
     return null;
   }
   return secret;
+}
+
+export function isSessionSecretConfigured(): boolean {
+  return Boolean(getSessionSecret());
 }
 
 export function isAdminAuthConfigured(): boolean {
@@ -70,12 +93,23 @@ export function verifyAdminPassword(candidate: string): boolean {
   return crypto.timingSafeEqual(candidateDigest, expectedDigest);
 }
 
-export function createSessionToken(now = Date.now()): string | null {
+export function createSessionToken(
+  inputOrNow?: number | SessionCreateInput
+): string | null {
   const secret = getSessionSecret();
   if (!secret) return null;
 
+  const opts: SessionCreateInput =
+    typeof inputOrNow === "number" ? { now: inputOrNow } : inputOrNow || {};
+  const now = opts.now ?? Date.now();
+  const role: UserRole = opts.role || "AGENCY_ADMIN";
+
   const payload: AdminSessionPayload = {
     sub: "agency-admin",
+    userId: opts.userId || (role === "SUPER_ADMIN" ? "super-admin" : "usr-demo-1"),
+    agencyId: opts.agencyId === undefined ? null : opts.agencyId,
+    role,
+    email: opts.email || getSuperAdminEmail(),
     iat: now,
     exp: now + SESSION_TTL_MS,
   };
@@ -123,7 +157,8 @@ export function verifySessionToken(
     if (
       parsed.sub !== "agency-admin" ||
       typeof parsed.exp !== "number" ||
-      parsed.exp <= now
+      parsed.exp <= now ||
+      (parsed.role !== "AGENCY_ADMIN" && parsed.role !== "SUPER_ADMIN")
     ) {
       return null;
     }
@@ -138,13 +173,13 @@ export function requireAdminSession(
 ):
   | { ok: true; session: AdminSessionPayload }
   | { ok: false; response: NextResponse } {
-  if (!isAdminAuthConfigured()) {
+  if (!isSessionSecretConfigured()) {
     return {
       ok: false,
       response: NextResponse.json(
         {
           error:
-            "Authentification administrateur non configurée sur le serveur.",
+            "Authentification non configurée sur le serveur (TRACKCARGO_SESSION_SECRET).",
         },
         { status: 503 }
       ),
@@ -166,6 +201,137 @@ export function requireAdminSession(
   return { ok: true, session };
 }
 
+export async function requireAgencySession(
+  request: NextRequest
+): Promise<
+  | {
+      ok: true;
+      session: AdminSessionPayload & { agencyId: string };
+      agency: Agency;
+      subscription: ResolvedSubscriptionState;
+    }
+  | { ok: false; response: NextResponse }
+> {
+  const auth = requireAdminSession(request);
+  if (!auth.ok) return auth;
+
+  if (auth.session.role !== "AGENCY_ADMIN" || !auth.session.agencyId) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Compte agence requis pour accéder à cet espace." },
+        { status: 403 }
+      ),
+    };
+  }
+
+  try {
+    const agency = await getAgencyById(auth.session.agencyId);
+    if (!agency) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: "Agence introuvable ou supprimée." },
+          { status: 401 }
+        ),
+      };
+    }
+
+    const subscription = resolveEffectiveSubscription(agency);
+    return {
+      ok: true,
+      session: { ...auth.session, agencyId: agency.id },
+      agency,
+      subscription,
+    };
+  } catch (err) {
+    if (err instanceof Error && err.message === "DATABASE_URL_NOT_CONFIGURED") {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: "Base de données PostgreSQL non configurée." },
+          { status: 503 }
+        ),
+      };
+    }
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Erreur serveur lors de la vérification du compte agence." },
+        { status: 500 }
+      ),
+    };
+  }
+}
+
+export async function requireActiveAgencySession(
+  request: NextRequest
+): Promise<
+  | {
+      ok: true;
+      session: AdminSessionPayload & { agencyId: string };
+      agency: Agency;
+      subscription: ResolvedSubscriptionState;
+    }
+  | { ok: false; response: NextResponse }
+> {
+  const gate = await requireAgencySession(request);
+  if (!gate.ok) return gate;
+
+  if (!gate.subscription.canWriteDashboard) {
+    if (gate.subscription.effectiveStatus === "SUSPENDED") {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            error:
+              "Votre compte agence est temporairement suspendu par l'administration TrackCargo CI.",
+            code: "AGENCY_SUSPENDED",
+            subscription: gate.subscription,
+          },
+          { status: 403 }
+        ),
+      };
+    }
+
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error:
+            "Votre essai gratuit ou abonnement mensuel est arrivé à échéance. Renouvelez par Wave ou Orange Money pour reprendre les opérations.",
+          code: "PAYMENT_REQUIRED",
+          subscription: gate.subscription,
+        },
+        { status: 402 }
+      ),
+    };
+  }
+
+  return gate;
+}
+
+export function requireSuperAdminSession(
+  request: NextRequest
+):
+  | { ok: true; session: AdminSessionPayload }
+  | { ok: false; response: NextResponse } {
+  const auth = requireAdminSession(request);
+  if (!auth.ok) return auth;
+
+  if (auth.session.role !== "SUPER_ADMIN") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Accès réservé au fondateur Super Admin." },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return auth;
+}
+
 export function shouldUseSecureCookie(request: NextRequest): boolean {
   const forwardedProto = request.headers.get("x-forwarded-proto");
   if (forwardedProto) {
@@ -174,7 +340,9 @@ export function shouldUseSecureCookie(request: NextRequest): boolean {
   return request.nextUrl.protocol === "https:";
 }
 
-export function getSessionCookieOptions(secure = process.env.NODE_ENV === "production") {
+export function getSessionCookieOptions(
+  secure = process.env.NODE_ENV === "production"
+) {
   return {
     name: SESSION_COOKIE_NAME,
     httpOnly: true,

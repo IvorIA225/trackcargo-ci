@@ -35,25 +35,26 @@ export function buildWhatsappClientLink(
   originUrl?: string
 ): string {
   const cleanPhone = normalizePhoneClient(parcel.clientPhone).replace(/^\+/, "");
-  const trackUrl = originUrl
-    ? `${originUrl}/track/${parcel.trackingCode}`
+  const trackPath = agency.slug
+    ? `/a/${agency.slug}?q=${encodeURIComponent(parcel.trackingCode)}`
     : `/track/${parcel.trackingCode}`;
+  const trackUrl = originUrl ? `${originUrl}${trackPath}` : trackPath;
   const statusLabel = PARCEL_STATUS_META[parcel.status].label;
   const paymentNote =
     parcel.paymentStatus === "IMPAYE"
-      ? `💰 Frais de fret : *${formatFcfa(parcel.amountFcfa)}* (Payable par Wave/OM ou au retrait)`
-      : `✅ ${PAYMENT_STATUS_META[parcel.paymentStatus].label}`;
+      ? `Frais de fret : *${formatFcfa(parcel.amountFcfa)}* (Payable par Wave/OM ou au retrait)`
+      : `Statut : *${PAYMENT_STATUS_META[parcel.paymentStatus].label}*`;
 
   const lines = [
-    `Bonjour *${parcel.clientName}* 👋`,
+    `Bonjour *${parcel.clientName}*`,
     `Mise à jour de votre colis *${parcel.trackingCode}* chez *${agency.name}* (${agency.commune}) :`,
     ``,
-    `📦 Contenu : ${parcel.description} (${parcel.weightKg} kg)`,
-    batch ? `🚢 Lot : ${batch.code} (${batch.origin})` : "",
-    `📍 Statut actuel : *${statusLabel}*`,
+    `Contenu : ${parcel.description} (${parcel.weightKg} kg)`,
+    batch ? `Lot : ${batch.code} (${batch.origin})` : "",
+    `Statut actuel : *${statusLabel}*`,
     paymentNote,
     ``,
-    `🔎 Suivez votre colis en direct et téléchargez votre reçu ici :`,
+    `Suivez votre colis en direct et téléchargez votre reçu ici :`,
     trackUrl,
     ``,
     `Entrepôt : ${agency.address}`,

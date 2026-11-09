@@ -31,7 +31,7 @@ export default function TrackCodePage({
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 print:hidden">
           <div className="space-y-1">
             <Link
-              href="/track"
+              href={agency?.slug ? `/a/${agency.slug}` : "/track"}
               className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0a2e6e] hover:text-[#ff5c1b] transition-colors mb-2 no-underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
@@ -44,8 +44,13 @@ export default function TrackCodePage({
             {agency && (
               <p className="text-sm text-[#43506b]">
                 Expédié par{" "}
-                <strong className="text-[#09152b]">{agency.name}</strong> à{" "}
-                {agency.commune}
+                <Link
+                  href={`/a/${agency.slug}`}
+                  className="font-bold text-[#0a2e6e] hover:text-[#ff5c1b] hover:underline"
+                >
+                  {agency.name}
+                </Link>{" "}
+                à {agency.commune}
               </p>
             )}
           </div>

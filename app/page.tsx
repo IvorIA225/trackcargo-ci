@@ -296,10 +296,10 @@ export default function HomePage() {
                 {/* Primary CTA Row */}
                 <div className="mt-3 sm:mt-5 flex flex-wrap items-center gap-2.5 sm:gap-3">
                   <Link
-                    href="/dashboard"
+                    href="/register"
                     className="tc-btn-primary !min-h-[44px] sm:!min-h-[48px] text-sm"
                   >
-                    <span>Tester sur un vrai lot</span>
+                    <span>Essayer 14 jours gratuits</span>
                     <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                   </Link>
                   <a
@@ -763,10 +763,10 @@ export default function HomePage() {
                   </p>
                 </div>
                 <Link
-                  href="/dashboard"
+                  href="/register"
                   className="tc-btn-cobalt w-full justify-center mt-4"
                 >
-                  <span>Ouvrir la démo agence</span>
+                  <span>Créer mon agence (14j gratuits)</span>
                   <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
               </div>
@@ -884,8 +884,8 @@ export default function HomePage() {
                       {formatFcfa(roi.estimatedFcfa)} / mois
                     </div>
                   </div>
-                  <Link href="/dashboard" className="tc-btn-primary shrink-0">
-                    <span>Tester maintenant</span>
+                  <Link href="/register" className="tc-btn-primary shrink-0">
+                    <span>Essayer 14 jours gratuits</span>
                     <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                   </Link>
                 </div>
@@ -936,7 +936,7 @@ export default function HomePage() {
                       </li>
                     </ul>
                   </div>
-                  <Link href="/dashboard" className="tc-btn-ghost w-full">
+                  <Link href="/register?plan=DEPART" className="tc-btn-ghost w-full">
                     <span>Essayer la formule Départ</span>
                   </Link>
                 </div>
@@ -978,7 +978,7 @@ export default function HomePage() {
                       </li>
                     </ul>
                   </div>
-                  <Link href="/dashboard" className="tc-btn-primary w-full">
+                  <Link href="/register?plan=PRO" className="tc-btn-primary w-full">
                     <span>Ouvrir le Pack Pro Cargo</span>
                     <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                   </Link>
@@ -1016,8 +1016,8 @@ export default function HomePage() {
                       </li>
                     </ul>
                   </div>
-                  <Link href="/dashboard" className="tc-btn-ghost w-full">
-                    <span>Demander une mise en place</span>
+                  <Link href="/register?plan=MULTI" className="tc-btn-ghost w-full">
+                    <span>Démarrer en Multi-Entrepôts</span>
                   </Link>
                 </div>
               </div>
@@ -1085,12 +1085,12 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <Link href="/dashboard" className="tc-btn-primary">
-                <span>Ouvrir l&apos;espace agence</span>
+              <Link href="/register" className="tc-btn-primary">
+                <span>Créer mon agence (14j gratuits)</span>
                 <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </Link>
-              <Link href="/track/TC-8841" className="tc-btn-ghost">
-                <span>Voir fiche TC-8841</span>
+              <Link href="/a/ivoire-cargo-express" className="tc-btn-ghost">
+                <span>Voir portail client démo</span>
               </Link>
             </div>
           </div>
@@ -1105,14 +1105,17 @@ export default function HomePage() {
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-4">
+                <Link href="/register" className="hover:text-white no-underline font-bold text-[#ff966b]">
+                  Essai 14 jours
+                </Link>
                 <Link href="/track" className="hover:text-white no-underline">
                   Suivi public
                 </Link>
                 <Link
-                  href="/track/TC-8841"
+                  href="/a/ivoire-cargo-express"
                   className="hover:text-white no-underline"
                 >
-                  Démo TC-8841
+                  Démo portail
                 </Link>
                 <Link href="/login" className="hover:text-white no-underline">
                   Connexion agence

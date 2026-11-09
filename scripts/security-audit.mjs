@@ -9,10 +9,23 @@ const REPORT_PATH = path.join(REPORT_DIR, "security-report.json");
 
 const PUBLIC_ONLY_ROUTES = new Set([
   "app/api/track/route.ts",
+  "app/api/public/[slug]/track/route.ts",
+  "app/api/auth/register/route.ts",
   "app/api/auth/login/route.ts",
   "app/api/auth/logout/route.ts",
   "app/api/auth/session/route.ts",
 ]);
+
+const AUTH_GUARD_CALLS = [
+  "requireAdminSession(",
+  "requireAgencySession(",
+  "requireActiveAgencySession(",
+  "requireSuperAdminSession(",
+];
+
+function hasAuthGuard(content) {
+  return AUTH_GUARD_CALLS.some((fn) => content.includes(fn));
+}
 
 function walkFiles(dir, exts, out = []) {
   if (!fs.existsSync(dir)) return out;
@@ -56,13 +69,13 @@ function main() {
     }
 
     if (rel === "app/api/agency/route.ts") {
-      // GET returns public profile, PATCH MUST require admin session
-      if (!content.includes("requireAdminSession(")) {
+      // GET returns public profile, PATCH MUST require active agency session guard
+      if (!hasAuthGuard(content)) {
         findings.push({
           severity: "CRITICAL",
           rule: "BROKEN_ACCESS_CONTROL",
           file: rel,
-          message: "PATCH /api/agency missing requireAdminSession()",
+          message: "PATCH /api/agency missing auth guard",
         });
       } else {
         passedChecks.push(`PATCH protected on ${rel}`);
@@ -70,12 +83,12 @@ function main() {
       continue;
     }
 
-    if (!content.includes("requireAdminSession(")) {
+    if (!hasAuthGuard(content)) {
       findings.push({
         severity: "CRITICAL",
         rule: "MISSING_AUTH_GUARD",
         file: rel,
-        message: `API route ${rel} is not allowlisted public and lacks requireAdminSession()`,
+        message: `API route ${rel} is not allowlisted public and lacks a server auth guard`,
       });
     } else {
       passedChecks.push(`Auth guard verified on ${rel}`);
@@ -120,6 +133,7 @@ function main() {
     ...walkFiles(path.join(ROOT, "app"), [".ts", ".tsx", ".js", ".mjs"]),
     ...walkFiles(path.join(ROOT, "components"), [".ts", ".tsx"]),
     ...walkFiles(path.join(ROOT, "lib"), [".ts", ".tsx"]),
+    ...walkFiles(path.join(ROOT, "db"), [".ts", ".tsx"]),
   ];
 
   const dangerousPatterns = [

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/auth";
-import { updateParcelRecord } from "@/lib/store";
+import { requireActiveAgencySession } from "@/lib/auth";
+import { updateParcelForTenant } from "@/lib/repository";
 import { validateParcelPatch } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminSession(request);
+  const auth = await requireActiveAgencySession(request);
   if (!auth.ok) return auth.response;
 
   try {
@@ -30,7 +30,11 @@ export async function PATCH(
       );
     }
 
-    const updated = updateParcelRecord(id, validated.data);
+    const updated = await updateParcelForTenant(
+      auth.session.agencyId,
+      id,
+      validated.data
+    );
     if (!updated) {
       return NextResponse.json(
         { error: "Colis introuvable." },

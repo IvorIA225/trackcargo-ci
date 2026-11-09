@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/auth";
-import { createBatchRecord } from "@/lib/store";
+import { requireActiveAgencySession } from "@/lib/auth";
+import { createBatchForTenant } from "@/lib/repository";
 import { validateBatchCreate } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const auth = requireAdminSession(request);
+  const auth = await requireActiveAgencySession(request);
   if (!auth.ok) return auth.response;
 
   try {
@@ -19,9 +19,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const batch = createBatchRecord(validated.data);
+    const batch = await createBatchForTenant(
+      auth.session.agencyId,
+      validated.data
+    );
     return NextResponse.json(batch, { status: 201 });
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message === "BATCH_CODE_EXISTS") {
+      return NextResponse.json(
+        { error: "Un lot avec ce code existe déjà dans votre agence." },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: "Erreur lors de la création du lot." },
       { status: 400 }

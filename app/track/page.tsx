@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Radio } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import TrackingLookup from "@/components/TrackingLookup";
@@ -22,8 +23,14 @@ export default function TrackPage() {
             Suivez votre colis vers Abidjan.
           </h1>
           <p className="text-sm sm:text-base text-[#43506b] leading-relaxed">
-            Saisissez votre code de suivi ou votre numéro WhatsApp pour voir
-            l&apos;étape actuelle, les frais en FCFA et préparer votre retrait.
+            Saisissez votre code de suivi unique (<code className="font-mono text-[#0a2e6e]">TC-xxxx</code>) reçu sur WhatsApp, ou ouvrez directement le portail dédié{" "}
+            <Link
+              href="/a/ivoire-cargo-express"
+              className="text-[#0a2e6e] font-bold hover:text-[#ff5c1b] hover:underline"
+            >
+              Ivoire Cargo Express
+            </Link>
+            .
           </p>
         </div>
 

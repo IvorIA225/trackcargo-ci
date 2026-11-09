@@ -4,6 +4,9 @@ import {
   ParcelStatus,
   PAYMENT_STATUS_META,
   PaymentStatus,
+  PLAN_META,
+  PlanTier,
+  PlatformSettings,
   TransportMode,
 } from "./types";
 
@@ -15,6 +18,8 @@ const PHONE_REGEX = /^\+?[0-9\s\-().]{8,22}$/;
 const BATCH_CODE_REGEX = /^[A-Z0-9-]{3,32}$/;
 const DATE_ISO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const TRACKING_CODE_QUERY_REGEX = /^TC-\d{4,6}$/i;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]?$/;
 
 function cleanString(val: unknown, min: number, max: number): string | null {
   if (typeof val !== "string") return null;
@@ -317,4 +322,235 @@ export function validateParcelPatch(body: unknown): ValidationResult<{
           : undefined,
     },
   };
+}
+
+export function validateSlugParam(raw: unknown): ValidationResult<string> {
+  if (typeof raw !== "string") {
+    return { ok: false, error: "Identifiant d'agence invalide." };
+  }
+  const clean = raw.trim().toLowerCase();
+  if (!SLUG_REGEX.test(clean)) {
+    return { ok: false, error: "Identifiant d'agence invalide." };
+  }
+  return { ok: true, data: clean };
+}
+
+export function validateRegisterInput(body: unknown): ValidationResult<{
+  agencyName: string;
+  commune: string;
+  whatsappPhone: string;
+  fullName: string;
+  email: string;
+  password: string;
+  plan: PlanTier;
+}> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { ok: false, error: "Corps JSON invalide." };
+  }
+  const r = body as Record<string, unknown>;
+  const details: Record<string, string> = {};
+
+  const agencyName = cleanString(r.agencyName, 2, 80);
+  if (!agencyName) {
+    details.agencyName = "Nom d'agence requis (2 à 80 caractères).";
+  }
+
+  const commune = cleanString(r.commune, 2, 50);
+  if (!commune) {
+    details.commune = "Commune ou ville requise (2 à 50 caractères).";
+  }
+
+  const whatsappPhone = cleanString(r.whatsappPhone, 8, 22);
+  if (
+    !whatsappPhone ||
+    !PHONE_REGEX.test(whatsappPhone) ||
+    whatsappPhone.replace(/\D/g, "").length < 8
+  ) {
+    details.whatsappPhone =
+      "Numéro WhatsApp invalide (au moins 8 chiffres requis).";
+  }
+
+  const emailRaw = cleanString(r.email, 5, 120)?.toLowerCase();
+  if (!emailRaw || !EMAIL_REGEX.test(emailRaw)) {
+    details.email = "Adresse email professionnelle invalide.";
+  }
+
+  const password = typeof r.password === "string" ? r.password : "";
+  if (password.length < 8 || password.length > 200) {
+    details.password =
+      "Le mot de passe doit contenir entre 8 et 200 caractères.";
+  }
+
+  const fullNameInput = cleanString(r.fullName, 2, 80);
+  const fullName =
+    fullNameInput || (agencyName ? `Gérant ${agencyName}` : "Gérant Agence");
+
+  let plan: PlanTier = "PRO";
+  if (r.plan !== undefined) {
+    if (typeof r.plan === "string" && r.plan in PLAN_META) {
+      plan = r.plan as PlanTier;
+    } else {
+      details.plan = "Forfait sélectionné invalide.";
+    }
+  }
+
+  if (
+    Object.keys(details).length > 0 ||
+    !agencyName ||
+    !commune ||
+    !whatsappPhone ||
+    !emailRaw
+  ) {
+    return { ok: false, error: "Validation de l'inscription échouée.", details };
+  }
+
+  return {
+    ok: true,
+    data: {
+      agencyName,
+      commune,
+      whatsappPhone,
+      fullName,
+      email: emailRaw,
+      password,
+      plan,
+    },
+  };
+}
+
+export function validateLoginInput(body: unknown): ValidationResult<{
+  email: string | null;
+  password: string;
+}> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { ok: false, error: "Requête d'authentification invalide." };
+  }
+  const r = body as Record<string, unknown>;
+  const password = typeof r.password === "string" ? r.password : "";
+  if (!password || password.length > 200) {
+    return { ok: false, error: "Mot de passe requis." };
+  }
+  if (r.email === undefined || r.email === null || r.email === "") {
+    return { ok: true, data: { email: null, password } };
+  }
+  const email = cleanString(r.email, 5, 120)?.toLowerCase();
+  if (!email || !EMAIL_REGEX.test(email)) {
+    return { ok: false, error: "Adresse email invalide." };
+  }
+  return { ok: true, data: { email, password } };
+}
+
+export function validateSuperAdminAction(body: unknown): ValidationResult<{
+  action:
+    | "ACTIVATE_30D"
+    | "SET_PLAN"
+    | "SUSPEND"
+    | "REACTIVATE"
+    | "EXPIRE_NOW";
+  plan?: PlanTier;
+  note?: string;
+}> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { ok: false, error: "Corps JSON invalide." };
+  }
+  const r = body as Record<string, unknown>;
+  const allowedActions = new Set([
+    "ACTIVATE_30D",
+    "SET_PLAN",
+    "SUSPEND",
+    "REACTIVATE",
+    "EXPIRE_NOW",
+  ]);
+  if (typeof r.action !== "string" || !allowedActions.has(r.action)) {
+    return { ok: false, error: "Action Super Admin invalide." };
+  }
+  const action = r.action as
+    | "ACTIVATE_30D"
+    | "SET_PLAN"
+    | "SUSPEND"
+    | "REACTIVATE"
+    | "EXPIRE_NOW";
+
+  let plan: PlanTier | undefined;
+  if (r.plan !== undefined) {
+    if (typeof r.plan !== "string" || !(r.plan in PLAN_META)) {
+      return { ok: false, error: "Forfait invalide." };
+    }
+    plan = r.plan as PlanTier;
+  }
+  if (action === "SET_PLAN" && !plan) {
+    return { ok: false, error: "Le forfait cible est requis." };
+  }
+
+  const note =
+    typeof r.note === "string" ? r.note.trim().slice(0, 240) : undefined;
+
+  return { ok: true, data: { action, plan, note } };
+}
+
+export function validatePlatformSettingsPatch(
+  body: unknown
+): ValidationResult<
+  Partial<
+    Pick<
+      PlatformSettings,
+      | "founderName"
+      | "founderWhatsapp"
+      | "founderWaveLink"
+      | "founderOmNumber"
+    >
+  >
+> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { ok: false, error: "Corps JSON invalide." };
+  }
+  const r = body as Record<string, unknown>;
+  const patch: Partial<
+    Pick<
+      PlatformSettings,
+      | "founderName"
+      | "founderWhatsapp"
+      | "founderWaveLink"
+      | "founderOmNumber"
+    >
+  > = {};
+  const details: Record<string, string> = {};
+
+  if (r.founderName !== undefined) {
+    const v = cleanString(r.founderName, 2, 80);
+    if (!v) details.founderName = "Nom invalide (2 à 80 caractères).";
+    else patch.founderName = v;
+  }
+  if (r.founderWhatsapp !== undefined) {
+    const v = cleanString(r.founderWhatsapp, 8, 22);
+    if (!v || !PHONE_REGEX.test(v)) {
+      details.founderWhatsapp = "Numéro WhatsApp fondateur invalide.";
+    } else {
+      patch.founderWhatsapp = v;
+    }
+  }
+  if (r.founderOmNumber !== undefined) {
+    const v = cleanString(r.founderOmNumber, 8, 22);
+    if (!v || !PHONE_REGEX.test(v)) {
+      details.founderOmNumber = "Numéro Orange Money invalide.";
+    } else {
+      patch.founderOmNumber = v;
+    }
+  }
+  if (r.founderWaveLink !== undefined) {
+    const v = cleanString(r.founderWaveLink, 10, 200);
+    if (!v || !isSafeHttpsUrl(v)) {
+      details.founderWaveLink = "Le lien Wave doit commencer par https://.";
+    } else {
+      patch.founderWaveLink = v;
+    }
+  }
+
+  if (Object.keys(details).length > 0) {
+    return { ok: false, error: "Validation échouée.", details };
+  }
+  if (Object.keys(patch).length === 0) {
+    return { ok: false, error: "Aucun champ valide fourni." };
+  }
+  return { ok: true, data: patch };
 }

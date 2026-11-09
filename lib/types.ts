@@ -13,6 +13,45 @@ export type PaymentStatus =
   | "PAYE_OM"
   | "PAYE_CASH";
 
+export type PlanTier = "DEPART" | "PRO" | "MULTI";
+
+export type SubscriptionStatus =
+  | "TRIAL"
+  | "ACTIVE"
+  | "PAST_DUE"
+  | "SUSPENDED";
+
+export type UserRole = "AGENCY_ADMIN" | "SUPER_ADMIN";
+
+export type SubscriptionAction =
+  | "TRIAL_STARTED"
+  | "ACTIVATED_30D"
+  | "PLAN_CHANGED"
+  | "SUSPENDED"
+  | "REACTIVATED"
+  | "EXPIRED_MANUALLY";
+
+export const PLAN_META: Record<
+  PlanTier,
+  { label: string; priceFcfa: number; summary: string }
+> = {
+  DEPART: {
+    label: "Départ",
+    priceFcfa: 35000,
+    summary: "1 entrepôt Abidjan, lots et portail client dédié.",
+  },
+  PRO: {
+    label: "Pack Pro Cargo",
+    priceFcfa: 60000,
+    summary: "Import Excel, alertes WhatsApp pré-remplies et multi-corridors.",
+  },
+  MULTI: {
+    label: "Multi-Entrepôts",
+    priceFcfa: 100000,
+    summary: "Comptoirs multiples, suivi avancé et export comptable.",
+  },
+};
+
 export interface TrackingEvent {
   status: ParcelStatus;
   label: string;
@@ -31,11 +70,60 @@ export interface Agency {
   orangeMoneyNumber: string;
   ratePerKgAirFcfa: number;
   ratePerCbmSeaFcfa: number;
+  plan: PlanTier;
+  subscriptionStatus: SubscriptionStatus;
+  trialEndsAt: string;
+  currentPeriodEnd: string | null;
+  manualSuspended: boolean;
+  isDemo: boolean;
+  createdAt: string;
   updatedAt: string;
+}
+
+export interface AgencyUser {
+  id: string;
+  agencyId: string | null;
+  email: string;
+  passwordHash: string;
+  fullName: string;
+  role: UserRole;
+  createdAt: string;
+}
+
+export interface PlatformSettings {
+  id: string;
+  founderName: string;
+  founderWhatsapp: string;
+  founderWaveLink: string;
+  founderOmNumber: string;
+  updatedAt: string;
+}
+
+export interface SubscriptionEvent {
+  id: string;
+  agencyId: string;
+  actorEmail: string;
+  action: SubscriptionAction;
+  plan: PlanTier;
+  amountFcfa: number;
+  note: string;
+  createdAt: string;
+}
+
+export interface ResolvedSubscriptionState {
+  effectiveStatus: SubscriptionStatus;
+  canWriteDashboard: boolean;
+  canViewPublicPortal: boolean;
+  daysRemaining: number;
+  expiresAt: string | null;
+  plan: PlanTier;
+  planPriceFcfa: number;
+  planLabel: string;
 }
 
 export interface Batch {
   id: string;
+  agencyId?: string;
   code: string;
   mode: TransportMode;
   origin: string;
@@ -49,6 +137,7 @@ export interface Batch {
 
 export interface Parcel {
   id: string;
+  agencyId?: string;
   trackingCode: string;
   batchId: string;
   clientName: string;
@@ -68,9 +157,12 @@ export interface TrackCargoDatabase {
   agency: Agency;
   batches: Batch[];
   parcels: Parcel[];
+  subscription?: ResolvedSubscriptionState;
+  platformSettings?: PlatformSettings;
 }
 
 export interface PublicAgencyProfile {
+  slug: string;
   name: string;
   commune: string;
   address: string;

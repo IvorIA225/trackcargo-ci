@@ -12,6 +12,7 @@ import {
   verifySessionToken,
 } from "../lib/auth";
 import { checkRateLimit, resetRateLimiterForTests } from "../lib/rate-limit";
+import { allocateUniqueSlug } from "../lib/repository";
 import {
   bulkUpdateBatchStatus,
   createParcelRecord,
@@ -20,11 +21,14 @@ import {
   readDb,
   searchTracking,
 } from "../lib/store";
+import { resolveEffectiveSubscription } from "../lib/subscription";
 import {
   isSafeHttpsUrl,
   validateAgencyPatch,
   validateBatchCreate,
+  validateRegisterInput,
   validateSingleParcel,
+  validateSuperAdminAction,
   validateTrackingQuery,
 } from "../lib/validation";
 
@@ -197,5 +201,134 @@ describe("lib/store PII minimization and consistency", () => {
     assert.ok(bulk.updatedCount >= 2);
     const updatedSearch = searchTracking(pkg.trackingCode);
     assert.equal(updatedSearch.parcels[0].status, "PRET_RETRAIT");
+  });
+});
+
+describe("SaaS multi-tenant auth, slugs & subscription resolution", () => {
+  it("issues multi-role session tokens with agencyId for agencies and null for SUPER_ADMIN", () => {
+    process.env.TRACKCARGO_SESSION_SECRET = "super-secret-key-for-tests-32chars";
+    const now = 1_700_000_000_000;
+
+    const agencyToken = createSessionToken({
+      userId: "usr-a",
+      agencyId: "ag-a",
+      role: "AGENCY_ADMIN",
+      email: "gerant@transita.ci",
+      now,
+    });
+    const parsedAgency = verifySessionToken(agencyToken, now + 1000);
+    assert.equal(parsedAgency?.role, "AGENCY_ADMIN");
+    assert.equal(parsedAgency?.agencyId, "ag-a");
+    assert.equal(parsedAgency?.email, "gerant@transita.ci");
+
+    const superToken = createSessionToken({
+      userId: "super-admin",
+      agencyId: null,
+      role: "SUPER_ADMIN",
+      email: "founder@trackcargo.ci",
+      now,
+    });
+    const parsedSuper = verifySessionToken(superToken, now + 1000);
+    assert.equal(parsedSuper?.role, "SUPER_ADMIN");
+    assert.equal(parsedSuper?.agencyId, null);
+  });
+
+  it("allocates collision-free slugs without reserved route names", () => {
+    const existing = ["ivoire-cargo", "ivoire-cargo-2", "admin-cargo"];
+    assert.equal(allocateUniqueSlug(existing, "Ivoire Cargo"), "ivoire-cargo-3");
+    assert.equal(allocateUniqueSlug(existing, "Élite Logistique CI"), "elite-logistique-ci");
+    assert.equal(allocateUniqueSlug(existing, "Admin"), "admin-cargo-2");
+  });
+
+  it("resolves TRIAL, ACTIVE, PAST_DUE, and SUSPENDED states cleanly", () => {
+    const now = new Date("2026-11-10T12:00:00.000Z").getTime();
+
+    const activeTrial = resolveEffectiveSubscription(
+      {
+        plan: "PRO",
+        subscriptionStatus: "TRIAL",
+        trialEndsAt: new Date(now + 5 * 86400_000).toISOString(),
+        currentPeriodEnd: null,
+        manualSuspended: false,
+      },
+      now
+    );
+    assert.equal(activeTrial.effectiveStatus, "TRIAL");
+    assert.equal(activeTrial.canWriteDashboard, true);
+    assert.equal(activeTrial.canViewPublicPortal, true);
+    assert.equal(activeTrial.daysRemaining, 5);
+
+    const expiredTrial = resolveEffectiveSubscription(
+      {
+        plan: "DEPART",
+        subscriptionStatus: "TRIAL",
+        trialEndsAt: new Date(now - 60_000).toISOString(),
+        currentPeriodEnd: null,
+        manualSuspended: false,
+      },
+      now
+    );
+    assert.equal(expiredTrial.effectiveStatus, "PAST_DUE");
+    assert.equal(expiredTrial.canWriteDashboard, false);
+    assert.equal(expiredTrial.canViewPublicPortal, true);
+    assert.equal(expiredTrial.planPriceFcfa, 35000);
+
+    const expiredPaid = resolveEffectiveSubscription(
+      {
+        plan: "MULTI",
+        subscriptionStatus: "ACTIVE",
+        trialEndsAt: new Date(now - 30 * 86400_000).toISOString(),
+        currentPeriodEnd: new Date(now - 1000).toISOString(),
+        manualSuspended: false,
+      },
+      now
+    );
+    assert.equal(expiredPaid.effectiveStatus, "PAST_DUE");
+    assert.equal(expiredPaid.canWriteDashboard, false);
+    assert.equal(expiredPaid.canViewPublicPortal, true);
+
+    const suspended = resolveEffectiveSubscription(
+      {
+        plan: "PRO",
+        subscriptionStatus: "ACTIVE",
+        trialEndsAt: new Date(now + 10 * 86400_000).toISOString(),
+        currentPeriodEnd: new Date(now + 20 * 86400_000).toISOString(),
+        manualSuspended: true,
+      },
+      now
+    );
+    assert.equal(suspended.effectiveStatus, "SUSPENDED");
+    assert.equal(suspended.canWriteDashboard, false);
+    assert.equal(suspended.canViewPublicPortal, false);
+  });
+
+  it("validates self-service registration and super-admin actions", () => {
+    assert.equal(
+      validateRegisterInput({
+        agencyName: "Babi Freight",
+        commune: "Marcory",
+        whatsappPhone: "+2250701020304",
+        email: "contact@babifreight.ci",
+        password: "short",
+      }).ok,
+      false
+    );
+    const okReg = validateRegisterInput({
+      agencyName: "Babi Freight",
+      commune: "Marcory",
+      whatsappPhone: "+2250701020304",
+      email: "contact@babifreight.ci",
+      password: "StrongPassword!2026",
+    });
+    assert.equal(okReg.ok, true);
+
+    assert.equal(
+      validateSuperAdminAction({ action: "SET_PLAN" }).ok,
+      false
+    );
+    assert.equal(
+      validateSuperAdminAction({ action: "ACTIVATE_30D", plan: "PRO" }).ok,
+      true
+    );
   });
 });
