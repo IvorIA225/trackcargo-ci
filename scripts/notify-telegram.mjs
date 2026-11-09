@@ -19,6 +19,16 @@ function readJsonIfExists(filePath) {
   return null;
 }
 
+function appendStepSummary(markdownLine) {
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY?.trim();
+  if (!summaryPath) return;
+  try {
+    fs.appendFileSync(summaryPath, `${markdownLine}\n`, "utf8");
+  } catch {
+    // ignore step summary write errors outside CI
+  }
+}
+
 async function main() {
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
@@ -86,17 +96,23 @@ async function main() {
 
   if (!token || !chatId) {
     console.log(
+      "::warning title=Telegram Non Configuré::TELEGRAM_BOT_TOKEN ou TELEGRAM_CHAT_ID absent des Secrets GitHub."
+    );
+    console.log(
       "[notify-telegram] TELEGRAM_BOT_TOKEN ou TELEGRAM_CHAT_ID non configuré."
     );
     console.log("--- APERÇU DU RAPPORT TELEGRAM ---");
     console.log(message);
+    appendStepSummary(
+      `- ⚠️ **Telegram non configuré** pour **${agentName}** (\`${status}\`) — ajoutez \`TELEGRAM_BOT_TOKEN\` et \`TELEGRAM_CHAT_ID\`.`
+    );
     if (strict) process.exit(1);
     return;
   }
 
-  const res = await fetch(
-    `https://api.telegram.org/bot${token}/sendMessage`,
-    {
+  let res;
+  try {
+    res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -105,17 +121,38 @@ async function main() {
         parse_mode: "HTML",
         disable_web_page_preview: true,
       }),
-    }
-  );
-
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error(`[notify-telegram] Erreur Telegram API (${res.status}): ${errText}`);
+    });
+  } catch (networkErr) {
+    console.log(
+      `::warning title=Telegram Réseau::Erreur réseau temporaire Telegram (${String(networkErr)}).`
+    );
+    appendStepSummary(
+      `- ⚠️ **Erreur réseau Telegram** pour **${agentName}** (\`${status}\`).`
+    );
     if (strict) process.exit(1);
     return;
   }
 
+  if (!res.ok) {
+    const errText = await res.text();
+    const isConfigError = res.status >= 400 && res.status < 500;
+    const annotation = isConfigError ? "::error" : "::warning";
+    console.log(
+      `${annotation} title=Telegram API (${res.status})::${errText.replace(/\r?\n/g, " ")}`
+    );
+    console.error(`[notify-telegram] Erreur Telegram API (${res.status}): ${errText}`);
+    appendStepSummary(
+      `- 🚨 **Échec envoi Telegram (${res.status})** pour **${agentName}** : vérifiez \`TELEGRAM_BOT_TOKEN\`, \`TELEGRAM_CHAT_ID\` et cliquez sur **Start** dans votre bot.`
+    );
+    if (strict || isConfigError) process.exit(1);
+    return;
+  }
+
+  console.log("::notice title=Telegram Report::Rapport envoyé sur Telegram avec succès.");
   console.log("[notify-telegram] Rapport envoyé sur Telegram avec succès.");
+  appendStepSummary(
+    `- ✅ **Rapport Telegram envoyé** pour **${agentName}** (Statut : \`${status}\`).`
+  );
 }
 
 main().catch((err) => {

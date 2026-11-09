@@ -27,6 +27,31 @@ function readOptionalFile(relPath, maxChars = 6000) {
   return fs.readFileSync(full, "utf8").slice(0, maxChars);
 }
 
+function collectRelevantContextFiles(failureLog, securityReport) {
+  const baseline = [
+    "lib/auth.ts",
+    "lib/validation.ts",
+    "lib/store.ts",
+    "lib/types.ts",
+    "app/api/track/route.ts",
+    "app/api/agency/route.ts",
+  ];
+  const combinedText = `${failureLog}\n${securityReport}`;
+  const pathRegex = /\b((?:app|components|lib|tests)\/[A-Za-z0-9_./\[\]-]+\.(?:ts|tsx|mjs|css))\b/g;
+  const discovered = new Set(baseline);
+
+  let match;
+  while ((match = pathRegex.exec(combinedText)) !== null) {
+    const candidate = match[1];
+    if (isAllowedTargetPath(candidate) && fs.existsSync(path.join(ROOT, candidate))) {
+      discovered.add(candidate);
+    }
+    if (discovered.size >= 10) break;
+  }
+
+  return Array.from(discovered);
+}
+
 async function callGemini(apiKey, promptText) {
   const url =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
@@ -121,14 +146,9 @@ async function main() {
     return;
   }
 
-  const contextFiles = [
-    "lib/auth.ts",
-    "lib/validation.ts",
-    "lib/store.ts",
-    "app/api/track/route.ts",
-    "app/api/agency/route.ts",
-  ]
-    .map((f) => `### ${f}\n\`\`\`ts\n${readOptionalFile(f, 3500)}\n\`\`\``)
+  const targetContextPaths = collectRelevantContextFiles(failureLog, securityReport);
+  const contextFiles = targetContextPaths
+    .map((f) => `### ${f}\n\`\`\`ts\n${readOptionalFile(f, 3000)}\n\`\`\``)
     .join("\n\n");
 
   const prompt = `

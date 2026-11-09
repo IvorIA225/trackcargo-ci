@@ -930,7 +930,9 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="number"
-                    step="0.5"
+                    min={0.1}
+                    max={50000}
+                    step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
                     className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm"
@@ -943,6 +945,8 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="number"
+                    min={0}
+                    max={1000}
                     step="0.01"
                     value={volumeCbm}
                     onChange={(e) => setVolumeCbm(e.target.value)}
@@ -1124,7 +1128,9 @@ export default function DashboardPage() {
                 </label>
                 <input
                   type="number"
-                  value={settingsForm.ratePerKgAirFcfa || 8500}
+                  min={100}
+                  max={500000}
+                  value={settingsForm.ratePerKgAirFcfa ?? 8500}
                   onChange={(e) =>
                     setSettingsForm({
                       ...settingsForm,
@@ -1140,7 +1146,9 @@ export default function DashboardPage() {
                 </label>
                 <input
                   type="number"
-                  value={settingsForm.ratePerCbmSeaFcfa || 320000}
+                  min={1000}
+                  max={10000000}
+                  value={settingsForm.ratePerCbmSeaFcfa ?? 320000}
                   onChange={(e) =>
                     setSettingsForm({
                       ...settingsForm,
