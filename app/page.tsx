@@ -1,1133 +1,990 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Calculator,
-  Check,
-  CheckCircle2,
-  ChevronDown,
-  Clock3,
-  MessageSquare,
-  Plane,
-  Radio,
-  ShieldCheck,
-  Ship,
-  Smartphone,
-  Warehouse,
-} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ContainerStage3D, { type CorridorId } from "@/components/ContainerStage3D";
 import Navbar from "@/components/Navbar";
+import ParcelShowcase3D from "@/components/ParcelShowcase3D";
 import ScrollCraftRunner from "@/components/ScrollCraftRunner";
-import ContainerStage3D, { CorridorId } from "@/components/ContainerStage3D";
 import TrackingLookup from "@/components/TrackingLookup";
 import { formatFcfa } from "@/lib/format";
+import { PLAN_META, type PlanTier } from "@/lib/types";
 
-type BatchStepKey =
-  | "RECUE_ORIGINE"
-  | "EN_TRANSIT"
-  | "ARRIVEE_ABIDJAN"
-  | "PRET_RETRAIT";
+type CorridorSpec = {
+  id: CorridorId;
+  label: string;
+  unitName: string;
+  origin: string;
+  arrival: string;
+  eta: string;
+  rateLabel: string;
+  summary: string;
+};
 
-const CORRIDORS: Record<
-  CorridorId,
-  {
-    id: CorridorId;
-    label: string;
-    shortTag: string;
-    originCity: string;
-    modeText: string;
-    sampleBatch: string;
-  }
-> = {
+const CORRIDORS: Record<CorridorId, CorridorSpec> = {
   yiwu_sea: {
     id: "yiwu_sea",
     label: "Yiwu · Maritime",
-    shortTag: "Corridor Yiwu -> Port Vridi",
-    originCity: "Yiwu, Chine",
-    modeText: "Conteneur 40 pieds · au CBM",
-    sampleBatch: "CON-YW-2611",
+    unitName: "Conteneur ISO 40 pieds · Acier maritime",
+    origin: "Yiwu & Ningbo",
+    arrival: "Terminal de Vridi, Abidjan",
+    eta: "42 à 50 jours",
+    rateLabel: "CBM et carton",
+    summary:
+      "Idéal pour le groupage au mètre cube. Dès le chargement du conteneur à Yiwu, chaque destinataire suit son code TC et règle son reliquat avant le retrait.",
   },
   canton_air: {
     id: "canton_air",
     label: "Canton · Aérien",
-    shortTag: "Corridor Guangzhou -> Aéroport FHB",
-    originCity: "Guangzhou, Chine",
-    modeText: "Fret express · facturé au kg",
-    sampleBatch: "AIR-GZ-2614",
+    unitName: "Unité ULD AKE · Aluminium aéronautique",
+    origin: "Guangzhou Baiyun",
+    arrival: "Fret FHB, Abidjan",
+    eta: "5 à 8 jours",
+    rateLabel: "Facturation au kilo",
+    summary:
+      "Conçu pour les commandes urgentes pesées à l'entrepôt. Le poids exact, le tarif au kilogramme et le lien de paiement Wave partent sans saisie répétée.",
   },
   istanbul_dubai: {
     id: "istanbul_dubai",
-    label: "Dubaï & Istanbul",
-    shortTag: "Corridor Dubaï / Istanbul -> Abidjan",
-    originCity: "Dubaï & Istanbul",
-    modeText: "Lots textiles & négoce mixte",
-    sampleBatch: "MIX-DB-2609",
+    label: "Istanbul & Dubaï",
+    unitName: "Caisse export cerclée · Négoce",
+    origin: "Laleli & Deira",
+    arrival: "Comptoir Treichville",
+    eta: "6 à 12 jours",
+    rateLabel: "Colis et valeur",
+    summary:
+      "Adapté aux boutiques de prêt-à-porter et d'électronique. Vos clientes reçoivent la photo au départ puis viennent retirer leurs sacs avec un reçu Wave prêt.",
   },
 };
 
-const BATCH_STEPS: Array<{
-  key: BatchStepKey;
-  pill: string;
-  title: string;
-  summary: string;
-  waPreview: string;
+type BatchStep = {
+  id: "RECUE_ORIGINE" | "EN_TRANSIT" | "ARRIVEE_ABIDJAN" | "PRET_RETRAIT";
+  stepLabel: string;
+  buttonLabel: string;
   progressPct: number;
-  updatedAt: string;
-}> = [
+  arcStop: number;
+  locationLine: string;
+  whatsappSample: string;
+  waveState: string;
+};
+
+const BATCH_STEPS: BatchStep[] = [
   {
-    key: "RECUE_ORIGINE",
-    pill: "1. Reçu entrepôt",
-    title: "Réception et pesée enregistrées",
-    summary: "Chaque carton est pesé et étiqueté avant le chargement du lot.",
-    waPreview:
-      "Votre colis a bien été pesé à l'entrepôt de départ. Suivez votre code TC directement en ligne.",
-    progressPct: 24,
-    updatedAt: "09:15",
+    id: "RECUE_ORIGINE",
+    stepLabel: "01 · Dépôt en Chine",
+    buttonLabel: "1. Reçu au dépôt",
+    progressPct: 18,
+    arcStop: 0.22,
+    locationLine: "Guangzhou · 42 colis pesés et étiquetés",
+    whatsappSample:
+      "Bonjour Aminata, votre colis TC-8841 (14,5 kg) est bien arrivé à notre dépôt de Guangzhou. Suivez son trajet ici sans nous appeler.",
+    waveState: "Montant bloqué à 48 000 FCFA, payable à l'arrivée",
   },
   {
-    key: "EN_TRANSIT",
-    pill: "2. En transit",
-    title: "Lot expédié vers Abidjan",
-    summary:
-      "Tous les colis du conteneur passent en transit en un seul clic.",
-    waPreview:
-      "Le lot est en route vers Abidjan. Votre page de suivi affiche la prochaine date estimée d'arrivée.",
-    progressPct: 54,
-    updatedAt: "14:20",
+    id: "EN_TRANSIT",
+    stepLabel: "02 · En mer ou en vol",
+    buttonLabel: "2. En transit",
+    progressPct: 52,
+    arcStop: 0.54,
+    locationLine: "Lot #CG-402 · Traversée en cours vers Abidjan",
+    whatsappSample:
+      "Le lot #CG-402 qui contient votre colis TC-8841 est en route vers Abidjan. Arrivée estimée dans 9 jours.",
+    waveState: "Lien de prépaiement disponible à tout moment",
   },
   {
-    key: "ARRIVEE_ABIDJAN",
-    pill: "3. Arrivé Abidjan",
-    title: "Dédouanement en cours sur place",
-    summary:
-      "Vos clients voient l'arrivée à Vridi ou FHB sans appeler le standard.",
-    waPreview:
-      "Votre conteneur est arrivé à Abidjan. Le tri et les formalités de douane viennent de démarrer.",
-    progressPct: 78,
-    updatedAt: "11:05",
+    id: "ARRIVEE_ABIDJAN",
+    stepLabel: "03 · Débarqué à Vridi",
+    buttonLabel: "3. Arrivé à Abidjan",
+    progressPct: 82,
+    arcStop: 0.84,
+    locationLine: "Port de Vridi · Dépotage prévu sous 24 h",
+    whatsappSample:
+      "Bonne nouvelle, le lot #CG-402 vient d'accoster à Vridi. Vous serez prévenue dès que votre colis passera au comptoir.",
+    waveState: "42 liens Wave préparés automatiquement pour le comptoir",
   },
   {
-    key: "PRET_RETRAIT",
-    pill: "4. Prêt au retrait",
-    title: "42 colis prêts au comptoir Treichville",
-    summary:
-      "Les messages WhatsApp partent avec le montant en FCFA et le lien Wave.",
-    waPreview:
-      "Votre colis est disponible au retrait à Treichville. 144 000 FCFA payables par Wave dès maintenant avant votre passage.",
+    id: "PRET_RETRAIT",
+    stepLabel: "04 · Disponible à Treichville",
+    buttonLabel: "4. Prêt au retrait",
     progressPct: 100,
-    updatedAt: "18:35",
+    arcStop: 1,
+    locationLine: "Treichville · Prêt contre code ou QR",
+    whatsappSample:
+      "Votre colis TC-8841 est prêt au comptoir de Treichville. Réglez les 48 000 FCFA par Wave ou Orange Money avant de passer.",
+    waveState: "Reçu généré automatiquement après validation Wave",
   },
 ];
 
-const LANES = [
+const CORRIDOR_CARDS = [
   {
-    id: "canton-air",
-    corridor: "Chine · Aérien",
-    title: "Guangzhou vers Aéroport FHB",
-    meta: "Facturation au kg · Vol cargo",
-    desc: "Saisissez le poids exact au départ. Le tarif en FCFA s'affiche directement sur la fiche client.",
-    img: "/media/v2-lane-air.webp",
-    alt: "Soute fret aérien et palettes aluminium sous soleil matinal avant embarquement",
-    icon: Plane,
+    city: "Guangzhou · Aérien",
+    timing: "5 à 8 jours",
+    billing: "Au kilogramme",
+    detail:
+      "Pesée à l'entrepôt en Chine, photo jointe au dossier et lien Wave prêt avant même l'atterrissage à Abidjan.",
+    image: "/media/v2-lane-air.webp",
+    alt: "Soute fret aérien sur piste en plein jour entre Guangzhou et Abidjan",
   },
   {
-    id: "yiwu-sea",
-    corridor: "Chine · Maritime",
-    title: "Yiwu et Ningbo vers Port Vridi",
-    meta: "Conteneur 40 pieds · Au CBM",
-    desc: "Passez cinquante colis d'un même conteneur à l'étape suivante en une seule validation.",
-    img: "/media/v2-lane-sea.webp",
-    alt: "Porte-conteneurs bleu et orange accosté sous grue portuaire en plein jour",
-    icon: Ship,
+    city: "Yiwu · Maritime",
+    timing: "42 à 50 jours",
+    billing: "CBM et carton",
+    detail:
+      "Un seul changement sur le lot met à jour quarante clients ensemble au moment où le conteneur quitte Ningbo puis entre à Vridi.",
+    image: "/media/v2-lane-sea.webp",
+    alt: "Porte-conteneurs au mouillage en eau claire vers le port d'Abidjan",
   },
   {
-    id: "istanbul-dubai",
-    corridor: "Turquie & Émirats",
-    title: "Istanbul et Dubaï vers Abidjan",
-    meta: "Prêt-à-porter et négoce mixte",
-    desc: "Chaque client retrouve ses colis sous le même numéro WhatsApp sans retenir de tableau.",
-    img: "/media/v2-lane-istanbul.webp",
-    alt: "Halle logistique claire organisée par palettes cerclées et conteneurs bleus",
-    icon: Warehouse,
+    city: "Istanbul & Dubaï",
+    timing: "6 à 12 jours",
+    billing: "Sac et valeur",
+    detail:
+      "Chaque commande est associée au numéro WhatsApp de la cliente pour éviter les erreurs de sacs à la remise.",
+    image: "/media/v2-lane-istanbul.webp",
+    alt: "Entrepôt d'exportation textile et palettes organisées pour l'Afrique de l'Ouest",
   },
   {
-    id: "abidjan-comptoir",
-    corridor: "Abidjan · Comptoir",
-    title: "Retrait Treichville, Adjamé et Marcory",
-    meta: "Bordereau et paiement Wave",
-    desc: "Le client arrive au comptoir avec son reçu déjà réglé ou son code prêt à scanner.",
-    img: "/media/v2-lane-abidjan.webp",
-    alt: "Comptoir d'accueil ensoleillé d'entrepôt logistique avec étagères rangées",
-    icon: Smartphone,
+    city: "Comptoir Abidjan",
+    timing: "Retrait rapide",
+    billing: "Wave & Orange Money",
+    detail:
+      "Votre équipe saisit le code TC ou scanne le QR client, encaisse le solde exact et imprime le bon de sortie.",
+    image: "/media/v2-lane-abidjan.webp",
+    alt: "Comptoir logistique d'accueil des clients à Abidjan",
   },
+];
+
+const PLANS: Array<{
+  tier: PlanTier;
+  name: string;
+  price: number;
+  description: string;
+  features: string[];
+  featured: boolean;
+}> = [
+  {
+    tier: "DEPART",
+    name: PLAN_META.DEPART.label,
+    price: PLAN_META.DEPART.priceFcfa,
+    description: PLAN_META.DEPART.summary,
+    features: [
+      "Portail client dédié à votre agence (/a/votre-slug)",
+      "Création de lots aérien & maritime et codes TC",
+      "Alertes WhatsApp pré-remplies par colis",
+      "1 compte administrateur agence prêt en 2 minutes",
+    ],
+    featured: false,
+  },
+  {
+    tier: "PRO",
+    name: PLAN_META.PRO.label,
+    price: PLAN_META.PRO.priceFcfa,
+    description: PLAN_META.PRO.summary,
+    features: [
+      "Import rapide de listes Excel / CSV",
+      "Mise à jour d'un conteneur ou vol en un clic",
+      "Encaissement Wave Business et Orange Money sans commission",
+      "Calcul auto au kilogramme (aérien) et au CBM (maritime)",
+    ],
+    featured: true,
+  },
+  {
+    tier: "MULTI",
+    name: PLAN_META.MULTI.label,
+    price: PLAN_META.MULTI.priceFcfa,
+    description: PLAN_META.MULTI.summary,
+    features: [
+      "Volume de colis et de conteneurs illimité",
+      "Pilotage multi-corridors (Chine, Dubaï, Turquie, Abidjan)",
+      "Suivi des encaissements Wave, Orange Money et espèces",
+      "Accompagnement WhatsApp prioritaire au démarrage",
+    ],
+    featured: false,
+  },
+];
+
+const FAQS = [
+  {
+    q: "Combien de temps faut-il pour démarrer sur nos arrivages en cours ?",
+    a: "Votre espace est prêt en moins de cinq minutes. Vous importez vos colis en cours ou vous créez un lot test immédiatement avec vos clients.",
+  },
+  {
+    q: "Nos clients doivent-ils télécharger une application mobile ?",
+    a: "Non. Ils cliquent sur le lien reçu sur WhatsApp et voient leur colis, son poids et le montant exact directement dans le navigateur de leur téléphone.",
+  },
+  {
+    q: "Prenez-vous une commission sur les paiements Wave ou Orange Money ?",
+    a: "Aucune. TrackCargo CI automatise le calcul du montant et le reçu, mais l'argent arrive directement sur votre compte marchand habituel.",
+  },
+  {
+    q: "Que se passe-t-il après les 14 jours d'essai gratuit ?",
+    a: "Vous choisissez votre forfait sans frais cachés. Aucune carte bancaire n'est demandée à l'inscription pour tester avec votre équipe.",
+  },
+];
+
+const TELEMETRY_STOPS = [
+  { label: "Dépôt", target: "#act-ouverture" },
+  { label: "Carton TC", target: "#act-comptoir" },
+  { label: "Quai Vridi", target: "#act-quai" },
+  { label: "Portail", target: "#portail-live" },
+  { label: "Lignes", target: "#act-lignes" },
 ];
 
 export default function HomePage() {
-  const [selectedCorridor, setSelectedCorridor] =
-    useState<CorridorId>("yiwu_sea");
-  const [activeStep, setActiveStep] = useState<BatchStepKey>("EN_TRANSIT");
-  const [monthlyParcels, setMonthlyParcels] = useState<number>(350);
-  const [callsPerParcel, setCallsPerParcel] = useState<number>(3);
+  const [corridor, setCorridor] = useState<CorridorId>("yiwu_sea");
+  const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
+  const [parcelsPerMonth, setParcelsPerMonth] = useState<number>(650);
+  const [messagesPerParcel, setMessagesPerParcel] = useState<number>(4);
+  const [activeTelemetryIdx, setActiveTelemetryIdx] = useState<number>(0);
+  const [hideFloatingRoute, setHideFloatingRoute] = useState<boolean>(false);
 
-  const activeCorridor = CORRIDORS[selectedCorridor];
-  const currentStep =
-    BATCH_STEPS.find((s) => s.key === activeStep) ?? BATCH_STEPS[1];
+  const quayVideoRef = useRef<HTMLVideoElement | null>(null);
+  const activeCorridor = CORRIDORS[corridor];
+  const currentStep = BATCH_STEPS[activeStepIndex] ?? BATCH_STEPS[0];
 
-  const roi = useMemo(() => {
-    const avoidedCalls = monthlyParcels * callsPerParcel;
-    const savedMinutes = avoidedCalls * 3.5;
-    const savedHours = Math.round(savedMinutes / 60);
-    const weeklyHours = Math.max(1, Math.round(savedHours / 4));
-    const estimatedFcfa = savedHours * 2500;
-    return {
-      avoidedCalls,
-      savedHours,
-      weeklyHours,
-      estimatedFcfa,
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const syncViewport = () => setIsCompactViewport(mq.matches);
+    syncViewport();
+    mq.addEventListener("change", syncViewport);
+    return () => mq.removeEventListener("change", syncViewport);
+  }, []);
+
+  useEffect(() => {
+    const v = quayVideoRef.current;
+    if (!v) return;
+    const targetSrc = isCompactViewport ? "/media/v2-quay-m.mp4" : "/media/v2-quay.mp4";
+    if (v.getAttribute("data-tc-src") === targetSrc) return;
+    v.setAttribute("data-tc-src", targetSrc);
+    v.src = targetSrc;
+    v.load();
+  }, [isCompactViewport]);
+
+  // Synchronized route telemetry observer + Peak scrub step tracking
+  useEffect(() => {
+    const sectionIds = [
+      "act-ouverture",
+      "act-comptoir",
+      "act-quai",
+      "portail-live",
+      "act-lignes",
+      "act-tarifs",
+      "act-cloture",
+    ];
+    let raf = 0;
+
+    const handleScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const midY = window.innerHeight * 0.45;
+        let currentIdx = 0;
+        for (let i = 0; i < sectionIds.length; i++) {
+          const el = document.getElementById(sectionIds[i]);
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= midY && rect.bottom >= 80) {
+            currentIdx = i;
+          }
+        }
+        // Hide bottom floating pill in Act 4 Peak (#act-quai), Act 7 Pricing (#act-tarifs), and footer (#act-cloture)
+        // so it never competes with the Peak dock, pricing CTAs, or closing links.
+        setHideFloatingRoute(currentIdx === 2 || currentIdx >= 5);
+        setActiveTelemetryIdx(Math.min(currentIdx, TELEMETRY_STOPS.length - 1));
+
+        const quayEl = document.getElementById("act-quai");
+        if (quayEl) {
+          const rawP = getComputedStyle(quayEl).getPropertyValue("--sc-p").trim();
+          const p = parseFloat(rawP);
+          if (!Number.isNaN(p) && p > 0) {
+            const idx = Math.min(BATCH_STEPS.length - 1, Math.floor(p * BATCH_STEPS.length));
+            setActiveStepIndex((prev) => (prev === idx ? prev : idx));
+          }
+        }
+      });
     };
-  }, [monthlyParcels, callsPerParcel]);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const roiStats = useMemo(() => {
+    const avoidedMessages = parcelsPerMonth * messagesPerParcel;
+    const hoursSaved = Math.round((avoidedMessages * 1.4) / 60);
+    const staffValueFcfa = Math.round(hoursSaved * 3200);
+    return { avoidedMessages, hoursSaved, staffValueFcfa };
+  }, [parcelsPerMonth, messagesPerParcel]);
 
   return (
-    <div id="tc-showcase-root" className="min-h-screen flex flex-col">
+    <div id="tc-showcase-root" className="min-h-screen bg-[#f7f6f2] text-[#0d131d]">
       <ScrollCraftRunner rootId="tc-showcase-root" />
-
       <div data-sc-progress aria-hidden="true" />
       <div className="sc-grain" aria-hidden="true" />
 
       <Navbar activeCorridorLabel={activeCorridor.label} />
 
-      <main className="flex-1">
-        {/* ================================================================
-            ACTE 1 — HERO 3D MULTI-PLANS PLEIN JOUR (pin, 2.20vh)
-           ================================================================ */}
+      <main>
+        {/* =================================================================
+            ACTE 1 — Ouverture 3D cinématique (flow, 100svh, max 4 éléments)
+           ================================================================= */}
         <section
-          data-sc-act="pin"
-          data-sc-span="2.20"
-          className="sc-act sc-act--pinned bg-[#f6f3ec]"
-          aria-label="Ouverture 3D plein jour sur le port d'Abidjan"
+          id="act-ouverture"
+          data-sc-act="flow"
+          className="sc-act tc-daylight-band relative min-h-[calc(100svh-4.5rem)] flex items-center pt-5 pb-8 sm:pt-8 sm:pb-12 overflow-hidden"
         >
-          <div className="sc-stage tc-stage-below-nav" data-sc-stage>
-            {/* Plane 1: Full-bleed crisp daylight harbor photography */}
-            <div className="tc-hero-plane" style={{ zIndex: 1 }}>
-              <picture
-                data-sc-parallax="0.16"
-                className="block w-full h-[114%] -top-[4%] relative"
-              >
-                <source
-                  media="(max-width: 860px)"
-                  srcSet="/media/v2-hero-day-m.webp"
-                />
-                <img
-                  src="/media/v2-hero-day.webp"
-                  alt="Terminal portuaire ensoleillé à Abidjan avec grues orange et conteneurs bleu cobalt"
-                  className="w-full h-full object-cover object-right"
-                />
-              </picture>
-            </div>
+          {/* Plan arrière : port d'Abidjan en plein jour + parallax doux */}
+          <div className="tc-hero-plane z-0" data-sc-parallax="-0.12" aria-hidden="true">
+            <picture className="block w-full h-full">
+              <source media="(max-width: 860px)" srcSet="/media/v2-hero-day-m.webp" />
+              <img
+                src="/media/v2-hero-day.webp"
+                alt=""
+                className="w-full h-full object-cover object-center opacity-70 sm:opacity-85"
+              />
+            </picture>
+          </div>
 
-            {/* Plane 2: Subtle sunlit coastal grid accent */}
-            <div
-              className="pointer-events-none hidden lg:flex items-center gap-2 absolute top-4 right-8 z-20 px-3 py-1.5 rounded-[8px] bg-white/92 backdrop-blur-xs border border-[#09152b]/14 shadow-xs text-[11px] font-mono font-bold text-[#09152b]"
-              aria-hidden="true"
-            >
-              <span className="h-2 w-2 rounded-full bg-[#10b981]" />
-              <span>VRIDI · PORT SUD · 09:00</span>
-            </div>
+          {/* Voile ivoire directionnel sur la colonne de texte */}
+          <div className="tc-day-scrim" aria-hidden="true" />
+          <div className="tc-day-floor" aria-hidden="true" />
 
-            {/* Plane 3: Localized Daylight Alabaster Scrim */}
-            <div className="tc-day-scrim" aria-hidden="true" />
-            <div className="tc-day-floor" aria-hidden="true" />
-
-            {/* Responsive Two-Zone Stage Grid — flush inside (100svh - 4rem) */}
-            <div className="relative z-20 h-full max-w-[82rem] mx-auto px-[var(--sc-gutter)] py-3 sm:py-5 md:py-8 flex flex-col justify-between md:grid md:grid-cols-12 md:items-center gap-2 md:gap-4">
-              {/* Left Column Desktop / Bottom Area Mobile: Foreground Copy at opacity 1 from y = 0 */}
-              <div className="md:col-span-6 order-last md:order-first flex flex-col justify-end md:justify-center relative z-30">
-                <div className="inline-flex self-start items-center gap-2 px-2.5 sm:px-3 py-1 rounded-[6px] bg-[#0a2e6e] text-white text-[10px] sm:text-xs font-mono font-bold tracking-[0.06em] uppercase mb-2 sm:mb-3 shadow-xs">
-                  <span
-                    className="h-2 w-2 rounded-full bg-[#ff5c1b]"
-                    aria-hidden="true"
-                  />
-                  <span>Agences de groupage · Abidjan</span>
-                </div>
-
-                <h1 className="sc-display sc-display--xl tc-hero-title text-[#09152b] font-extrabold max-w-[16ch]">
-                  Vos clients suivent leur colis sans vous appeler.
+          <div className="sc-wrap relative z-20 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+              {/* Colonne gauche : 4 éléments stricts, zéro pilule eyebrow */}
+              <div className="lg:col-span-6 space-y-3.5 sm:space-y-5">
+                <h1 className="sc-display sc-display--xl tc-hero-title text-[#0d131d] tracking-tight">
+                  Vos clients suivent leur colis sans appeler le comptoir.
                 </h1>
 
-                <p className="hidden sm:block sc-lede text-[#2c3a57] font-medium mt-3 max-w-[44ch]">
-                  Validez tout un conteneur en une fois, prévenez sur WhatsApp
-                  et encaissez par Wave avant le retrait.
+                <p className="text-[14.5px] sm:text-[17px] leading-[1.55] text-[#243247] max-w-[48ch]">
+                  Un code TC par carton, des alertes WhatsApp en un geste et un lien Wave ou Orange
+                  Money prêt dès que le lot arrive à Vridi.
                 </p>
 
-                {/* Interactive Corridor Switcher */}
-                <div className="mt-2.5 sm:mt-4">
-                  <div className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-[0.06em] text-[#43506b] mb-1.5">
-                    Basculer le corridor 3D :
-                  </div>
+                {/* Sélecteur de corridor synchronisé au modèle 3D */}
+                <div className="space-y-2 pt-0.5">
                   <div
-                    className="flex flex-wrap gap-1.5 sm:gap-2"
                     role="group"
-                    aria-label="Sélecteur de corridor 3D"
+                    aria-label="Choisir une ligne logistique"
+                    className="inline-flex flex-wrap items-center gap-1 rounded-[16px] sm:rounded-full bg-white/95 p-1 border border-[#0d131d]/12 shadow-sm"
                   >
-                    {(Object.keys(CORRIDORS) as CorridorId[]).map((cid) => {
-                      const c = CORRIDORS[cid];
-                      const active = selectedCorridor === cid;
+                    {(Object.keys(CORRIDORS) as CorridorId[]).map((id) => {
+                      const active = corridor === id;
                       return (
                         <button
-                          key={cid}
+                          key={id}
                           type="button"
-                          onClick={() => setSelectedCorridor(cid)}
+                          onClick={() => setCorridor(id)}
                           aria-pressed={active}
-                          className={`px-2.5 sm:px-3 py-1.5 rounded-[8px] text-[11px] sm:text-xs font-bold transition-all cursor-pointer border ${
+                          className={`rounded-full px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11.5px] sm:text-[13px] font-semibold transition-all cursor-pointer ${
                             active
-                              ? "bg-[#0a2e6e] text-white border-[#09152b] shadow-xs"
-                              : "bg-white/95 text-[#09152b] border-[#09152b]/20 hover:border-[#0a2e6e]"
+                              ? "bg-[#0d1522] text-white shadow-sm"
+                              : "text-[#334155] hover:text-[#0d131d] hover:bg-[#f1efe8]"
                           }`}
                         >
-                          {c.label}
+                          {CORRIDORS[id].label}
                         </button>
                       );
                     })}
                   </div>
+                  <p className="text-[11.5px] sm:text-[12.5px] font-mono text-[#334155] pl-1">
+                    {activeCorridor.unitName} · {activeCorridor.eta}
+                  </p>
                 </div>
 
-                {/* Primary CTA Row */}
-                <div className="mt-3 sm:mt-5 flex flex-wrap items-center gap-2.5 sm:gap-3">
-                  <Link
-                    href="/register"
-                    className="tc-btn-primary !min-h-[44px] sm:!min-h-[48px] text-sm"
-                  >
-                    <span>Essayer 14 jours gratuits</span>
-                    <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
+                {/* Actions principales */}
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-0.5">
+                  <Link href="/register" className="tc-btn-primary">
+                    Essayer 14 jours gratuits
                   </Link>
-                  <a
-                    href="#portail-live"
-                    className="tc-btn-ghost hidden sm:inline-flex"
-                  >
-                    <span>Essayer le suivi client</span>
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  <a href="#portail-live" className="tc-btn-ghost">
+                    Tester le suivi client
                   </a>
                 </div>
               </div>
 
-              {/* Right Column Desktop / Upper Frame Mobile: Immediate Daylight WebGL 3D Container */}
-              <div
-                data-sc-parallax="-0.06"
-                className="md:col-span-6 order-first md:order-last h-[190px] sm:h-[270px] md:h-[min(68svh,600px)] w-full flex items-center justify-center relative z-10"
-              >
-                <ContainerStage3D
-                  corridor={selectedCorridor}
-                  activeStep={activeStep}
-                />
+              {/* Colonne droite : Scène WebGL PBR sans socle artificiel ni badges superposés */}
+              <div className="lg:col-span-6 relative">
+                <div className="relative h-[200px] sm:h-[340px] lg:h-[520px] w-full">
+                  <ContainerStage3D
+                    corridor={corridor}
+                    activeStep={currentStep.id}
+                    className="w-full h-full"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ================================================================
-            ACTE 2 — RÉALITÉ ENTREPÔT & CONTRASTE OPÉRATIONNEL (flow + reveal)
-           ================================================================ */}
+        {/* =================================================================
+            ACTE 2 — Ce qui change au comptoir (pin 1.65vh + Carton 3D PBR)
+           ================================================================= */}
         <section
+          id="act-comptoir"
+          data-sc-act="pin"
+          data-sc-span="1.65"
+          className="sc-act tc-daylight-band"
+        >
+          <div className="sc-stage tc-stage-below-nav bg-[#f7f6f2] flex items-start pt-4 sm:items-center sm:pt-0">
+            <div className="sc-wrap w-full">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5 lg:gap-12 items-center">
+                <div className="lg:col-span-6 space-y-2.5 sm:space-y-5">
+                  <h2 className="sc-display sc-display--lg tc-act2-title text-[#0d131d]">
+                    Fini les captures Wave perdues et les appels à 22 heures.
+                  </h2>
+
+                  <p className="hidden sm:block text-[16px] leading-[1.6] text-[#475569] max-w-[48ch]">
+                    Chaque carton pesé en Chine ou à Dubaï garde sa fiche claire jusqu&apos;à la
+                    remise au comptoir à Abidjan.
+                  </p>
+
+                  {/* Comparatif épuré sans encadrés lourds */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-2 border-t border-[#0d131d]/12">
+                    <div className="space-y-1">
+                      <p className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#525e70]">
+                        Avant, sur papier et groupes
+                      </p>
+                      <p className="text-[12.5px] sm:text-[13.5px] text-[#475569] leading-[1.45] sm:leading-[1.55]">
+                        Les clients demandent chaque jour où est le bateau, et les reçus Mobile
+                        Money se mélangent dans WhatsApp.
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#c9410e]">
+                        Avec TrackCargo CI
+                      </p>
+                      <p className="text-[12.5px] sm:text-[13.5px] text-[#0d131d] font-medium leading-[1.45] sm:leading-[1.55]">
+                        Une mise à jour sur le lot prévient quarante clients avec leur code TC et
+                        leur solde prêt à régler.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scène 3D macro : carton TC-8841 cerclé sur palette bois */}
+                <div className="lg:col-span-6">
+                  <div className="relative h-[165px] sm:h-[260px] lg:h-[450px] w-full">
+                    <ParcelShowcase3D className="w-full h-full" />
+                  </div>
+                  <p className="hidden sm:block text-center text-[12px] font-mono text-[#525e70] mt-2">
+                    Colis TC-8841 · 14,5 kg · Étiquette et cerclage synchronisés au défilement
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================================================
+            ACTE 3 — Respiration silencieuse : Entrepôt de Treichville (reveal up)
+           ================================================================= */}
+        <section
+          id="act-entrepot"
           data-sc-act="flow"
-          className="tc-daylight-band tc-flow-after-pin border-t border-[#09152b]/10"
-          aria-label="Comparaison opérationnelle entrepôt"
+          className="sc-act tc-daylight-band py-8 sm:py-14"
         >
-          <div className="sc-wrap grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            <div className="lg:col-span-6 space-y-5" data-sc-in>
-              <span className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-[0.07em] text-[#0a2e6e] bg-[#dce7fa] border border-[#0a2e6e]/20 px-3 py-1 rounded-[6px]">
-                <span>Avant et après le déploiement</span>
-              </span>
-              <h2 className="sc-display sc-display--lg tc-act2-title text-[#09152b] font-extrabold">
-                Arrêtez de répondre cent fois au même message WhatsApp.
-              </h2>
-              <p className="text-[#43506b] text-base leading-relaxed max-w-[52ch]">
-                Quand un navire accoste à Vridi, votre téléphone sature en
-                quelques minutes. Avec TrackCargo CI, vos clients consultent
-                leur code directement et préparent le règlement depuis chez eux.
-              </p>
-
-              {/* High-contrast operational ledger comparison */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-                <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 sm:p-5 shadow-[var(--sc-e1)] space-y-2.5">
-                  <div className="text-xs font-mono font-extrabold uppercase tracking-wider text-rose-700">
-                    Carnet papier & Excel
-                  </div>
-                  <ul className="space-y-2 text-sm text-[#43506b]">
-                    <li className="flex items-start gap-2">
-                      <span className="font-mono text-rose-600 font-bold">
-                        01.
-                      </span>
-                      <span>
-                        Appels répétés dès la mise à quai du conteneur
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-mono text-rose-600 font-bold">
-                        02.
-                      </span>
-                      <span>
-                        Captures d&apos;écran Wave égarées dans les discussions
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-mono text-rose-600 font-bold">
-                        03.
-                      </span>
-                      <span>
-                        Erreurs de poids ou de CBM recopiées à la main
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="bg-[#0a2e6e] text-white rounded-[14px] border border-[#09152b] p-4 sm:p-5 shadow-[var(--sc-e2)] space-y-2.5">
-                  <div className="text-xs font-mono font-extrabold uppercase tracking-wider text-[#fef08a]">
-                    Portail TrackCargo CI
-                  </div>
-                  <ul className="space-y-2 text-sm text-[#dce7fa]">
-                    <li className="flex items-start gap-2">
-                      <Check
-                        className="w-4 h-4 text-[#ff5c1b] shrink-0 mt-0.5"
-                        aria-hidden="true"
-                      />
-                      <span>
-                        Mise à jour globale d&apos;un lot entier en un seul clic
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check
-                        className="w-4 h-4 text-[#ff5c1b] shrink-0 mt-0.5"
-                        aria-hidden="true"
-                      />
-                      <span>
-                        Lien public unique consultable par téléphone ou code TC
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check
-                        className="w-4 h-4 text-[#ff5c1b] shrink-0 mt-0.5"
-                        aria-hidden="true"
-                      />
-                      <span>
-                        Montant FCFA et bouton Wave ou Orange Money prêts
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Architectural daylight warehouse reveal plate + authored silence */}
-            <div className="lg:col-span-6 space-y-3">
-              <div
-                data-sc-reveal="left"
-                className="rounded-[16px] overflow-hidden border border-[#09152b]/16 shadow-[var(--sc-e3)] bg-white"
-              >
-                <img
-                  src="/media/v2-warehouse-day.webp"
-                  alt="Baie de réception claire à Treichville avec balance industrielle et cartons palettisés"
-                  className="w-full aspect-[16/10] object-cover"
-                />
-              </div>
-              <div className="flex items-center justify-between text-xs font-mono text-[#43506b] px-1">
-                <span>RÉCEPTION TREICHVILLE · BALANCE & TRI DIRECT</span>
-                <span className="font-bold text-[#0a2e6e]">
-                  {activeCorridor.sampleBatch}
-                </span>
-              </div>
-            </div>
+          <div className="sc-wrap">
+            <figure
+              data-sc-reveal="up"
+              data-sc-reveal-at="0.06 0.62"
+              className="overflow-hidden rounded-[20px] bg-[#eeebe3] shadow-[0_24px_60px_-20px_rgba(13,21,34,0.16)]"
+            >
+              <img
+                src="/media/v2-warehouse-day.webp"
+                alt="Baie de pesée et palettes rangées dans l'entrepôt clair de Treichville"
+                className="w-full h-[34svh] sm:h-[48svh] lg:h-[54svh] object-cover object-center block"
+              />
+            </figure>
+            <p className="mt-3.5 text-center text-[14px] sm:text-[15px] text-[#525e70] max-w-[54ch] mx-auto">
+              À Treichville, chaque carton pesé reçoit son code TC et son avis de retrait dès son
+              entrée en rayon.
+            </p>
           </div>
         </section>
 
-        {/* ================================================================
-            ACTE 3 — LE PIC : PONT DE CONTRÔLE COBALT & SCRUB QUAI (2.95vh)
-           ================================================================ */}
+        {/* =================================================================
+            ACTE 4 — LE PIC : Quai de Vridi & Lot de 42 colis (scrub 2.75vh)
+           ================================================================= */}
         <section
-          id="pont-controle"
+          id="act-quai"
           data-sc-act="scrub"
-          data-sc-span="2.95"
+          data-sc-span="2.75"
           data-sc-dwell="0.34"
-          className="sc-act sc-act--pinned tc-cobalt-band"
-          aria-label="Pont de contrôle logistique synchronisé"
+          className="sc-act tc-slate-band"
         >
-          <div className="sc-stage tc-stage-below-nav" data-sc-stage>
-            {/* Frame-matched poster & full-life scrubbed daylight quay clip */}
-            <picture className="sc-stage__poster block w-full h-full">
-              <source
-                media="(max-width: 860px)"
-                srcSet="/media/v2-quay-poster-p.webp"
-              />
-              <img
-                src="/media/v2-quay-poster.webp"
-                alt="Allée ensoleillée de conteneurs bleu cobalt et orange au quai"
-                className="w-full h-full object-cover"
-              />
-            </picture>
+          <div className="sc-stage tc-stage-below-nav bg-[#0d1522] overflow-hidden">
+            <img
+              src={isCompactViewport ? "/media/v2-quay-poster-p.webp" : "/media/v2-quay-poster.webp"}
+              alt="Terminal à conteneurs du port d'Abidjan en plein jour"
+              className="sc-stage__poster"
+            />
             <video
+              ref={quayVideoRef}
               data-sc-scrub
-              data-sc-src="/media/v2-quay.mp4"
-              data-sc-src-mobile="/media/v2-quay-m.mp4"
               muted
               playsInline
-              preload="auto"
-              aria-hidden="true"
+              preload="none"
+              poster={isCompactViewport ? "/media/v2-quay-poster-p.webp" : "/media/v2-quay-poster.webp"}
+              className="w-full h-full object-cover object-center"
             />
 
-            {/* Deep Cobalt gradient localized behind lower control dock */}
-            <div className="tc-cobalt-scrim" aria-hidden="true" />
+            {/* Voile sombre uniquement en bas pour laisser ~70% du quai au soleil */}
+            <div className="tc-slate-scrim" aria-hidden="true" />
 
-            {/* Top Floating Corridor Banner — visible cleanly below header */}
-            <div className="pointer-events-none absolute top-4 sm:top-5 left-[var(--sc-gutter)] right-[var(--sc-gutter)] z-20 flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[8px] bg-[#0a2e6e] text-white border border-white/25 text-xs font-mono font-bold shadow-md">
-                <span
-                  className="h-2 w-2 rounded-full bg-[#ff5c1b]"
-                  aria-hidden="true"
-                />
-                <span>{activeCorridor.shortTag}</span>
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-[8px] bg-white text-[#09152b] text-xs font-mono font-extrabold shadow-md">
-                <span>{activeCorridor.sampleBatch}</span>
-                <span>·</span>
-                <span className="text-[#0a2e6e]">{activeCorridor.modeText}</span>
+            {/* Lecture discrète en haut à gauche */}
+            <div className="absolute top-4 left-4 sm:top-6 sm:left-8 z-20 flex items-center gap-2.5 rounded-full bg-[#0d1522]/80 backdrop-blur-md px-3.5 py-1.5 border border-white/15">
+              <span className="h-2 w-2 rounded-full bg-[#f0642d]" aria-hidden="true" />
+              <span
+                data-sc-verify-state={currentStep.id}
+                className="text-[11.5px] sm:text-[12px] font-mono text-white/95"
+              >
+                {currentStep.locationLine}
               </span>
             </div>
 
-            {/* Interactive SVG Corridor & Batch Control Panel — Always 100% opaque high-contrast */}
-            <div className="absolute inset-x-[var(--sc-gutter)] bottom-[clamp(0.75rem,3vh,2.2rem)] z-20 max-w-[72rem] mx-auto">
-              <div className="bg-[#0a2e6e] text-white rounded-[16px] border border-white/25 shadow-[var(--sc-e3)] p-4 sm:p-6 space-y-3 sm:space-y-4">
-                {/* Scroll-Driven SVG Route Trace */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-white/15 pb-3">
-                  <div className="space-y-1">
-                    <div className="text-[11px] font-mono font-extrabold uppercase tracking-[0.07em] text-[#fef08a]">
-                      Mise à jour de masse · 42 colis groupés
-                    </div>
-                    <h2 className="font-[family-name:var(--font-archivo)] text-lg sm:text-2xl font-extrabold text-white">
-                      {currentStep.title}
+            {/* Dock verre dépoli compact centré en bas (sans cap 46rem) */}
+            <div className="absolute z-20 bottom-3 sm:bottom-6 inset-x-0 px-4 sm:px-8">
+              <div className="max-w-4xl mx-auto rounded-[18px] bg-[#0d1522]/88 backdrop-blur-xl border border-white/14 p-3.5 sm:p-5 shadow-2xl space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#cbd5e1]">
+                      Lot #CG-402 · 42 colis groupés
+                    </p>
+                    <h2 className="text-[16px] sm:text-[20px] font-semibold text-white tracking-tight">
+                      Un clic met à jour tout le conteneur à la fois
                     </h2>
                   </div>
 
-                  {/* Animated SVG Flight/Sea Path Driven by --sc-p */}
-                  <div
-                    className="w-full md:w-[320px] shrink-0"
-                    aria-hidden="true"
-                  >
-                    <div className="flex justify-between text-[10px] font-mono font-bold text-[#dce7fa] mb-1">
-                      <span>{activeCorridor.originCity}</span>
-                      <span>Abidjan</span>
-                    </div>
-                    <svg viewBox="0 0 320 28" className="w-full h-6">
-                      <line
-                        x1="12"
-                        y1="14"
-                        x2="308"
-                        y2="14"
-                        stroke="rgba(255,255,255,0.28)"
-                        strokeWidth="3"
-                        strokeDasharray="6 6"
-                      />
-                      <line
-                        x1="12"
-                        y1="14"
-                        x2="308"
-                        y2="14"
-                        stroke="#ff5c1b"
-                        strokeWidth="4"
+                  {/* Tracé SVG d'itinéraire synchronisé */}
+                  <div className="hidden md:flex items-center gap-3 min-w-[230px]">
+                    <span className="text-[11px] font-mono text-[#cbd5e1]">Yiwu</span>
+                    <svg viewBox="0 0 180 24" className="w-36 h-6 overflow-visible" aria-hidden="true">
+                      <path
+                        d="M 6 18 Q 90 2 174 18"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.22)"
+                        strokeWidth="2"
                         strokeLinecap="round"
-                        style={{
-                          strokeDasharray: 296,
-                          strokeDashoffset:
-                            "calc(296 * (1 - clamp(0.15, (var(--sc-p, 0.4) * 1.15), 1)))",
-                        }}
                       />
-                      <circle cx="12" cy="14" r="5" fill="#ffffff" />
+                      <path
+                        d="M 6 18 Q 90 2 174 18"
+                        fill="none"
+                        stroke="#f0642d"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        pathLength="100"
+                        strokeDasharray="100"
+                        strokeDashoffset={100 - currentStep.progressPct}
+                      />
                       <circle
-                        cx="160"
-                        cy="14"
+                        cx={6 + (168 * currentStep.progressPct) / 100}
+                        cy={18 - Math.sin((currentStep.progressPct / 100) * Math.PI) * 8}
                         r="4"
-                        fill={
-                          currentStep.progressPct >= 50 ? "#ff5c1b" : "#113b86"
-                        }
-                        stroke="#ffffff"
-                        strokeWidth="1.5"
-                      />
-                      <circle
-                        cx="308"
-                        cy="14"
-                        r="5.5"
-                        fill={
-                          currentStep.progressPct === 100
-                            ? "#10b981"
-                            : "#ff5c1b"
-                        }
-                        stroke="#ffffff"
-                        strokeWidth="1.5"
+                        fill="#ffffff"
                       />
                     </svg>
+                    <span className="text-[11px] font-mono text-white font-semibold">Vridi</span>
                   </div>
                 </div>
 
-                {/* Stage Switcher Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {BATCH_STEPS.map((st) => {
-                    const selected = st.key === activeStep;
+                {/* 4 boutons d'étapes interactives */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+                  {BATCH_STEPS.map((step, idx) => {
+                    const selected = idx === activeStepIndex;
                     return (
                       <button
-                        key={st.key}
+                        key={step.id}
                         type="button"
-                        onClick={() => setActiveStep(st.key)}
-                        aria-pressed={selected}
-                        className={`px-2.5 sm:px-3 py-2 rounded-[10px] text-xs font-extrabold transition-all cursor-pointer border text-left ${
+                        onClick={() => setActiveStepIndex(idx)}
+                        className={`rounded-full px-3 py-2 text-left text-[12px] font-semibold transition-all cursor-pointer truncate ${
                           selected
-                            ? "bg-[#ff5c1b] text-[#09152b] border-[#09152b] shadow-[0_2px_0_#09152b]"
-                            : "bg-[#113b86] text-white border-white/25 hover:bg-[#194da8]"
+                            ? "bg-[#c9410e] text-white shadow-sm"
+                            : "bg-white/10 text-[#e2e8f0] hover:bg-white/18"
                         }`}
                       >
-                        {st.pill}
+                        {step.buttonLabel}
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Live WhatsApp & Verification Telemetry */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center pt-1">
-                  <div className="lg:col-span-8 bg-[#071f4a] rounded-[10px] border border-white/15 px-3.5 py-2.5 flex items-start gap-2.5">
-                    <MessageSquare
-                      className="w-4 h-4 text-[#10b981] shrink-0 mt-0.5"
-                      aria-hidden="true"
-                    />
-                    <div className="text-xs sm:text-sm text-[#f8fafc] leading-snug">
-                      <span className="font-bold text-white">
-                        Aperçu client WhatsApp :{" "}
-                      </span>
-                      {currentStep.waPreview}
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-4 flex flex-wrap items-center justify-between lg:justify-end gap-2">
-                    <span
-                      data-sc-verify-state={`3d:${currentStep.key}:${currentStep.updatedAt}`}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-white text-[#09152b] font-mono text-[11px] font-extrabold"
-                    >
-                      <CheckCircle2
-                        className="w-3.5 h-3.5 text-emerald-700"
-                        aria-hidden="true"
-                      />
-                      <span>{`Mise à jour ${currentStep.updatedAt}`}</span>
-                    </span>
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#09152b] font-extrabold text-xs no-underline"
-                    >
-                      <span>Gérer en direct</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
-                    </Link>
-                  </div>
+                {/* Aperçu WhatsApp & Wave en langage simple */}
+                <div className="rounded-[12px] bg-white/8 border border-white/10 px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <p className="text-[12.5px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
+                    {currentStep.whatsappSample}
+                  </p>
+                  <span className="shrink-0 text-[11px] font-mono text-[#fde68a]">
+                    {currentStep.waveState}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ================================================================
-            ACTE 4 — PORTAIL CLIENT EN DIRECT (/api/track, flow + data-sc-in)
-           ================================================================ */}
+        {/* =================================================================
+            ACTE 5 — Banc d'essai client en direct (/api/track)
+           ================================================================= */}
         <section
           id="portail-live"
-          data-sc-act="flow"
-          className="tc-daylight-band tc-flow-after-pin border-b border-[#09152b]/10"
           aria-label="Portail client public testable"
+          data-sc-act="flow"
+          className="sc-act tc-daylight-band scroll-mt-20 py-12 sm:py-16"
         >
-          <div className="sc-wrap space-y-6">
-            <div
-              className="flex flex-col md:flex-row md:items-end justify-between gap-4"
-              data-sc-in
-            >
-              <div className="space-y-2 max-w-2xl">
-                <span className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-[0.07em] text-[#0a2e6e] bg-[#dce7fa] border border-[#0a2e6e]/20 px-3 py-1 rounded-[6px]">
-                  <Radio
-                    className="w-3.5 h-3.5 text-[#ff5c1b]"
-                    aria-hidden="true"
-                  />
-                  <span>Démonstration client connectée à /api/track</span>
-                </span>
-                <h2 className="sc-display sc-display--md text-[#09152b] font-extrabold">
-                  Testez la fiche que reçoivent vos clients sur leur téléphone.
-                </h2>
-                <p className="text-sm sm:text-base text-[#43506b]">
-                  Cliquez sur{" "}
-                  <span className="font-mono font-bold text-[#0a2e6e]">
-                    TC-8841
-                  </span>
-                  ,{" "}
-                  <span className="font-mono font-bold text-[#0a2e6e]">
-                    TC-8842
-                  </span>{" "}
-                  ou{" "}
-                  <span className="font-mono font-bold text-[#0a2e6e]">
-                    TC-8844
-                  </span>{" "}
-                  pour inspecter le statut, le tarif en FCFA et le bouton Wave.
-                </p>
-              </div>
-              <Link href="/track" className="tc-btn-cobalt shrink-0">
-                <span>Ouvrir en pleine page</span>
-                <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-              </Link>
+          <div className="sc-wrap max-w-5xl">
+            <div data-sc-in="up" className="max-w-2xl mb-8 sm:mb-10 space-y-3">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.09em] text-[#c9410e]">
+                Démonstration en direct
+              </p>
+              <h2 className="sc-display sc-display--lg text-[#0d131d]">
+                Essayez le suivi exact que voit votre client.
+              </h2>
+              <p className="text-[15.5px] text-[#475569] leading-[1.6]">
+                Cliquez sur l&apos;un des numéros ci-dessous pour consulter la position du lot, le
+                poids du carton et le bouton de paiement Wave ou Orange Money.
+              </p>
             </div>
 
-            <TrackingLookup initialQuery="TC-8841" compact />
+            <div data-sc-in="up">
+              <TrackingLookup initialQuery="TC-8841" compact />
+            </div>
           </div>
         </section>
 
-        {/* ================================================================
-            ACTE 5 — RAIL HORIZONTAL COBALT PLEIN JOUR (pan, 2.35vh)
-           ================================================================ */}
+        {/* =================================================================
+            ACTE 6 — Les quatre lignes logistiques (pan horizontal 1.85vh)
+           ================================================================= */}
         <section
+          id="act-lignes"
           data-sc-act="pan"
-          data-sc-span="2.35"
-          className="sc-act sc-act--pinned tc-cobalt-band"
-          aria-label="Corridors aériens et maritimes gérés"
+          data-sc-span="1.85"
+          className="sc-act tc-slate-band"
         >
-          <div className="sc-stage tc-stage-below-nav" data-sc-stage>
-            <div className="tc-rail-track" data-sc-pan="0.72">
-              <div className="tc-rail-lead space-y-3">
-                <span className="inline-flex items-center gap-1.5 self-start text-[11px] font-mono font-extrabold uppercase tracking-[0.08em] px-2.5 py-1 rounded-[6px] bg-[#ff5c1b] text-[#09152b] border border-[#09152b]">
-                  <span>{activeCorridor.label}</span>
-                </span>
-                <h2 className="sc-display sc-display--lg text-white font-extrabold">
-                  Quatre corridors, un seul tableau.
+          <div className="sc-stage tc-stage-below-nav bg-[#0d1522] overflow-hidden">
+            <div className="tc-rail-track" data-sc-pan="0.04">
+              <div className="tc-rail-lead">
+                <h2 className="sc-display sc-display--lg text-white mb-4">
+                  Un seul outil pour vos quatre lignes d&apos;activité.
                 </h2>
-                <p className="text-sm sm:text-base text-[#dce7fa] leading-relaxed">
-                  Fret aérien facturé au kilo ou conteneur complet facturé au
-                  CBM : toutes vos lignes restent lisibles du départ jusqu&apos;à
-                  la remise au comptoir.
+                <p className="text-[15px] text-[#cbd5e1] leading-[1.6] max-w-[34ch]">
+                  Faites défiler pour voir comment votre équipe suit chaque trajet de la Chine ou
+                  de la Turquie jusqu&apos;à la remise au client.
                 </p>
               </div>
 
-              {LANES.map((lane) => {
-                const Icon = lane.icon;
-                return (
-                  <article
-                    key={lane.id}
-                    data-sc-tilt="5"
-                    className="tc-lane-card"
-                  >
-                    <div className="relative h-44 sm:h-52 overflow-hidden bg-[#ebe5d8] shrink-0">
-                      <img
-                        src={lane.img}
-                        alt={lane.alt}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-[#0a2e6e] text-white text-[11px] font-mono font-bold shadow-sm">
-                        <Icon
-                          className="w-3.5 h-3.5 text-[#ff5c1b]"
-                          aria-hidden="true"
-                        />
-                        <span>{lane.corridor}</span>
-                      </span>
+              {CORRIDOR_CARDS.map((card, idx) => (
+                <article
+                  key={card.city}
+                  data-sc-tilt="4"
+                  className="tc-lane-card"
+                  style={
+                    idx > 0
+                      ? {
+                          opacity: "clamp(0.68, calc(0.58 + var(--sc-p, 1) * 0.75), 1)",
+                        }
+                      : undefined
+                  }
+                >
+                  <div className="h-48 sm:h-56 w-full overflow-hidden bg-[#142033]">
+                    <img
+                      src={card.image}
+                      alt={card.alt}
+                      className="w-full h-full object-cover object-center block"
+                    />
+                  </div>
+                  <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-[12px] font-mono text-[#cbd5e1]">
+                        {card.timing} · {card.billing}
+                      </p>
+                      <h3 className="text-[20px] font-bold text-white tracking-tight">
+                        {card.city}
+                      </h3>
+                      <p className="text-[14px] text-[#cbd5e1] leading-[1.55]">{card.detail}</p>
                     </div>
-                    <div className="p-5 flex-1 flex flex-col justify-between gap-3">
-                      <div className="space-y-1.5">
-                        <div className="text-xs font-mono font-bold text-[#0a2e6e] uppercase">
-                          {lane.meta}
-                        </div>
-                        <h3 className="font-[family-name:var(--font-archivo)] text-lg sm:text-xl font-extrabold text-[#09152b] leading-snug">
-                          {lane.title}
-                        </h3>
-                        <p className="text-sm text-[#43506b] leading-relaxed">
-                          {lane.desc}
-                        </p>
-                      </div>
-                      <div className="pt-2 border-t border-[#09152b]/10 flex items-center justify-between text-xs font-mono font-bold text-[#0a2e6e]">
-                        <span>Traçabilité lot complète</span>
-                        <span className="text-[#09152b]">Actif</span>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+                  </div>
+                </article>
+              ))}
 
               <div className="tc-rail-end">
                 <div className="space-y-3">
-                  <div className="text-xs font-mono font-extrabold uppercase tracking-wider text-[#09152b]">
-                    Mise en route rapide
-                  </div>
-                  <h3 className="font-[family-name:var(--font-archivo)] text-2xl font-extrabold text-[#09152b] leading-tight">
-                    Démarrez votre premier lot dès aujourd&apos;hui.
+                  <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-white/90">
+                    Prêt pour votre agence
+                  </p>
+                  <h3 className="text-[24px] font-bold text-white leading-[1.15]">
+                    Configurez vos propres lignes en cinq minutes.
                   </h3>
-                  <p className="text-sm font-medium text-[#09152b]/90">
-                    Copiez vos lignes Excel existantes, générez les codes TC et
-                    partagez votre lien personnalisé aux clients.
+                  <p className="text-[14px] text-white/90 leading-[1.55]">
+                    Votre lien personnalisé s&apos;adapte automatiquement à vos tarifs au kilo et au
+                    mètre cube.
                   </p>
                 </div>
-                <Link
-                  href="/register"
-                  className="tc-btn-cobalt w-full justify-center mt-4"
-                >
-                  <span>Créer mon agence (14j gratuits)</span>
-                  <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-                </Link>
+                <div className="pt-4">
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 hover:bg-[#f7f6f2] transition"
+                  >
+                    Créer mon agence
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ================================================================
-            ACTE 6 — CALCULATEUR FCFA, TARIFS ASYMÉTRIQUES, FAQ & CLÔTURE COBALT
-           ================================================================ */}
-        <section
-          data-sc-act="flow"
-          className="tc-daylight-band tc-flow-after-pin"
-          aria-label="Simulateur de temps gagné et tarification"
-        >
-          <div className="sc-wrap space-y-16 sm:space-y-24">
-            {/* 6A: Interactive FCFA ROI Calculator */}
-            <section
-              aria-label="Simulateur de gain hebdomadaire en FCFA"
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-[20px] border border-[#09152b]/14 p-6 sm:p-10 shadow-[var(--sc-e2)]"
-              data-sc-in
-            >
-              <div className="lg:col-span-6 space-y-5">
-                <span className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-[0.07em] text-[#0a2e6e] bg-[#dce7fa] px-3 py-1 rounded-[6px]">
-                  <Calculator
-                    className="w-3.5 h-3.5 text-[#ff5c1b]"
-                    aria-hidden="true"
-                  />
-                  <span>Calculez votre charge WhatsApp</span>
-                </span>
-                <h2 className="sc-display sc-display--md text-[#09152b] font-extrabold">
-                  Combien d&apos;heures vos équipes passent au téléphone chaque
-                  mois ?
-                </h2>
+        {/* =================================================================
+            ACTE 7 — Simulateur, Tarifs FCFA, FAQ & Clôture sobre (flow)
+           ================================================================= */}
+        <section id="act-tarifs" data-sc-act="flow" className="sc-act tc-daylight-band">
+          {/* Simulateur de temps libéré */}
+          <div className="pt-10 pb-10 sm:pt-14 sm:pb-12">
+            <div className="sc-wrap max-w-5xl">
+              <div
+                data-sc-in="up"
+                className="rounded-[20px] bg-white border border-[#0d131d]/10 p-5 sm:p-8 shadow-[0_14px_34px_-14px_rgba(13,21,34,0.1)] grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center"
+              >
+                <div className="lg:col-span-6 space-y-5">
+                  <h2 className="sc-display sc-display--lg text-[#0d131d]">
+                    Combien d&apos;heures gagnez-vous chaque mois ?
+                  </h2>
+                  <p className="text-[15px] text-[#475569] leading-[1.6]">
+                    Ajustez le volume de colis traités par votre comptoir pour estimer les appels
+                    évités dès la mise en ligne du lien de suivi.
+                  </p>
 
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <div className="flex justify-between text-sm font-bold text-[#09152b] mb-1.5">
-                      <label htmlFor="calc-parcels">
-                        Colis gérés chaque mois
-                      </label>
-                      <span className="font-mono text-[#0a2e6e]">
-                        {monthlyParcels} colis
-                      </span>
-                    </div>
-                    <input
-                      id="calc-parcels"
-                      type="range"
-                      min={50}
-                      max={1500}
-                      step={50}
-                      value={monthlyParcels}
-                      onChange={(e) =>
-                        setMonthlyParcels(Number(e.target.value))
-                      }
-                      className="w-full cursor-pointer"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm font-bold text-[#09152b] mb-1.5">
-                      <label htmlFor="calc-messages">
-                        Relances moyennes par colis
-                      </label>
-                      <span className="font-mono text-[#0a2e6e]">
-                        {callsPerParcel} échanges
-                      </span>
-                    </div>
-                    <input
-                      id="calc-messages"
-                      type="range"
-                      min={1}
-                      max={8}
-                      step={1}
-                      value={callsPerParcel}
-                      onChange={(e) =>
-                        setCallsPerParcel(Number(e.target.value))
-                      }
-                      className="w-full cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-6 bg-[#f6f3ec] rounded-[16px] border border-[#09152b]/14 p-6 space-y-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white rounded-[12px] p-4 border border-[#09152b]/10">
-                    <div className="text-xs font-mono font-bold text-[#43506b] uppercase">
-                      Messages évités / mois
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-[#0a2e6e] font-mono tabular-nums mt-1">
-                      {roi.avoidedCalls.toLocaleString("fr-FR")}
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-[12px] p-4 border border-[#09152b]/10">
-                    <div className="text-xs font-mono font-bold text-[#43506b] uppercase">
-                      Temps libéré / sem.
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-[#09152b] font-mono tabular-nums mt-1 flex items-center gap-1.5">
-                      <Clock3
-                        className="w-5 h-5 text-[#ff5c1b]"
-                        aria-hidden="true"
+                  <div className="space-y-4 pt-2">
+                    <div>
+                      <div className="flex justify-between text-[13.5px] font-semibold mb-1.5">
+                        <label htmlFor="calc-parcels">Colis traités par mois</label>
+                        <span className="font-mono text-[#c9410e]">{parcelsPerMonth} colis</span>
+                      </div>
+                      <input
+                        id="calc-parcels"
+                        type="range"
+                        min={100}
+                        max={3000}
+                        step={50}
+                        value={parcelsPerMonth}
+                        onChange={(e) => setParcelsPerMonth(Number(e.target.value))}
+                        className="w-full accent-[#c9410e] cursor-pointer"
                       />
-                      <span>{roi.weeklyHours} h</span>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[13.5px] font-semibold mb-1.5">
+                        <label htmlFor="calc-messages">Relances WhatsApp par colis</label>
+                        <span className="font-mono text-[#c9410e]">
+                          {messagesPerParcel} échanges
+                        </span>
+                      </div>
+                      <input
+                        id="calc-messages"
+                        type="range"
+                        min={2}
+                        max={8}
+                        step={1}
+                        value={messagesPerParcel}
+                        onChange={(e) => setMessagesPerParcel(Number(e.target.value))}
+                        className="w-full accent-[#c9410e] cursor-pointer"
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-[#0a2e6e] text-white rounded-[12px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="text-xs font-mono uppercase tracking-wider text-[#fef08a] font-bold">
-                      Équivalent charge équipe économisée
+                <div className="lg:col-span-6 rounded-[16px] bg-[#f7f6f2] border border-[#0d131d]/10 p-6 sm:p-8 space-y-4">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#525e70]">
+                    Estimation mensuelle pour votre équipe
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[28px] sm:text-[34px] font-bold text-[#0d131d] font-mono">
+                        {roiStats.hoursSaved} h
+                      </p>
+                      <p className="text-[13px] text-[#475569]">libérées au comptoir</p>
                     </div>
-                    <div className="text-2xl font-extrabold font-mono tabular-nums mt-0.5">
-                      {formatFcfa(roi.estimatedFcfa)} / mois
+                    <div>
+                      <p className="text-[28px] sm:text-[34px] font-bold text-[#c9410e] font-mono">
+                        {roiStats.avoidedMessages.toLocaleString("fr-FR")}
+                      </p>
+                      <p className="text-[13px] text-[#475569]">messages évités</p>
                     </div>
                   </div>
-                  <Link href="/register" className="tc-btn-primary shrink-0">
-                    <span>Essayer 14 jours gratuits</span>
-                    <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-                  </Link>
+                  <div className="pt-3 border-t border-[#0d131d]/10 flex items-center justify-between gap-4">
+                    <span className="text-[13.5px] text-[#475569]">
+                      Temps équipe économisé estimé
+                    </span>
+                    <span className="text-[18px] font-bold text-[#0d131d] font-mono">
+                      {formatFcfa(roiStats.staffValueFcfa)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </section>
+            </div>
+          </div>
 
-            {/* 6B: Asymmetric 3-Tier Pricing */}
-            <section id="tarifs" className="space-y-8" data-sc-in>
-              <div className="max-w-2xl space-y-2">
-                <span className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-[0.07em] text-[#0a2e6e] bg-[#dce7fa] px-3 py-1 rounded-[6px]">
-                  <span>Tarifs agence en FCFA</span>
-                </span>
-                <h2 className="sc-display sc-display--md text-[#09152b] font-extrabold">
-                  Des forfaits simples, sans pourcentage sur vos encaissements.
+          {/* Tarifs clairs FCFA */}
+          <div id="tarifs" className="scroll-mt-24 pb-10 sm:pb-14">
+            <div className="sc-wrap max-w-5xl">
+              <div data-sc-in="up" className="max-w-2xl mb-7 space-y-2">
+                <h2 className="sc-display sc-display--lg text-[#0d131d]">
+                  Des tarifs fixes en FCFA, sans commission sur vos encaissements.
                 </h2>
+                <p className="text-[15.5px] text-[#475569]">
+                  Chaque forfait démarre avec 14 jours d&apos;essai complet sans engagement.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                {/* Tier 1 */}
-                <div className="bg-white rounded-[16px] border border-[#09152b]/14 p-6 sm:p-7 flex flex-col justify-between gap-6 shadow-[var(--sc-e1)]">
-                  <div className="space-y-4">
-                    <div className="text-xs font-mono font-bold uppercase text-[#43506b]">
-                      Départ
-                    </div>
-                    <div className="text-3xl font-extrabold font-mono text-[#09152b]">
-                      35 000 FCFA
-                      <span className="text-sm font-normal text-[#43506b]">
-                        {" "}
-                        / mois
-                      </span>
-                    </div>
-                    <p className="text-sm text-[#43506b]">
-                      Idéal pour démarrer avec un entrepôt à Abidjan et vos
-                      premiers lots hebdomadaires.
-                    </p>
-                    <ul className="space-y-2 text-sm text-[#09152b]">
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#0a2e6e]" />
-                        <span>Portail public client avec nom d&apos;agence</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#0a2e6e]" />
-                        <span>Mises à jour de masse par conteneur</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#0a2e6e]" />
-                        <span>Lien marchand Wave &amp; Orange Money</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <Link href="/register?plan=DEPART" className="tc-btn-ghost w-full">
-                    <span>Essayer la formule Départ</span>
-                  </Link>
-                </div>
+              <div data-sc-in="" data-sc-stagger="80" className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {PLANS.map((plan) => (
+                  <div
+                    key={plan.name}
+                    className={`rounded-[18px] p-6 sm:p-7 flex flex-col justify-between gap-6 ${
+                      plan.featured
+                        ? "bg-[#0d1522] text-white shadow-[0_24px_54px_-16px_rgba(13,21,34,0.28)]"
+                        : "bg-white text-[#0d131d] border border-[#0d131d]/10 shadow-sm"
+                    }`}
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-[19px] font-bold tracking-tight">{plan.name}</h3>
+                        <p
+                          className={`mt-1 text-[13.5px] leading-[1.5] ${
+                            plan.featured ? "text-[#cbd5e1]" : "text-[#475569]"
+                          }`}
+                        >
+                          {plan.description}
+                        </p>
+                      </div>
 
-                {/* Tier 2 — Highlighted Cobalt Elevation */}
-                <div className="bg-[#0a2e6e] text-white rounded-[18px] border-2 border-[#09152b] p-6 sm:p-8 flex flex-col justify-between gap-6 shadow-[var(--sc-e3)] lg:-translate-y-2">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-mono font-extrabold uppercase text-[#fef08a]">
-                        Pack Pro Cargo
-                      </span>
-                      <span className="px-2.5 py-0.5 rounded-[6px] bg-[#ff5c1b] text-[#09152b] text-[11px] font-extrabold font-mono border border-[#09152b]">
-                        Recommandé
-                      </span>
-                    </div>
-                    <div className="text-3xl sm:text-4xl font-extrabold font-mono text-white">
-                      60 000 FCFA
-                      <span className="text-sm font-normal text-[#c7d9f7]">
-                        {" "}
-                        / mois
-                      </span>
-                    </div>
-                    <p className="text-sm text-[#dce7fa]">
-                      Pensé pour les transitaires gérant des départs aériens et
-                      conteneurs Chine / Dubaï / Turquie en continu.
-                    </p>
-                    <ul className="space-y-2.5 text-sm text-white">
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#ff5c1b]" />
-                        <span>Import Excel multi-lignes en un clic</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#ff5c1b]" />
-                        <span>Alertes WhatsApp pré-remplies avec solde FCFA</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#ff5c1b]" />
-                        <span>Bordereaux imprimables &amp; suivi multi-corridors</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <Link href="/register?plan=PRO" className="tc-btn-primary w-full">
-                    <span>Ouvrir le Pack Pro Cargo</span>
-                    <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-                  </Link>
-                </div>
+                      <p className="text-[30px] font-bold font-mono tracking-tight">
+                        {plan.price.toLocaleString("fr-FR")}{" "}
+                        <span className="text-[14px] font-sans font-medium opacity-80">
+                          FCFA / mois
+                        </span>
+                      </p>
 
-                {/* Tier 3 */}
-                <div className="bg-white rounded-[16px] border border-[#09152b]/14 p-6 sm:p-7 flex flex-col justify-between gap-6 shadow-[var(--sc-e1)]">
-                  <div className="space-y-4">
-                    <div className="text-xs font-mono font-bold uppercase text-[#43506b]">
-                      Multi-Entrepôts
+                      <ul className="space-y-2.5 text-[13.5px]">
+                        {plan.features.map((feat) => (
+                          <li key={feat} className="flex items-start gap-2.5">
+                            <span
+                              className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${
+                                plan.featured ? "bg-[#f0642d]" : "bg-[#c9410e]"
+                              }`}
+                              aria-hidden="true"
+                            />
+                            <span className={plan.featured ? "text-[#e2e8f0]" : "text-[#334155]"}>
+                              {feat}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className="text-3xl font-extrabold font-mono text-[#09152b]">
-                      100 000 FCFA
-                      <span className="text-sm font-normal text-[#43506b]">
-                        {" "}
-                        / mois
-                      </span>
-                    </div>
-                    <p className="text-sm text-[#43506b]">
-                      Pour les structures opérant sur plusieurs points de
-                      retrait entre Abidjan et l&apos;intérieur du pays.
-                    </p>
-                    <ul className="space-y-2 text-sm text-[#09152b]">
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#0a2e6e]" />
-                        <span>Comptoirs multiples et équipes séparées</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#0a2e6e]" />
-                        <span>Accompagnement mise en service sur place</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#0a2e6e]" />
-                        <span>Export comptable hebdomadaire Wave et Cash</span>
-                      </li>
-                    </ul>
+
+                    <Link
+                      href={`/register?plan=${plan.tier}`}
+                      className={plan.featured ? "tc-btn-primary w-full" : "tc-btn-cobalt w-full"}
+                    >
+                      Essayer 14 jours gratuits
+                    </Link>
                   </div>
-                  <Link href="/register?plan=MULTI" className="tc-btn-ghost w-full">
-                    <span>Démarrer en Multi-Entrepôts</span>
-                  </Link>
-                </div>
+                ))}
               </div>
-            </section>
+            </div>
+          </div>
 
-            {/* 6C: Direct Practical FAQ */}
-            <section className="max-w-3xl space-y-4" data-sc-in>
-              <h2 className="font-[family-name:var(--font-archivo)] text-2xl sm:text-3xl font-extrabold text-[#09152b]">
+          {/* Questions directes */}
+          <div className="pb-10 sm:pb-14">
+            <div data-sc-in="up" className="sc-wrap max-w-4xl">
+              <h2 className="text-[22px] sm:text-[28px] font-bold text-[#0d131d] mb-5 tracking-tight">
                 Questions fréquentes
               </h2>
-              <div className="divide-y divide-[#09152b]/12 bg-white rounded-[16px] border border-[#09152b]/14 px-5 sm:px-6 shadow-[var(--sc-e1)]">
-                {[
-                  {
-                    q: "Mes clients doivent-ils installer une application pour suivre leur colis ?",
-                    a: "Non. Ils ouvrent simplement le lien de votre agence dans leur navigateur mobile et tapent leur code TC ou leur numéro WhatsApp.",
-                  },
-                  {
-                    q: "Comment fonctionnent les paiements Wave et Orange Money ?",
-                    a: "Vous renseignez votre propre lien marchand Wave Business et votre numéro Orange Money dans l'espace agence. TrackCargo CI ne prélève aucune commission sur vos transactions.",
-                  },
-                  {
-                    q: "Puis-je importer ma liste de colis déjà préparée dans Excel ?",
-                    a: "Oui. Copiez directement vos colonnes Nom, Téléphone, Description et Poids dans l'onglet Import Excel pour générer tous les codes de suivi d'un seul coup.",
-                  },
-                  {
-                    q: "L'outil gère-t-il à la fois le kilo aérien et le CBM maritime ?",
-                    a: "Oui. Chaque lot définit son mode de calcul (prix au kilogramme pour l'aérien ou au mètre cube pour le maritime) avec conversion automatique en FCFA.",
-                  },
-                ].map((item) => (
-                  <details key={item.q} className="group py-4">
-                    <summary className="flex items-center justify-between gap-4 cursor-pointer font-bold text-[#09152b] text-sm sm:text-base list-none">
+              <div className="divide-y divide-[#0d131d]/12 border-y border-[#0d131d]/12">
+                {FAQS.map((item) => (
+                  <details key={item.q} className="group py-3.5 sm:py-4">
+                    <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-[15px] sm:text-[16px] font-semibold text-[#0d131d]">
                       <span>{item.q}</span>
-                      <ChevronDown
-                        className="w-4 h-4 text-[#0a2e6e] shrink-0 transition-transform group-open:rotate-180"
-                        aria-hidden="true"
-                      />
+                      <span className="text-[#c9410e] font-mono text-[18px] group-open:rotate-45 transition-transform">
+                        +
+                      </span>
                     </summary>
-                    <p className="text-sm text-[#43506b] mt-2.5 leading-relaxed">
+                    <p className="mt-2 text-[14px] text-[#475569] leading-[1.6] max-w-[66ch]">
                       {item.a}
                     </p>
                   </details>
                 ))}
               </div>
-            </section>
+            </div>
           </div>
+
         </section>
 
-        {/* ================================================================
-            CLÔTURE MONOLITHE COBALT + PIED DE PAGE STRUCTURÉ (Direct flow close)
-           ================================================================ */}
-        <section className="tc-cobalt-band border-t border-[#09152b]">
-          <div className="sc-wrap py-16 sm:py-24 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div className="space-y-4 max-w-2xl">
-              <div className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-[0.07em] text-[#fef08a]">
-                <ShieldCheck className="w-4 h-4" aria-hidden="true" />
-                <span>Déploiement agence en quelques minutes</span>
-              </div>
-              <h2 className="sc-display sc-display--lg text-white font-extrabold">
-                Passez vos prochains conteneurs sur TrackCargo CI.
-              </h2>
-              <p className="text-base text-[#dce7fa] leading-relaxed">
-                Importez un premier Manifeste Excel, activez votre lien client
-                et testez le retrait sans encombrer votre comptoir.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 shrink-0">
+        {/* Clôture architecturale ardoise sobre + pied de page */}
+        <section id="act-cloture" className="tc-slate-band py-12 sm:py-16">
+          <div data-sc-in="up" className="sc-wrap max-w-4xl text-center space-y-5">
+            <h2 className="sc-display sc-display--xl text-white">
+              Ouvrez votre lien client sur le prochain arrivage.
+            </h2>
+            <p className="text-[15.5px] sm:text-[17.5px] text-[#cbd5e1] max-w-[50ch] mx-auto leading-[1.6]">
+              Créez votre agence en quelques minutes, importez vos premiers codes TC et partagez
+              le lien à vos clients dès aujourd&apos;hui.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-1">
               <Link href="/register" className="tc-btn-primary">
-                <span>Créer mon agence (14j gratuits)</span>
-                <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
+                Essayer 14 jours gratuits
               </Link>
-              <Link href="/a/ivoire-cargo-express" className="tc-btn-ghost">
-                <span>Voir portail client démo</span>
+              <Link href="/login" className="tc-btn-ghost">
+                Connexion agence
               </Link>
             </div>
           </div>
 
-          <footer className="bg-[#09152b] text-[#c7d9f7] border-t border-white/12">
-            <div className="sc-wrap py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs sm:text-sm">
-              <div className="flex items-center gap-2 font-bold text-white">
-                <span>TrackCargo CI</span>
-                <span className="text-[#ff5c1b]">·</span>
-                <span className="font-normal text-[#c7d9f7]">
-                  Logiciel de groupage Chine, Turquie &amp; Dubaï vers Abidjan
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <Link href="/register" className="hover:text-white no-underline font-bold text-[#ff966b]">
-                  Essai 14 jours
-                </Link>
-                <Link href="/track" className="hover:text-white no-underline">
-                  Suivi public
-                </Link>
-                <Link
-                  href="/a/ivoire-cargo-express"
-                  className="hover:text-white no-underline"
-                >
-                  Démo portail
-                </Link>
-                <Link href="/login" className="hover:text-white no-underline">
-                  Connexion agence
-                </Link>
-                <a href="#tarifs" className="hover:text-white no-underline">
-                  Tarifs FCFA
-                </a>
-              </div>
+          <footer className="sc-wrap max-w-5xl mt-12 pt-7 border-t border-white/12 flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] text-[#cbd5e1]">
+            <p>TrackCargo CI · Logiciel de suivi fret pour transitaires en Côte d&apos;Ivoire</p>
+            <div className="flex items-center gap-5">
+              <Link href="/track" className="hover:text-white transition">
+                Portail colis
+              </Link>
+              <Link href="/register" className="hover:text-white transition">
+                Ouvrir une agence
+              </Link>
+              <Link href="/login" className="hover:text-white transition">
+                Espace agence
+              </Link>
             </div>
           </footer>
         </section>
       </main>
+
+      {/* Signature Move : Fil d'acheminement synchronisé (desktop xl+ hors Peak et Clôture) */}
+      <nav
+        aria-label="Fil d'acheminement de la page"
+        className={`hidden xl:flex fixed bottom-4 left-1/2 -translate-x-1/2 z-40 items-center gap-1 rounded-full bg-[#0d1522]/88 backdrop-blur-md border border-white/15 px-2.5 py-1.5 text-[11.5px] text-white shadow-xl transition-opacity duration-200 ${
+          hideFloatingRoute ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
+        <span className="font-mono text-[#cbd5e1] px-2.5">{activeCorridor.origin}</span>
+        {TELEMETRY_STOPS.map((stop, idx) => {
+          const isCurrent = idx === activeTelemetryIdx;
+          return (
+            <a
+              key={stop.target}
+              href={stop.target}
+              className={`rounded-full px-2.5 py-1 font-medium transition-colors ${
+                isCurrent ? "bg-[#c9410e] text-white" : "text-[#cbd5e1] hover:text-white"
+              }`}
+            >
+              {stop.label}
+            </a>
+          );
+        })}
+        <span className="font-mono text-[#cbd5e1] px-2.5">Abidjan</span>
+      </nav>
     </div>
   );
 }

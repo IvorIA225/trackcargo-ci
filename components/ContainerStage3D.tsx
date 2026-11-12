@@ -1,6 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  createCardboardTextures,
+  createCoastalStudioEnvironment,
+  createGroundShadowTexture,
+  createShippingLabelTexture,
+  createWoodDeckTexture,
+  PBRTextureSet,
+} from "@/lib/three-studio";
+import { createSteelLiveryTextures } from "@/lib/three-studio";
 
 export type CorridorId = "yiwu_sea" | "canton_air" | "istanbul_dubai";
 
@@ -8,39 +17,53 @@ interface ContainerStage3DProps {
   className?: string;
   corridor?: CorridorId;
   activeStep?: string;
-  compact?: boolean;
 }
 
-const CORRIDOR_COLORS: Record<
-  CorridorId,
-  {
-    hull: number;
-    door: number;
-    beacon: number;
-    badge: string;
-    arcHeight: number;
-  }
-> = {
+interface CorridorLook {
+  hullHex: string;
+  doorColor: number;
+  accentHex: string;
+  serial: string;
+  spec: string;
+  metalness: number;
+  roughness: number;
+  brushed: boolean;
+  isAirUld: boolean;
+}
+
+const CORRIDOR_LOOKS: Record<CorridorId, CorridorLook> = {
   yiwu_sea: {
-    hull: 0x124eb5,
-    door: 0xff5c1b,
-    beacon: 0xff5c1b,
-    badge: "YIWU · VRIDI 40FT",
-    arcHeight: 2.35,
+    hullHex: "#153766",
+    doorColor: 0xc9410e,
+    accentHex: "#c9410e",
+    serial: "TRCK 409281 0",
+    spec: "MAX GROSS 32 500 KG · 45G1",
+    metalness: 0.45,
+    roughness: 0.38,
+    brushed: false,
+    isAirUld: false,
   },
   canton_air: {
-    hull: 0x0a2e6e,
-    door: 0x06b6d4,
-    beacon: 0xff5c1b,
-    badge: "CANTON · AIR CARGO",
-    arcHeight: 3.15,
+    hullHex: "#d7dfe8",
+    doorColor: 0xc9410e,
+    accentHex: "#c9410e",
+    serial: "AKE 48210 CI",
+    spec: "FRET AÉRIEN · AÉROPORT FHB",
+    metalness: 0.84,
+    roughness: 0.24,
+    brushed: true,
+    isAirUld: true,
   },
   istanbul_dubai: {
-    hull: 0x163d82,
-    door: 0xf59e0b,
-    beacon: 0x0ea5e9,
-    badge: "DUBAÏ · ISTANBUL",
-    arcHeight: 2.75,
+    hullHex: "#212b38",
+    doorColor: 0xd16024,
+    accentHex: "#d16024",
+    serial: "TCGO 712045 4",
+    spec: "LOT NÉGOCE · ISTANBUL / DUBAÏ",
+    metalness: 0.52,
+    roughness: 0.34,
+    brushed: false,
+    isAirUld: false,
   },
 };
 
@@ -48,7 +71,6 @@ export default function ContainerStage3D({
   className = "",
   corridor = "yiwu_sea",
   activeStep = "EN_TRANSIT",
-  compact = false,
 }: ContainerStage3DProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const corridorRef = useRef<CorridorId>(corridor);
@@ -77,28 +99,24 @@ export default function ContainerStage3D({
     let targetY = 0;
     let curX = 0;
     let curY = 0;
-    let hullMatRef: import("three").MeshStandardMaterial | null = null;
-    let doorMatRef: import("three").MeshStandardMaterial | null = null;
-    let beaconMatRef: import("three").MeshStandardMaterial | null = null;
-    let arcCurvePts: import("three").QuadraticBezierCurve3 | null = null;
-    let arcLineMesh: import("three").Mesh | null = null;
+
+    const disposables: Array<{ dispose: () => void }> = [];
+    const liveryCache: Partial<Record<CorridorId, PBRTextureSet>> = {};
 
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const getScrollProgress = () => {
-      const stage = container.closest("[data-sc-act], [data-sc-stage]") as
-        | HTMLElement
-        | null;
-      if (!stage) return 0.12;
-      const val = getComputedStyle(stage).getPropertyValue("--sc-p").trim();
+      const act = container.closest("[data-sc-act]") as HTMLElement | null;
+      if (!act) return 0;
+      const val = getComputedStyle(act).getPropertyValue("--sc-p").trim();
       const parsed = parseFloat(val);
-      return Number.isFinite(parsed) ? Math.max(0, Math.min(1, parsed)) : 0.12;
+      return Number.isFinite(parsed) ? Math.max(0, Math.min(1, parsed)) : 0;
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (prefersReduced) return;
+      if (prefersReduced || e.pointerType !== "mouse") return;
       const rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
       targetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
@@ -115,7 +133,7 @@ export default function ContainerStage3D({
         if (disposed || !container) return;
 
         const w = Math.max(container.clientWidth, 300);
-        const h = Math.max(container.clientHeight, 260);
+        const h = Math.max(container.clientHeight, 240);
 
         try {
           renderer = new THREE.WebGLRenderer({
@@ -132,7 +150,7 @@ export default function ContainerStage3D({
         renderer.setSize(w, h, false);
         renderer.setClearColor(0x000000, 0);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.18;
+        renderer.toneMappingExposure = 1.06;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
         renderer.domElement.style.width = "100%";
@@ -143,126 +161,163 @@ export default function ContainerStage3D({
 
         const scene = new THREE.Scene();
 
+        // Procedural Coastal Daylight HDRI for realistic metallic & specular reflections
+        const studioEnv = createCoastalStudioEnvironment(THREE, renderer);
+        disposables.push(studioEnv);
+        scene.environment = studioEnv.texture;
+
         const isNarrow = w < 520;
-        const fov = w / h > 1.55 ? 36 : isNarrow ? 38 : 33;
+        const fov = w / h > 1.55 ? 29 : isNarrow ? 34 : 28;
         const camera = new THREE.PerspectiveCamera(fov, w / h, 0.1, 100);
         camera.position.set(
-          isNarrow ? 6.6 : 6.0,
-          isNarrow ? 2.55 : 2.35,
-          isNarrow ? 7.5 : 6.7
+          isNarrow ? 7.65 : 7.55,
+          isNarrow ? 2.6 : 2.38,
+          isNarrow ? 8.9 : 8.45
         );
-        camera.lookAt(0, isNarrow ? 0.35 : 0.28, 0);
+        camera.lookAt(0.12, isNarrow ? 0.02 : -0.04, 0);
 
-        // Bright Coastal 9am Three-Point Daylight Lighting
-        const skyBounce = new THREE.HemisphereLight(0xf3f9ff, 0xe8dfd0, 1.9);
-        scene.add(skyBounce);
+        const hemi = new THREE.HemisphereLight(0xf2f7ff, 0xd8cfc2, 0.85);
+        scene.add(hemi);
 
-        const sunLight = new THREE.DirectionalLight(0xfff8ed, 2.9);
-        sunLight.position.set(7.5, 11.5, 8.5);
+        const sunLight = new THREE.DirectionalLight(0xfff4e0, 2.5);
+        sunLight.position.set(8.5, 12.5, 9.0);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.set(1024, 1024);
         sunLight.shadow.camera.near = 2;
-        sunLight.shadow.camera.far = 26;
-        sunLight.shadow.camera.left = -5;
-        sunLight.shadow.camera.right = 5;
-        sunLight.shadow.camera.top = 5;
-        sunLight.shadow.camera.bottom = -5;
-        sunLight.shadow.bias = -0.0005;
+        sunLight.shadow.camera.far = 28;
+        sunLight.shadow.camera.left = -5.5;
+        sunLight.shadow.camera.right = 5.5;
+        sunLight.shadow.camera.top = 5.5;
+        sunLight.shadow.camera.bottom = -5.5;
+        sunLight.shadow.bias = -0.0004;
+        sunLight.shadow.radius = 3.5;
         scene.add(sunLight);
 
-        const skyRim = new THREE.DirectionalLight(0x9ec5ff, 1.25);
-        skyRim.position.set(-7, 4.5, -5.5);
+        const skyRim = new THREE.DirectionalLight(0xa8cbff, 0.95);
+        skyRim.position.set(-8, 5, -6);
         scene.add(skyRim);
 
-        const apronFill = new THREE.PointLight(0xffffff, 1.1, 14);
-        apronFill.position.set(2.5, -0.4, 5.2);
-        scene.add(apronFill);
-
-        // Soft cast shadow receiver onto sunlit quay floor
+        // Grounded Shadow Receiver + Soft Ambient Occlusion Contact Decal
+        const groundY = -1.06;
         const shadowFloor = new THREE.Mesh(
-          new THREE.PlaneGeometry(18, 18),
-          new THREE.ShadowMaterial({ opacity: 0.22 })
+          new THREE.PlaneGeometry(24, 24),
+          new THREE.ShadowMaterial({ opacity: 0.2 })
         );
         shadowFloor.rotation.x = -Math.PI / 2;
-        shadowFloor.position.y = -1.12;
+        shadowFloor.position.y = groundY;
         shadowFloor.receiveShadow = true;
         scene.add(shadowFloor);
 
-        // Architectural Travertine Quay Plinth Base
-        const plinthGroup = new THREE.Group();
-        const plinthTop = new THREE.Mesh(
-          new THREE.BoxGeometry(5.6, 0.14, 3.1),
-          new THREE.MeshStandardMaterial({
-            color: 0xf6f3ec,
-            roughness: 0.72,
-            metalness: 0.04,
+        const aoTex = createGroundShadowTexture(THREE);
+        disposables.push(aoTex);
+        const aoPlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(7.2, 4.2),
+          new THREE.MeshBasicMaterial({
+            map: aoTex,
+            transparent: true,
+            opacity: 0.72,
+            depthWrite: false,
           })
         );
-        plinthTop.position.set(0, -1.04, 0);
-        plinthTop.receiveShadow = true;
-        plinthGroup.add(plinthTop);
+        aoPlane.rotation.x = -Math.PI / 2;
+        aoPlane.position.set(0.15, groundY + 0.004, 0);
+        scene.add(aoPlane);
 
-        const plinthTrim = new THREE.Mesh(
-          new THREE.BoxGeometry(5.72, 0.05, 3.22),
-          new THREE.MeshStandardMaterial({
-            color: 0x0a2e6e,
-            roughness: 0.42,
-            metalness: 0.2,
-          })
-        );
-        plinthTrim.position.set(0, -1.11, 0);
-        plinthGroup.add(plinthTrim);
-        scene.add(plinthGroup);
-
-        // Root CargoRig
         const cargoRig = new THREE.Group();
-        cargoRig.position.y = 0.06;
+        cargoRig.position.y = 0.02;
         scene.add(cargoRig);
 
-        const initialPalette = CORRIDOR_COLORS[corridorRef.current];
-
-        const containerSteelMat = new THREE.MeshStandardMaterial({
-          color: initialPalette.hull,
-          metalness: 0.42,
-          roughness: 0.36,
+        (Object.keys(CORRIDOR_LOOKS) as CorridorId[]).forEach((cid) => {
+          const look = CORRIDOR_LOOKS[cid];
+          const texSet = createSteelLiveryTextures(THREE, {
+            baseHex: look.hullHex,
+            accentHex: look.accentHex,
+            serialCode: look.serial,
+            specLine: look.spec,
+            brushedAluminum: look.brushed,
+          });
+          liveryCache[cid] = texSet;
+          disposables.push(texSet);
         });
-        hullMatRef = containerSteelMat;
 
-        const containerTrimMat = new THREE.MeshStandardMaterial({
-          color: 0x09152b,
-          metalness: 0.55,
+        const initialLook = CORRIDOR_LOOKS[corridorRef.current];
+        const initialLivery = liveryCache[corridorRef.current]!;
+
+        const hullMat = new THREE.MeshStandardMaterial({
+          map: initialLivery.map,
+          bumpMap: initialLivery.bumpMap,
+          bumpScale: 0.014,
+          roughnessMap: initialLivery.roughnessMap,
+          metalness: initialLook.metalness,
+          roughness: initialLook.roughness,
+          envMapIntensity: 1.05,
+        });
+
+        const ribMat = new THREE.MeshStandardMaterial({
+          color: initialLook.hullHex,
+          metalness: 0.36,
+          roughness: 0.48,
+          envMapIntensity: 0.92,
+        });
+
+        const castSteelMat = new THREE.MeshStandardMaterial({
+          color: 0x202938,
+          metalness: 0.78,
           roughness: 0.34,
+          envMapIntensity: 1.05,
         });
 
-        const doorPanelMat = new THREE.MeshStandardMaterial({
-          color: initialPalette.door,
-          metalness: 0.34,
-          roughness: 0.3,
+        const steelFrameMat = new THREE.MeshStandardMaterial({
+          color: 0x111722,
+          metalness: 0.65,
+          roughness: 0.36,
+          envMapIntensity: 1.0,
         });
-        doorMatRef = doorPanelMat;
+
+        const doorMat = new THREE.MeshStandardMaterial({
+          color: initialLook.doorColor,
+          metalness: 0.38,
+          roughness: 0.32,
+          envMapIntensity: 1.1,
+        });
 
         const chromeMat = new THREE.MeshStandardMaterial({
-          color: 0xf1f5f9,
-          metalness: 0.85,
-          roughness: 0.18,
+          color: 0xe8edf3,
+          metalness: 0.92,
+          roughness: 0.16,
+          envMapIntensity: 1.35,
         });
 
-        const length = 4.4;
-        const height = 2.02;
-        const depth = 1.94;
-        const wall = 0.065;
+        const rubberSealMat = new THREE.MeshStandardMaterial({
+          color: 0x10141b,
+          metalness: 0.05,
+          roughness: 0.85,
+        });
 
-        const addBox = (
-          bw: number,
-          bh: number,
-          bd: number,
+        const woodTex = createWoodDeckTexture(THREE);
+        disposables.push(woodTex);
+        const deckMat = new THREE.MeshStandardMaterial({
+          map: woodTex.map,
+          bumpMap: woodTex.bumpMap,
+          bumpScale: 0.02,
+          roughness: 0.78,
+          metalness: 0.04,
+        });
+
+        const L = 4.6;
+        const H = 2.08;
+        const D = 1.98;
+        const wall = 0.06;
+
+        const addMesh = (
+          geo: import("three").BufferGeometry,
+          mat: import("three").Material,
           x: number,
           y: number,
           z: number,
-          mat: import("three").Material,
           parent: import("three").Object3D = cargoRig
         ) => {
-          const m = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), mat);
+          const m = new THREE.Mesh(geo, mat);
           m.position.set(x, y, z);
           m.castShadow = true;
           m.receiveShadow = true;
@@ -270,201 +325,220 @@ export default function ContainerStage3D({
           return m;
         };
 
-        // Main shell (Floor + Interior deck, Roof, Back wall, Left & Right Walls)
-        addBox(length, wall, depth, 0, -height / 2 + wall / 2, 0, containerTrimMat);
-        addBox(length, wall, depth, 0, height / 2 - wall / 2, 0, containerSteelMat);
-        addBox(wall, height, depth, -length / 2 + wall / 2, 0, 0, containerSteelMat);
-        addBox(length, height, wall, 0, 0, -depth / 2 + wall / 2, containerSteelMat);
-        addBox(length, height, wall, 0, 0, depth / 2 - wall / 2, containerSteelMat);
+        // 1. ISO Maritime / Bonded Steel Container Group
+        const isoGroup = new THREE.Group();
+        cargoRig.add(isoGroup);
 
-        // Hardwood deck interior planks
-        addBox(
-          length - 0.16,
-          0.03,
-          depth - 0.16,
-          0,
-          -height / 2 + wall + 0.015,
-          0,
-          new THREE.MeshStandardMaterial({
-            color: 0xcfa46f,
-            roughness: 0.78,
-            metalness: 0.02,
-          })
-        );
+        addMesh(new THREE.BoxGeometry(L, wall, D), steelFrameMat, 0, -H / 2 + wall / 2, 0, isoGroup);
+        addMesh(new THREE.BoxGeometry(L, wall, D), ribMat, 0, H / 2 - wall / 2, 0, isoGroup);
+        addMesh(new THREE.BoxGeometry(wall, H, D), hullMat, -L / 2 + wall / 2, 0, 0, isoGroup);
+        addMesh(new THREE.BoxGeometry(L, H - 0.14, wall), hullMat, 0, 0, -D / 2 + wall / 2, isoGroup);
+        addMesh(new THREE.BoxGeometry(L, H - 0.14, wall), hullMat, 0, 0, D / 2 - wall / 2, isoGroup);
+        // Smooth flush nameplate sign mounted over front ribs so ISO code reads cleanly
+        addMesh(new THREE.BoxGeometry(1.75, 0.42, 0.016), hullMat, -0.85, 0.36, D / 2 + 0.048, isoGroup);
+        addMesh(new THREE.BoxGeometry(L - 0.16, 0.03, D - 0.16), deckMat, 0, -H / 2 + wall + 0.015, 0, isoGroup);
 
-        // Crisp exterior corrugation ribs along both long sides + roof
-        const ribCount = 15;
+        const ribShape = new THREE.Shape();
+        ribShape.moveTo(0, 0);
+        ribShape.lineTo(0.028, 0.045);
+        ribShape.lineTo(0.088, 0.045);
+        ribShape.lineTo(0.116, 0);
+        ribShape.closePath();
+
+        const sideRibGeo = new THREE.ExtrudeGeometry(ribShape, {
+          depth: H - 0.24,
+          bevelEnabled: true,
+          bevelThickness: 0.004,
+          bevelSize: 0.004,
+          bevelSegments: 2,
+        });
+        sideRibGeo.rotateX(-Math.PI / 2);
+
+        const roofRibGeo = new THREE.ExtrudeGeometry(ribShape, {
+          depth: D - 0.24,
+          bevelEnabled: true,
+          bevelThickness: 0.003,
+          bevelSize: 0.003,
+          bevelSegments: 2,
+        });
+
+        const ribCount = 17;
         for (let i = 0; i < ribCount; i++) {
-          const rx = -length / 2 + 0.3 + (i / (ribCount - 1)) * (length - 0.6);
-          addBox(0.085, height - 0.22, 0.045, rx, 0, depth / 2 + 0.02, containerSteelMat);
-          addBox(0.085, height - 0.22, 0.045, rx, 0, -depth / 2 - 0.02, containerSteelMat);
-          addBox(0.085, 0.035, depth - 0.22, rx, height / 2 + 0.015, 0, containerSteelMat);
+          const rx = -L / 2 + 0.34 + (i / (ribCount - 1)) * (L - 0.72);
+          const ribFront = new THREE.Mesh(sideRibGeo, ribMat);
+          ribFront.position.set(rx - 0.058, -(H - 0.24) / 2, D / 2 - 0.002);
+          ribFront.castShadow = true;
+          ribFront.receiveShadow = true;
+          isoGroup.add(ribFront);
+
+          const ribBack = new THREE.Mesh(sideRibGeo, ribMat);
+          ribBack.rotation.y = Math.PI;
+          ribBack.position.set(rx + 0.058, -(H - 0.24) / 2, -D / 2 + 0.002);
+          ribBack.castShadow = true;
+          ribBack.receiveShadow = true;
+          isoGroup.add(ribBack);
+
+          const ribRoof = new THREE.Mesh(roofRibGeo, ribMat);
+          ribRoof.position.set(rx - 0.058, H / 2 - 0.002, -(D - 0.24) / 2);
+          ribRoof.castShadow = true;
+          ribRoof.receiveShadow = true;
+          isoGroup.add(ribRoof);
         }
 
-        // ISO Corner Posts + High-Contrast White/Orange Corner Castings
-        const corners: [number, number][] = [
-          [-length / 2 + 0.05, -depth / 2 + 0.05],
-          [-length / 2 + 0.05, depth / 2 - 0.05],
-          [length / 2 - 0.05, -depth / 2 + 0.05],
-          [length / 2 - 0.05, depth / 2 - 0.05],
-        ];
-        corners.forEach(([cx, cz]) => {
-          addBox(0.11, height + 0.02, 0.11, cx, 0, cz, containerTrimMat);
-          addBox(0.135, 0.11, 0.135, cx, height / 2 - 0.03, cz, chromeMat);
-          addBox(0.135, 0.11, 0.135, cx, -height / 2 + 0.03, cz, chromeMat);
+        addMesh(new THREE.BoxGeometry(L, 0.08, 0.08), steelFrameMat, 0, H / 2 - 0.04, D / 2 - 0.03, isoGroup);
+        addMesh(new THREE.BoxGeometry(L, 0.08, 0.08), steelFrameMat, 0, H / 2 - 0.04, -D / 2 + 0.03, isoGroup);
+        addMesh(new THREE.BoxGeometry(L, 0.11, 0.09), steelFrameMat, 0, -H / 2 + 0.055, D / 2 - 0.03, isoGroup);
+        addMesh(new THREE.BoxGeometry(L, 0.11, 0.09), steelFrameMat, 0, -H / 2 + 0.055, -D / 2 + 0.03, isoGroup);
+        [-0.75, 0.75].forEach((fx) => {
+          addMesh(new THREE.BoxGeometry(0.32, 0.065, D + 0.03), rubberSealMat, fx, -H / 2 + 0.055, 0, isoGroup);
         });
 
-        // White architectural stencil stripe along top edge
-        addBox(length - 0.45, 0.14, 0.02, 0, height / 2 - 0.24, depth / 2 + 0.046, chromeMat);
-        addBox(0.95, 0.28, 0.022, -length / 2 + 0.72, 0.22, depth / 2 + 0.048, doorPanelMat);
+        const cornerXZ: [number, number][] = [
+          [-L / 2 + 0.055, -D / 2 + 0.055],
+          [-L / 2 + 0.055, D / 2 - 0.055],
+          [L / 2 - 0.055, -D / 2 + 0.055],
+          [L / 2 - 0.055, D / 2 - 0.055],
+        ];
+        cornerXZ.forEach(([cx, cz]) => {
+          addMesh(new THREE.BoxGeometry(0.11, H + 0.01, 0.11), steelFrameMat, cx, 0, cz, isoGroup);
+          addMesh(new THREE.BoxGeometry(0.145, 0.11, 0.145), castSteelMat, cx, H / 2 - 0.025, cz, isoGroup);
+          addMesh(new THREE.BoxGeometry(0.145, 0.11, 0.145), castSteelMat, cx, -H / 2 + 0.025, cz, isoGroup);
+        });
 
-        // Twin Hinged Signal Orange Rear Doors (+X opening)
         const leftDoorPivot = new THREE.Group();
-        leftDoorPivot.position.set(length / 2 - 0.03, 0, -depth / 2 + 0.04);
-        cargoRig.add(leftDoorPivot);
+        leftDoorPivot.position.set(L / 2 - 0.03, 0, -D / 2 + 0.045);
+        isoGroup.add(leftDoorPivot);
 
         const rightDoorPivot = new THREE.Group();
-        rightDoorPivot.position.set(length / 2 - 0.03, 0, depth / 2 - 0.04);
-        cargoRig.add(rightDoorPivot);
+        rightDoorPivot.position.set(L / 2 - 0.03, 0, D / 2 - 0.045);
+        isoGroup.add(rightDoorPivot);
 
-        const doorHalfDepth = depth / 2 - 0.05;
-        const leftLeaf = new THREE.Mesh(
-          new THREE.BoxGeometry(0.06, height - 0.14, doorHalfDepth),
-          doorPanelMat
-        );
-        leftLeaf.position.set(0, 0, doorHalfDepth / 2);
-        leftLeaf.castShadow = true;
-        leftDoorPivot.add(leftLeaf);
+        const doorHalfW = D / 2 - 0.055;
+        addMesh(new THREE.BoxGeometry(0.055, H - 0.14, doorHalfW), doorMat, 0, 0, doorHalfW / 2, leftDoorPivot);
+        addMesh(new THREE.BoxGeometry(0.055, H - 0.14, doorHalfW), doorMat, 0, 0, -doorHalfW / 2, rightDoorPivot);
 
-        const rightLeaf = new THREE.Mesh(
-          new THREE.BoxGeometry(0.06, height - 0.14, doorHalfDepth),
-          doorPanelMat
-        );
-        rightLeaf.position.set(0, 0, -doorHalfDepth / 2);
-        rightLeaf.castShadow = true;
-        rightDoorPivot.add(rightLeaf);
+        addMesh(new THREE.BoxGeometry(0.064, H - 0.15, 0.025), rubberSealMat, 0, 0, doorHalfW - 0.01, leftDoorPivot);
+        addMesh(new THREE.BoxGeometry(0.064, H - 0.15, 0.025), rubberSealMat, 0, 0, -doorHalfW + 0.01, rightDoorPivot);
 
-        // Dual Stainless Locking Rods per Door Leaf
-        [0.24, 0.56].forEach((offset) => {
-          const rodL = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.02, 0.02, height - 0.22, 10),
-            chromeMat
+        [0.24, 0.58].forEach((offset) => {
+          addMesh(
+            new THREE.CylinderGeometry(0.018, 0.018, H - 0.22, 12),
+            chromeMat,
+            0.042,
+            0,
+            offset,
+            leftDoorPivot
           );
-          rodL.position.set(0.042, 0, offset);
-          leftDoorPivot.add(rodL);
+          addMesh(new THREE.BoxGeometry(0.04, 0.11, 0.045), chromeMat, 0.055, -0.35, offset, leftDoorPivot);
 
-          const rodR = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.02, 0.02, height - 0.22, 10),
-            chromeMat
+          addMesh(
+            new THREE.CylinderGeometry(0.018, 0.018, H - 0.22, 12),
+            chromeMat,
+            0.042,
+            0,
+            -offset,
+            rightDoorPivot
           );
-          rodR.position.set(0.042, 0, -offset);
-          rightDoorPivot.add(rodR);
+          addMesh(new THREE.BoxGeometry(0.04, 0.11, 0.045), chromeMat, 0.055, -0.35, -offset, rightDoorPivot);
         });
 
-        // Illuminated Sunlit Carton Pallet Bay inside Container
+        // 2. Brushed Aluminum AKE Air Freight ULD Group
+        const uldGroup = new THREE.Group();
+        uldGroup.visible = initialLook.isAirUld;
+        cargoRig.add(uldGroup);
+
+        const uldProfile = new THREE.Shape();
+        uldProfile.moveTo(-1.35, -0.98);
+        uldProfile.lineTo(1.15, -0.98);
+        uldProfile.lineTo(1.75, -0.35);
+        uldProfile.lineTo(1.75, 0.98);
+        uldProfile.lineTo(-1.65, 0.98);
+        uldProfile.lineTo(-1.65, -0.98);
+        uldProfile.closePath();
+
+        const uldExtrudeGeo = new THREE.ExtrudeGeometry(uldProfile, {
+          depth: 1.9,
+          bevelEnabled: true,
+          bevelThickness: 0.025,
+          bevelSize: 0.025,
+          bevelSegments: 3,
+        });
+        uldExtrudeGeo.translate(0, 0, -0.95);
+        const uldBody = new THREE.Mesh(uldExtrudeGeo, hullMat);
+        uldBody.castShadow = true;
+        uldBody.receiveShadow = true;
+        uldGroup.add(uldBody);
+
+        addMesh(new THREE.BoxGeometry(3.65, 0.09, 2.08), chromeMat, 0.05, -0.98, 0, uldGroup);
+        addMesh(new THREE.BoxGeometry(0.07, 1.96, 1.96), steelFrameMat, 1.73, 0, 0, uldGroup);
+        for (let sy = -0.65; sy <= 0.65; sy += 0.32) {
+          addMesh(new THREE.BoxGeometry(0.03, 0.045, 1.82), doorMat, 1.77, sy, 0, uldGroup);
+        }
+        for (let sz = -0.68; sz <= 0.68; sz += 0.34) {
+          addMesh(new THREE.BoxGeometry(0.03, 1.84, 0.045), doorMat, 1.77, 0, sz, uldGroup);
+        }
+
+        // 3. Palletized Cartons Bay
         const parcelBay = new THREE.Group();
         cargoRig.add(parcelBay);
 
-        const crateLightMat = new THREE.MeshStandardMaterial({
-          color: 0xe2bb87,
-          roughness: 0.72,
-          metalness: 0.03,
-        });
-        const crateWarmMat = new THREE.MeshStandardMaterial({
-          color: 0xd09d62,
-          roughness: 0.78,
+        const kraftTex = createCardboardTextures(THREE);
+        disposables.push(kraftTex);
+
+        const cartonMat = new THREE.MeshStandardMaterial({
+          map: kraftTex.map,
+          bumpMap: kraftTex.bumpMap,
+          bumpScale: 0.015,
+          roughnessMap: kraftTex.roughnessMap,
+          roughness: 0.85,
           metalness: 0.02,
         });
-        const parcelLabelCobalt = new THREE.MeshStandardMaterial({
-          color: 0x0a2e6e,
-          roughness: 0.35,
-          metalness: 0.1,
-        });
-        const parcelLabelReady = new THREE.MeshStandardMaterial({
-          color: 0x10b981,
-          emissive: 0x065f46,
-          emissiveIntensity: 0.22,
-          roughness: 0.3,
+
+        const tapeMat = new THREE.MeshPhysicalMaterial({
+          color: 0xd8b27c,
+          roughness: 0.14,
+          metalness: 0.05,
+          clearcoat: 0.9,
+          clearcoatRoughness: 0.1,
         });
 
-        // Heavy Pallet Base
-        addBox(3.4, 0.09, 1.5, 0.15, -height / 2 + 0.14, 0, crateWarmMat, parcelBay);
-
-        const specs = [
-          [-0.9, -0.45, -0.35, 0.85, 0.7, 0.72],
-          [0.05, -0.45, -0.35, 0.85, 0.7, 0.72],
-          [1.0, -0.45, -0.35, 0.88, 0.72, 0.72],
-          [-0.9, -0.45, 0.42, 0.85, 0.7, 0.68],
-          [0.05, -0.45, 0.42, 0.85, 0.7, 0.68],
-          [1.02, -0.42, 0.42, 0.9, 0.76, 0.68],
-          [-0.45, 0.3, 0.02, 0.92, 0.65, 1.25],
-          [0.62, 0.3, 0.02, 0.92, 0.65, 1.25],
-          [1.56, -0.42, -0.1, 0.62, 0.74, 1.05],
-        ];
-        specs.forEach(([px, py, pz, sw, sh, sd], idx) => {
-          addBox(
-            sw,
-            sh,
-            sd,
-            px,
-            py,
-            pz,
-            idx % 2 === 0 ? crateLightMat : crateWarmMat,
-            parcelBay
-          );
-          addBox(
-            0.02,
-            0.14,
-            0.28,
-            px + sw / 2 + 0.01,
-            py + 0.08,
-            pz,
-            idx % 3 === 0 ? parcelLabelReady : parcelLabelCobalt,
-            parcelBay
-          );
-        });
-
-        // Elevated Daylight Route Arc & Live Freight Beacon above Container
-        const arcGroup = new THREE.Group();
-        cargoRig.add(arcGroup);
-
-        const buildArc = (arcH: number) => {
-          if (arcLineMesh) {
-            arcGroup.remove(arcLineMesh);
-            arcLineMesh.geometry.dispose();
-          }
-          arcCurvePts = new THREE.QuadraticBezierCurve3(
-            new THREE.Vector3(-2.1, height / 2 + 0.25, 0),
-            new THREE.Vector3(0.05, height / 2 + arcH, 0.35),
-            new THREE.Vector3(2.35, height / 2 + 0.28, 0)
-          );
-          const tubeGeo = new THREE.TubeGeometry(arcCurvePts, 44, 0.024, 8, false);
-          arcLineMesh = new THREE.Mesh(
-            tubeGeo,
-            new THREE.MeshStandardMaterial({
-              color: 0x0a2e6e,
-              roughness: 0.28,
-              metalness: 0.4,
-            })
-          );
-          arcGroup.add(arcLineMesh);
-        };
-        buildArc(initialPalette.arcHeight);
-
-        const beaconMat = new THREE.MeshStandardMaterial({
-          color: initialPalette.beacon,
-          emissive: initialPalette.beacon,
-          emissiveIntensity: 0.38,
-          roughness: 0.25,
-          metalness: 0.2,
-        });
-        beaconMatRef = beaconMat;
-
-        const beacon = new THREE.Mesh(
-          new THREE.OctahedronGeometry(0.14, 1),
-          beaconMat
+        const labelTex = createShippingLabelTexture(
+          THREE,
+          "TC-8841",
+          "CHINE -> ABIDJAN",
+          "18.5 KG · LOT 42"
         );
-        arcGroup.add(beacon);
+        disposables.push(labelTex);
+        const labelMat = new THREE.MeshStandardMaterial({
+          map: labelTex,
+          roughness: 0.55,
+        });
+
+        addMesh(new THREE.BoxGeometry(3.15, 0.06, 1.48), deckMat, 0.35, -H / 2 + 0.13, 0, parcelBay);
+        [-0.55, 0, 0.55].forEach((pz) => {
+          addMesh(new THREE.BoxGeometry(3.1, 0.06, 0.14), deckMat, 0.35, -H / 2 + 0.08, pz, parcelBay);
+        });
+
+        const boxSpecs: Array<[number, number, number, number, number, number, boolean]> = [
+          [-0.65, -0.46, -0.34, 0.86, 0.68, 0.68, false],
+          [0.32, -0.46, -0.34, 0.88, 0.68, 0.68, false],
+          [1.26, -0.45, -0.34, 0.84, 0.7, 0.68, true],
+          [-0.65, -0.46, 0.38, 0.86, 0.68, 0.66, false],
+          [0.32, -0.46, 0.38, 0.88, 0.68, 0.66, false],
+          [1.26, -0.43, 0.38, 0.86, 0.74, 0.66, true],
+          [-0.12, 0.26, 0.02, 0.95, 0.66, 1.18, false],
+          [0.95, 0.28, 0.02, 0.92, 0.68, 1.16, true],
+        ];
+
+        boxSpecs.forEach(([bx, by, bz, bw, bh, bd, showLabel]) => {
+          addMesh(new THREE.BoxGeometry(bw, bh, bd), cartonMat, bx, by, bz, parcelBay);
+          addMesh(new THREE.BoxGeometry(bw + 0.008, 0.014, 0.11), tapeMat, bx, by + bh / 2 + 0.004, bz, parcelBay);
+          addMesh(new THREE.BoxGeometry(0.025, bh + 0.012, bd + 0.012), steelFrameMat, bx - bw * 0.22, by, bz, parcelBay);
+          addMesh(new THREE.BoxGeometry(0.025, bh + 0.012, bd + 0.012), steelFrameMat, bx + bw * 0.22, by, bz, parcelBay);
+          if (showLabel) {
+            addMesh(new THREE.BoxGeometry(0.012, 0.22, 0.34), labelMat, bx + bw / 2 + 0.006, by + 0.08, bz, parcelBay);
+          }
+        });
 
         container.addEventListener("pointermove", onPointerMove, { passive: true });
         container.addEventListener("pointerleave", onPointerLeave, { passive: true });
@@ -496,66 +570,65 @@ export default function ContainerStage3D({
           if (!isVisible || !renderer) return;
 
           if (!prefersReduced) {
-            t += 0.016;
+            t += 0.014;
           }
 
           const curCorridor = corridorRef.current;
-          const palette = CORRIDOR_COLORS[curCorridor];
+          const look = CORRIDOR_LOOKS[curCorridor];
           if (curCorridor !== lastCorridor) {
             lastCorridor = curCorridor;
-            hullMatRef?.color.setHex(palette.hull);
-            doorMatRef?.color.setHex(palette.door);
-            beaconMatRef?.color.setHex(palette.beacon);
-            beaconMatRef?.emissive.setHex(palette.beacon);
-            buildArc(palette.arcHeight);
+            const livery = liveryCache[curCorridor];
+            if (livery) {
+              hullMat.map = livery.map;
+              hullMat.bumpMap = livery.bumpMap;
+              hullMat.roughnessMap = livery.roughnessMap;
+              hullMat.metalness = look.metalness;
+              hullMat.roughness = look.roughness;
+              hullMat.needsUpdate = true;
+            }
+            doorMat.color.setHex(look.doorColor);
+            ribMat.color.set(look.hullHex);
+            ribMat.metalness = look.metalness;
+            ribMat.roughness = look.roughness + 0.12;
+            isoGroup.visible = !look.isAirUld;
+            uldGroup.visible = look.isAirUld;
+            parcelBay.visible = !look.isAirUld;
           }
 
-          curX += (targetX - curX) * 0.07;
-          curY += (targetY - curY) * 0.07;
+          curX += (targetX - curX) * 0.065;
+          curY += (targetY - curY) * 0.065;
 
           const p = getScrollProgress();
           const stepBoost =
             stepRef.current === "PRET_RETRAIT"
-              ? 0.92
+              ? 0.88
               : stepRef.current === "ARRIVEE_ABIDJAN"
-              ? 0.72
-              : 0.35;
+              ? 0.62
+              : 0.32;
 
           const doorProgress = prefersReduced
             ? 0.48
-            : Math.min(1, Math.max(0.24, (p - 0.04) * 1.45 + stepBoost * 0.32));
-          const doorSwing = 0.25 + doorProgress * 1.38;
+            : Math.min(1, Math.max(0.28, p * 1.3 + stepBoost * 0.35));
+          const doorSwing = 0.24 + doorProgress * 1.42;
 
           leftDoorPivot.rotation.y = -doorSwing;
           rightDoorPivot.rotation.y = doorSwing;
 
-          parcelBay.position.x = prefersReduced
-            ? 0.28
-            : doorProgress * 0.65;
+          parcelBay.position.x = prefersReduced ? 0.25 : doorProgress * 0.58;
 
-          const idleBob = prefersReduced ? 0 : Math.sin(t * 1.2) * 0.035;
-          const corridorOffset =
+          const subtleBreath = prefersReduced ? 0 : Math.sin(t * 0.9) * 0.012;
+          const corridorYaw =
             curCorridor === "canton_air"
-              ? 0.16
+              ? -0.22
               : curCorridor === "istanbul_dubai"
-              ? -0.14
-              : 0;
+              ? -0.44
+              : -0.34;
 
-          cargoRig.rotation.y =
-            -0.34 + corridorOffset + p * 0.56 + curX * 0.14;
-          cargoRig.rotation.x = 0.04 - curY * 0.07;
-          cargoRig.position.y = 0.06 + idleBob;
+          cargoRig.rotation.y = corridorYaw + p * 0.42 + curX * 0.11;
+          cargoRig.rotation.x = 0.03 - curY * 0.045;
+          cargoRig.position.y = 0.02 + subtleBreath;
 
-          plinthGroup.rotation.y = cargoRig.rotation.y * 0.38;
-
-          if (arcCurvePts) {
-            const beaconPos = prefersReduced
-              ? 0.62
-              : (0.15 + p * 0.75 + Math.sin(t * 0.7) * 0.06) % 1;
-            const pt = arcCurvePts.getPoint(Math.max(0, Math.min(1, beaconPos)));
-            beacon.position.copy(pt);
-            beacon.rotation.y = t * 1.4;
-          }
+          aoPlane.rotation.z = -cargoRig.rotation.y * 0.2;
 
           renderer.render(scene, camera);
         };
@@ -573,14 +646,13 @@ export default function ContainerStage3D({
       container.removeEventListener("pointerleave", onPointerLeave);
       resizeObserver?.disconnect();
       visibilityObserver?.disconnect();
+      disposables.forEach((d) => d.dispose());
       if (renderer) {
         renderer.dispose();
         renderer = null;
       }
     };
-  }, [compact]);
-
-  const palette = CORRIDOR_COLORS[corridor];
+  }, []);
 
   return (
     <div
@@ -591,56 +663,38 @@ export default function ContainerStage3D({
       {webglReady ? (
         <div
           ref={hostRef}
-          className="w-full h-full min-h-[260px]"
-          aria-label="Maquette 3D interactive du conteneur TrackCargo CI"
+          className="w-full h-full min-h-[240px]"
+          aria-label="Rendu 3D interactif de l'unité de fret TrackCargo CI"
         />
       ) : (
-        /* Daylight Architectural Vector Blueprint Fallback when WebGL unavailable */
         <div className="w-full h-full flex items-center justify-center p-4">
           <svg
             viewBox="0 0 420 260"
-            className="w-full max-w-[400px] drop-shadow-xl"
-            aria-label="Schéma conteneur 3D TrackCargo CI"
+            className="w-full max-w-[380px] drop-shadow-xl"
+            aria-label="Vue vectorielle de l'unité de fret TrackCargo CI"
           >
-            <ellipse cx="210" cy="222" rx="158" ry="18" fill="rgba(10,46,110,0.14)" />
+            <ellipse cx="210" cy="218" rx="154" ry="16" fill="rgba(13,19,29,0.16)" />
             <polygon
               points="74,95 270,58 348,88 348,188 152,216 74,184"
-              fill="#124eb5"
-              stroke="#09152b"
-              strokeWidth="2.5"
+              fill="#153766"
+              stroke="#0d131d"
+              strokeWidth="2"
             />
             <polygon
               points="270,58 348,88 348,188 270,158"
-              fill="#ff5c1b"
-              stroke="#09152b"
-              strokeWidth="2.5"
+              fill="#c9410e"
+              stroke="#0d131d"
+              strokeWidth="2"
             />
             <polygon
               points="74,95 270,58 348,88 152,124"
-              fill="#1e63d6"
-              stroke="#09152b"
-              strokeWidth="2"
+              fill="#1e4b8a"
+              stroke="#0d131d"
+              strokeWidth="1.5"
             />
-            <path
-              d="M 92 78 Q 210 10 318 68"
-              fill="none"
-              stroke="#ff5c1b"
-              strokeWidth="3"
-              strokeDasharray="6 5"
-            />
-            <circle cx="240" cy="36" r="7" fill="#ff5c1b" stroke="#09152b" strokeWidth="2" />
           </svg>
         </div>
       )}
-
-      {/* Architectural Spec Plate pinned discretely at container base */}
-      <div className="pointer-events-none absolute bottom-3 right-3 sm:bottom-5 sm:right-5 inline-flex items-center gap-2 px-2.5 py-1 rounded-[6px] bg-white/92 backdrop-blur-xs border border-[#09152b]/18 shadow-sm text-[11px] font-mono font-bold text-[#09152b]">
-        <span
-          className="h-2 w-2 rounded-full bg-[#ff5c1b]"
-          aria-hidden="true"
-        />
-        <span>{palette.badge}</span>
-      </div>
     </div>
   );
 }

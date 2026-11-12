@@ -225,16 +225,16 @@ export default function TrackingLookup({
 
   if (portalBlocked) {
     return (
-      <div className="bg-white rounded-[16px] border-2 border-[#09152b]/20 p-8 text-center text-[#09152b] shadow-[var(--sc-e2)] space-y-3">
-        <div className="mx-auto h-11 w-11 rounded-[10px] bg-amber-100 border border-amber-400 text-amber-800 flex items-center justify-center">
+      <div className="bg-white rounded-[18px] border border-[#0d131d]/12 p-8 text-center text-[#0d131d] shadow-[var(--sc-e2)] space-y-3">
+        <div className="mx-auto h-11 w-11 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
           <AlertTriangle className="w-5 h-5" aria-hidden="true" />
         </div>
-        <h2 className="text-xl font-extrabold">
+        <h2 className="text-xl font-bold">
           {portalBlocked.state === "NOT_FOUND"
             ? "Portail agence introuvable"
             : "Portail momentanément indisponible"}
         </h2>
-        <p className="text-sm text-[#43506b] max-w-md mx-auto">
+        <p className="text-sm text-[#525e70] max-w-md mx-auto">
           {portalBlocked.message}
         </p>
       </div>
@@ -247,11 +247,11 @@ export default function TrackingLookup({
 
   return (
     <div className="w-full space-y-5">
-      <div className="bg-white text-[#09152b] rounded-[16px] border border-[#09152b]/14 shadow-[var(--sc-e2)] p-4 sm:p-6 print:hidden">
+      <div className="bg-white text-[#0d131d] rounded-[18px] border border-[#0d131d]/10 shadow-[var(--sc-e2)] p-4 sm:p-6 print:hidden">
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search
-              className="w-4 h-4 text-[#43506b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+              className="w-4 h-4 text-[#525e70] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
               aria-hidden="true"
             />
             <input
@@ -261,10 +261,10 @@ export default function TrackingLookup({
               aria-label="Code de suivi colis ou numéro WhatsApp"
               placeholder={
                 agencySlug
-                  ? "Code colis (ex: TC-1042) ou votre numéro WhatsApp"
-                  : "Code colis (ex: TC-8841) ou numéro WhatsApp démo (0708123456)"
+                  ? "Code colis (ex: TC-1042) ou numéro WhatsApp"
+                  : "Code colis (ex: TC-8841) ou numéro démo (0708123456)"
               }
-              className="w-full h-12 pl-10 pr-4 rounded-[10px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] focus:border-[#0a2e6e] text-sm sm:text-base font-mono"
+              className="w-full h-12 pl-10 pr-4 rounded-full border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#525e70]/80 focus:outline-none focus:ring-2 focus:ring-[#c9410e] focus:border-[#c9410e] text-sm sm:text-base font-mono"
             />
           </div>
           <button
@@ -277,9 +277,9 @@ export default function TrackingLookup({
         </form>
 
         {showDemoQuickExamples && (
-          <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs text-[#43506b]">
-            <span className="font-semibold">
-              Codes de démonstration en direct :
+          <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs text-[#525e70]">
+            <span className="font-medium">
+              Codes de démonstration :
             </span>
             {quickExamples.map((ex) => (
               <button
@@ -289,10 +289,10 @@ export default function TrackingLookup({
                   setQuery(ex);
                   runSearch(ex);
                 }}
-                className={`px-2.5 py-1 rounded-[6px] font-mono transition-colors cursor-pointer border ${
+                className={`px-3 py-1 rounded-full font-mono transition-colors cursor-pointer border ${
                   query.toUpperCase() === ex
-                    ? "bg-[#0a2e6e] text-white border-[#0a2e6e] font-bold"
-                    : "bg-[#f6f3ec] text-[#09152b] border-[#09152b]/18 hover:border-[#0a2e6e] hover:bg-[#dce7fa]/50"
+                    ? "bg-[#0d1522] text-white border-[#0d1522] font-semibold"
+                    : "bg-[#f7f6f2] text-[#0d131d] border-[#0d131d]/12 hover:border-[#0d131d]/30"
                 }`}
               >
                 {ex}
@@ -303,19 +303,19 @@ export default function TrackingLookup({
       </div>
 
       {searched && !loading && errorMsg && (
-        <div className="bg-amber-50 rounded-[14px] border border-amber-400 p-5 text-sm text-amber-950 font-medium">
+        <div className="bg-amber-50 rounded-[14px] border border-amber-300 p-5 text-sm text-amber-950 font-medium">
           {errorMsg}
         </div>
       )}
 
       {searched && !loading && !errorMsg && parcels.length === 0 && (
-        <div className="bg-white rounded-[16px] border border-[#09152b]/14 p-8 text-center text-[#09152b] shadow-[var(--sc-e1)]">
+        <div className="bg-white rounded-[18px] border border-[#0d131d]/10 p-8 text-center text-[#0d131d] shadow-[var(--sc-e1)]">
           <div className="text-lg font-bold">
             Aucun colis trouvé pour « {query} »
           </div>
-          <p className="text-sm text-[#43506b] mt-1.5">
+          <p className="text-sm text-[#525e70] mt-1.5">
             {hintMsg ||
-              "Vérifiez votre code de suivi complet (ex: TC-8841) ou vérifiez vos 8 à 10 chiffres WhatsApp."}
+              "Vérifiez votre code de suivi complet (ex: TC-8841) ou vos 8 à 10 chiffres WhatsApp."}
           </p>
         </div>
       )}
@@ -328,46 +328,46 @@ export default function TrackingLookup({
         return (
           <div
             key={parcel.id}
-            className="bg-white text-[#09152b] rounded-[16px] border border-[#09152b]/16 shadow-[var(--sc-e2)] overflow-hidden print:border-slate-300"
+            className="bg-white text-[#0d131d] rounded-[18px] border border-[#0d131d]/10 shadow-[var(--sc-e2)] overflow-hidden print:border-slate-300"
           >
-            {/* Header Band — Crisp Cargo Cobalt */}
-            <div className="bg-[#0a2e6e] text-white px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#09152b] print:bg-slate-100 print:text-black print:border-slate-300">
+            {/* Header Band — Deep Atlantic Slate */}
+            <div className="bg-[#0d1522] text-white px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 print:bg-slate-100 print:text-black print:border-slate-300">
               <div>
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="font-mono text-lg sm:text-xl font-extrabold text-[#ff966b] print:text-black">
+                  <span className="font-mono text-lg sm:text-xl font-bold text-[#ff966b] print:text-black">
                     {parcel.trackingCode}
                   </span>
                   <span
-                    className={`text-xs font-bold px-2.5 py-1 rounded-[6px] border ${currentMeta.badgeClass}`}
+                    className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${currentMeta.badgeClass}`}
                   >
                     {currentMeta.shortLabel}
                   </span>
                   <span
-                    className={`text-xs font-bold px-2.5 py-1 rounded-[6px] border ${paymentMeta.badgeClass}`}
+                    className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${paymentMeta.badgeClass}`}
                   >
                     {paymentMeta.label}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-[#dce7fa] mt-1.5 print:text-slate-700">
+                <p className="text-xs sm:text-sm text-[#c7d4e6] mt-1.5 print:text-slate-700">
                   Client :{" "}
-                  <strong className="text-white print:text-black">
+                  <strong className="text-white font-semibold print:text-black">
                     {parcel.clientName}
                   </strong>{" "}
                   · <span className="font-mono">{parcel.clientPhone}</span>
                 </p>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-xs font-mono uppercase tracking-[0.06em] text-[#b9d0f6] print:text-slate-600">
+                <div className="text-xs font-mono uppercase tracking-[0.06em] text-[#9eb0c9] print:text-slate-600">
                   Frais de fret
                 </div>
-                <div className="text-xl font-extrabold text-white font-mono tabular-nums print:text-black">
+                <div className="text-xl font-bold text-white font-mono tabular-nums print:text-black">
                   {formatFcfa(parcel.amountFcfa)}
                 </div>
               </div>
             </div>
 
             {/* Stepper */}
-            <div className="p-5 sm:p-6 border-b border-[#09152b]/10 bg-[#faf8f4] print:border-slate-200">
+            <div className="p-5 sm:p-6 border-b border-[#0d131d]/8 bg-[#faf9f6] print:border-slate-200">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {ORDERED_STEPS.map((st) => {
                   const meta = PARCEL_STATUS_META[st];
@@ -376,22 +376,22 @@ export default function TrackingLookup({
                   return (
                     <div
                       key={st}
-                      className={`rounded-[10px] p-3 border transition-colors ${
+                      className={`rounded-[12px] p-3 border transition-colors ${
                         active
-                          ? "bg-[#fff1eb] border-[#ff5c1b] text-[#09152b] shadow-xs"
+                          ? "bg-[#fff4ee] border-[#c9410e]/40 text-[#0d131d]"
                           : done
-                          ? "bg-emerald-50 border-emerald-400 text-[#09152b]"
-                          : "bg-white border-[#09152b]/12 text-[#43506b]"
+                          ? "bg-emerald-50/70 border-emerald-200 text-[#0d131d]"
+                          : "bg-white border-[#0d131d]/8 text-[#525e70]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span
-                          className={`inline-flex h-6 w-6 items-center justify-center rounded-[6px] text-xs font-extrabold font-mono ${
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold font-mono ${
                             active
-                              ? "bg-[#ff5c1b] text-[#09152b] border border-[#09152b]"
+                              ? "bg-[#c9410e] text-white"
                               : done
                               ? "bg-emerald-600 text-white"
-                              : "bg-[#ebe5d8] text-[#09152b]"
+                              : "bg-[#eeebe3] text-[#525e70]"
                           }`}
                         >
                           {done && !active ? (
@@ -400,11 +400,11 @@ export default function TrackingLookup({
                             meta.step
                           )}
                         </span>
-                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#43506b]">
+                        <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#525e70]">
                           Étape {meta.step}
                         </span>
                       </div>
-                      <div className="text-xs font-bold leading-snug text-[#09152b]">
+                      <div className="text-xs font-semibold leading-snug text-[#0d131d]">
                         {meta.shortLabel}
                       </div>
                     </div>
@@ -416,44 +416,44 @@ export default function TrackingLookup({
             {/* Details + Actions */}
             <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#f6f3ec] rounded-[10px] p-4 border border-[#09152b]/12 text-sm print:bg-slate-50 print:border-slate-300">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#f7f6f2] rounded-[12px] p-4 border border-[#0d131d]/8 text-sm print:bg-slate-50 print:border-slate-300">
                   <div>
-                    <div className="text-xs font-mono text-[#43506b] flex items-center gap-1.5">
+                    <div className="text-xs font-mono text-[#525e70] flex items-center gap-1.5">
                       <Package
-                        className="w-3.5 h-3.5 text-[#0a2e6e]"
+                        className="w-3.5 h-3.5 text-[#0d1522]"
                         aria-hidden="true"
                       />
                       <span>Contenu déclaré</span>
                     </div>
-                    <div className="font-bold text-[#09152b] mt-1 print:text-black">
+                    <div className="font-semibold text-[#0d131d] mt-1 print:text-black">
                       {parcel.description}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-mono text-[#43506b]">
+                    <div className="text-xs font-mono text-[#525e70]">
                       Poids / Volume
                     </div>
-                    <div className="font-bold text-[#09152b] mt-1 font-mono tabular-nums print:text-black">
+                    <div className="font-semibold text-[#0d131d] mt-1 font-mono tabular-nums print:text-black">
                       {parcel.weightKg} kg
                       {parcel.volumeCbm > 0 ? ` · ${parcel.volumeCbm} CBM` : ""}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-mono text-[#43506b] flex items-center gap-1.5">
+                    <div className="text-xs font-mono text-[#525e70] flex items-center gap-1.5">
                       {parcel.batch?.mode === "maritime" ? (
                         <Ship
-                          className="w-3.5 h-3.5 text-[#0a2e6e]"
+                          className="w-3.5 h-3.5 text-[#0d1522]"
                           aria-hidden="true"
                         />
                       ) : (
                         <Plane
-                          className="w-3.5 h-3.5 text-[#0a2e6e]"
+                          className="w-3.5 h-3.5 text-[#0d1522]"
                           aria-hidden="true"
                         />
                       )}
                       <span>Lot / Transport</span>
                     </div>
-                    <div className="font-bold text-[#09152b] mt-1 font-mono print:text-black">
+                    <div className="font-semibold text-[#0d131d] mt-1 font-mono print:text-black">
                       {parcel.batch
                         ? `${parcel.batch.code} (${
                             parcel.batch.mode === "maritime"
@@ -467,21 +467,21 @@ export default function TrackingLookup({
 
                 {!compact && (
                   <div>
-                    <h4 className="text-sm font-extrabold text-[#09152b] mb-3 print:text-black">
+                    <h4 className="text-sm font-bold text-[#0d131d] mb-3 print:text-black">
                       Historique d&apos;acheminement
                     </h4>
-                    <div className="space-y-3 border-l-2 border-[#0a2e6e]/25 ml-2 pl-4 print:border-slate-300">
+                    <div className="space-y-3 border-l-2 border-[#0d1522]/15 ml-2 pl-4 print:border-slate-300">
                       {[...parcel.history].reverse().map((ev, idx) => (
                         <div key={`${ev.timestamp}-${idx}`} className="relative">
                           <span
                             className={`absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full ${
-                              idx === 0 ? "bg-[#ff5c1b]" : "bg-emerald-600"
+                              idx === 0 ? "bg-[#c9410e]" : "bg-emerald-600"
                             }`}
                           />
-                          <div className="text-sm font-bold text-[#09152b] print:text-black">
+                          <div className="text-sm font-semibold text-[#0d131d] print:text-black">
                             {ev.label}
                           </div>
-                          <div className="text-xs text-[#43506b] print:text-slate-600">
+                          <div className="text-xs text-[#525e70] print:text-slate-600">
                             {ev.location} · {formatDateFr(ev.timestamp)}
                           </div>
                         </div>
@@ -492,37 +492,37 @@ export default function TrackingLookup({
               </div>
 
               {/* Payment & Pickup Card */}
-              <div className="bg-[#f6f3ec] rounded-[12px] border border-[#09152b]/14 p-4 flex flex-col justify-between gap-4 print:bg-slate-50 print:border-slate-300">
-                <div className="space-y-2">
-                  <div className="text-xs font-mono font-bold uppercase tracking-wider text-[#0a2e6e] flex items-center gap-1.5">
+              <div className="bg-[#f7f6f2] rounded-[12px] border border-[#0d131d]/8 p-4 flex flex-col justify-between gap-4 print:bg-slate-50 print:border-slate-300">
+                <div className="space-y-1.5">
+                  <div className="text-xs font-mono font-semibold uppercase tracking-wider text-[#525e70] flex items-center gap-1.5">
                     <MapPin
-                      className="w-3.5 h-3.5 text-[#ff5c1b]"
+                      className="w-3.5 h-3.5 text-[#c9410e]"
                       aria-hidden="true"
                     />
-                    <span>Point de retrait Abidjan</span>
+                    <span>Retrait Abidjan</span>
                   </div>
-                  <div className="text-sm font-extrabold text-[#09152b] print:text-black">
+                  <div className="text-sm font-bold text-[#0d131d] print:text-black">
                     {agency?.name || "Agence TrackCargo CI"}
                   </div>
-                  <div className="text-xs text-[#43506b] print:text-slate-700">
+                  <div className="text-xs text-[#525e70] print:text-slate-700">
                     {agency?.address || "Abidjan"}
                   </div>
                   {parcel.batch?.etaDate && (
-                    <div className="text-xs text-[#43506b] pt-1 print:text-slate-700">
+                    <div className="text-xs text-[#525e70] pt-1 print:text-slate-700">
                       Arrivée estimée :{" "}
-                      <strong className="text-[#09152b] font-mono print:text-black">
+                      <strong className="text-[#0d131d] font-mono print:text-black">
                         {parcel.batch.etaDate}
                       </strong>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2.5 print:hidden">
+                <div className="space-y-2 print:hidden">
                   {!paymentMeta.isPaid && (
                     <button
                       type="button"
                       onClick={() => setShowPayModal(parcel)}
-                      className="w-full py-2.5 px-4 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#09152b] font-extrabold text-sm border border-[#09152b]/20 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-2.5 px-4 rounded-full bg-[#0e7490] hover:bg-[#0c6078] text-white font-semibold text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Smartphone className="w-4 h-4" aria-hidden="true" />
                       <span>Régler par Wave / Orange Money</span>
@@ -538,7 +538,7 @@ export default function TrackingLookup({
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-2.5 px-4 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#042318] font-extrabold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
+                      className="w-full py-2.5 px-4 rounded-full bg-[#047857] hover:bg-[#065f46] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
                     >
                       <MessageSquare className="w-4 h-4" aria-hidden="true" />
                       <span>Contacter sur WhatsApp</span>
@@ -548,7 +548,7 @@ export default function TrackingLookup({
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="w-full py-2 px-4 rounded-[8px] border border-[#09152b]/22 bg-white hover:bg-[#ebe5d8] text-[#09152b] font-semibold text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-2 px-4 rounded-full border border-[#0d131d]/14 bg-white hover:bg-[#eeebe3] text-[#0d131d] font-medium text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Printer className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Imprimer le bordereau</span>
@@ -563,23 +563,23 @@ export default function TrackingLookup({
       {/* Mobile Money Payment Modal */}
       {showPayModal && agency && (
         <div
-          className="fixed inset-0 z-50 bg-[#09152b]/70 backdrop-blur-xs flex items-center justify-center p-4 print:hidden"
+          className="fixed inset-0 z-50 bg-[#0d1522]/70 backdrop-blur-xs flex items-center justify-center p-4 print:hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="pay-modal-title"
         >
-          <div className="bg-white text-[#09152b] rounded-[16px] max-w-md w-full p-6 shadow-2xl border border-[#09152b]/20 space-y-4">
+          <div className="bg-white text-[#0d131d] rounded-[18px] max-w-md w-full p-6 shadow-2xl border border-[#0d131d]/12 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 id="pay-modal-title" className="text-lg font-extrabold">
+                <h3 id="pay-modal-title" className="text-lg font-bold">
                   Régler le colis{" "}
-                  <span className="font-mono text-[#0a2e6e]">
+                  <span className="font-mono text-[#c9410e]">
                     {showPayModal.trackingCode}
                   </span>
                 </h3>
-                <p className="text-sm text-[#43506b] mt-1">
+                <p className="text-sm text-[#525e70] mt-1">
                   Montant dû :{" "}
-                  <strong className="text-[#09152b] font-mono">
+                  <strong className="text-[#0d131d] font-mono">
                     {formatFcfa(showPayModal.amountFcfa)}
                   </strong>
                 </p>
@@ -588,7 +588,7 @@ export default function TrackingLookup({
                 type="button"
                 onClick={() => setShowPayModal(null)}
                 aria-label="Fermer la fenêtre de paiement"
-                className="p-1.5 rounded-[6px] text-[#43506b] hover:text-[#09152b] hover:bg-[#ebe5d8] cursor-pointer"
+                className="p-1.5 rounded-full text-[#525e70] hover:text-[#0d131d] hover:bg-[#f7f6f2] cursor-pointer"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -600,26 +600,26 @@ export default function TrackingLookup({
                   href={agency.waveLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full text-center py-3 px-4 rounded-[8px] bg-[#22d3ee] hover:bg-[#38bdf8] text-[#09152b] font-extrabold text-sm border border-[#09152b]/20 transition-colors no-underline"
+                  className="block w-full text-center py-3 px-4 rounded-full bg-[#0e7490] hover:bg-[#0c6078] text-white font-semibold text-sm transition-colors no-underline"
                 >
                   Payer avec Wave ({formatFcfa(showPayModal.amountFcfa)})
                 </a>
               )}
 
-              <div className="p-3.5 rounded-[10px] bg-[#fff4ee] border border-[#ff5c1b]/40 text-sm">
-                <div className="font-extrabold text-[#9a2e00]">
+              <div className="p-4 rounded-[12px] bg-[#fff4ee] border border-[#c9410e]/25 text-sm">
+                <div className="font-bold text-[#9a2e00]">
                   Option Orange Money / MTN MoMo
                 </div>
-                <div className="text-[#09152b] mt-1">
+                <div className="text-[#0d131d] mt-1">
                   Envoyez{" "}
                   <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
                   numéro :{" "}
-                  <span className="font-mono font-extrabold">
+                  <span className="font-mono font-bold">
                     {agency.orangeMoneyNumber}
                   </span>
                 </div>
-                <div className="text-xs text-[#43506b] mt-1 font-mono font-semibold">
-                  Référence à indiquer : {showPayModal.trackingCode}
+                <div className="text-xs text-[#525e70] mt-1 font-mono font-medium">
+                  Référence : {showPayModal.trackingCode}
                 </div>
               </div>
 
@@ -633,7 +633,7 @@ export default function TrackingLookup({
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2.5 px-4 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#042318] font-extrabold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
+                className="w-full py-2.5 px-4 rounded-full bg-[#047857] hover:bg-[#065f46] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
               >
                 <Check className="w-4 h-4" aria-hidden="true" />
                 <span>Envoyer la capture sur WhatsApp</span>

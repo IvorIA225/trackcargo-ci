@@ -2,48 +2,47 @@
 @import "../styles/scrollcraft.css" layer(base);
 
 /* ============================================================================
-   TrackCargo CI v2 — Audacious Daylight Coastal & Cargo Cobalt Design System
+   TrackCargo CI v3 — Studio Maritime Épuré
    ----------------------------------------------------------------------------
-   High-key Alabaster Stone (#F6F3EC), Deep Cargo Cobalt (#0A2E6E),
-   Signal Tangerine (#FF5C1B) and Ink Navy (#09152B).
-   Overrides scrollcraft.css tokens inside @layer base and places custom
-   components inside @layer components so Tailwind @layer utilities win.
+   Mineral Ivory (#F7F6F2), Abyssal Slate (#0D131D), Deep Atlantic (#0D1522),
+   and Rich Signal Vermilion (#C9410E — 4.81:1 contrast with white ink).
    ========================================================================== */
 
 @layer base {
   :root {
-    --sc-canvas: #f6f3ec;
+    --sc-canvas: #f7f6f2;
     --sc-surface: #ffffff;
-    --sc-surface-elevated: #ebe5d8;
-    --sc-ink: #09152b;
-    --sc-ink-soft: #43506b;
-    --sc-accent: #ff5c1b;
-    --sc-accent-hover: #ff7136;
-    --sc-accent-ink: #09152b;
+    --sc-surface-elevated: #eeebe3;
+    --sc-ink: #0d131d;
+    --sc-ink-soft: #525e70;
+    --sc-accent: #c9410e;
+    --sc-accent-hover: #b1370a;
+    --sc-accent-ink: #ffffff;
 
-    --sc-cobalt: #0a2e6e;
-    --sc-cobalt-mid: #124eb5;
-    --sc-cobalt-soft: #dce7fa;
+    --sc-slate-deep: #0d1522;
+    --sc-slate-surface: #142033;
+    --sc-cobalt: #153766;
+    --sc-cobalt-soft: #e3ebf6;
 
-    --sc-hairline: color-mix(in oklab, var(--sc-ink) 12%, transparent);
-    --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 24%, transparent);
+    --sc-hairline: color-mix(in oklab, var(--sc-ink) 10%, transparent);
+    --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 20%, transparent);
 
-    --sc-shadow-color: 220 48% 14%;
-    --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.08),
-             0 4px 10px -2px hsl(var(--sc-shadow-color) / 0.1);
-    --sc-e2: 0 2px 6px hsl(var(--sc-shadow-color) / 0.09),
-             0 12px 26px -6px hsl(var(--sc-shadow-color) / 0.14);
-    --sc-e3: 0 6px 14px hsl(var(--sc-shadow-color) / 0.1),
-             0 24px 48px -12px hsl(var(--sc-shadow-color) / 0.18);
-    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    --sc-shadow-color: 218 38% 12%;
+    --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.05),
+             0 4px 12px -2px hsl(var(--sc-shadow-color) / 0.07);
+    --sc-e2: 0 2px 6px hsl(var(--sc-shadow-color) / 0.06),
+             0 14px 30px -8px hsl(var(--sc-shadow-color) / 0.11);
+    --sc-e3: 0 8px 18px hsl(var(--sc-shadow-color) / 0.08),
+             0 28px 56px -14px hsl(var(--sc-shadow-color) / 0.16);
+    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
     --sc-font-display: var(--font-archivo), "Geist", system-ui, sans-serif;
     --sc-font-text: var(--font-geist-sans), system-ui, sans-serif;
     --sc-font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-    --sc-r-sm: 6px;
-    --sc-r-md: 10px;
-    --sc-r-lg: 16px;
+    --sc-r-sm: 8px;
+    --sc-r-md: 12px;
+    --sc-r-lg: 18px;
   }
 }
 
@@ -56,20 +55,18 @@
 }
 
 @layer components {
-  /* Crisp fast settle for programmatic reveal checks and rapid jumps */
   [data-sc-in],
   [data-sc-stagger] > * {
-    transition-duration: 300ms;
+    transition-duration: 320ms;
   }
 
-  /* Pin stage flush below the 64px fixed navbar so top copy & mobile CTAs never slip under or off-fold */
+  /* Pinned stages clear the floating pill navbar cleanly on desktop and mobile */
   .sc-stage.tc-stage-below-nav {
-    top: 4rem;
-    height: calc(100vh - 4rem);
-    height: calc(100svh - 4rem);
+    top: 4.5rem;
+    height: calc(100vh - 4.5rem);
+    height: calc(100svh - 4.5rem);
   }
 
-  /* Guarantee .sc-copy--center stays dead-center even below 860px */
   .sc-copy.sc-copy--center {
     inset-inline: auto;
     left: 50%;
@@ -80,17 +77,14 @@
     text-align: center;
   }
 
-  /* Daylight subtle atmospheric paper grain (lighter than dark mode) */
   .sc-grain {
-    opacity: 0.025;
+    opacity: 0.022;
   }
 
-  /* Parallax Planes & Full-bleed Hero */
   .tc-hero-plane {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    transition: opacity 380ms var(--sc-ease-out);
     will-change: transform, opacity;
   }
 
@@ -100,18 +94,18 @@
     max-width: none;
   }
 
-  /* Localized frosted Alabaster gradient left-side only — keeps sunlit harbor & 3D luminous */
+  /* Directional soft atmospheric mineral-ivory veil on the left copy side */
   .tc-day-scrim {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 6;
     background: linear-gradient(
-      90deg,
-      rgba(246, 243, 236, 0.96) 0%,
-      rgba(246, 243, 236, 0.91) 36%,
-      rgba(246, 243, 236, 0.45) 54%,
-      rgba(246, 243, 236, 0.04) 72%,
+      102deg,
+      rgba(247, 246, 242, 0.96) 0%,
+      rgba(247, 246, 242, 0.88) 34%,
+      rgba(247, 246, 242, 0.44) 52%,
+      rgba(247, 246, 242, 0.05) 70%,
       transparent 84%
     );
   }
@@ -120,91 +114,80 @@
     position: absolute;
     inset-inline: 0;
     bottom: 0;
-    height: clamp(72px, 12vh, 130px);
+    height: clamp(64px, 11vh, 120px);
     z-index: 8;
     pointer-events: none;
     background: linear-gradient(
       to top,
-      #f6f3ec 0%,
-      rgba(246, 243, 236, 0.85) 38%,
+      #f7f6f2 0%,
+      rgba(247, 246, 242, 0.82) 38%,
       transparent 100%
     );
   }
 
-  /* Darkened Cobalt Scrub Scrim (Act 3) anchored bottom-left behind control text */
-  .tc-cobalt-scrim {
+  /* Localized bottom scrim for the Peak scrub dock (keeps upper 70% of port bright) */
+  .tc-slate-scrim {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 3;
     background: linear-gradient(
-      to top right,
-      rgba(8, 28, 69, 0.92) 0%,
-      rgba(10, 46, 110, 0.72) 38%,
-      rgba(10, 46, 110, 0.22) 64%,
-      rgba(10, 46, 110, 0.08) 100%
+      to top,
+      rgba(13, 21, 34, 0.82) 0%,
+      rgba(13, 21, 34, 0.34) 28%,
+      rgba(13, 21, 34, 0.06) 52%,
+      transparent 74%
     );
   }
 
   @media (max-width: 860px) {
     .tc-day-scrim {
       background: linear-gradient(
-        to top,
-        #f6f3ec 0%,
-        rgba(246, 243, 236, 0.97) 42%,
-        rgba(246, 243, 236, 0.76) 58%,
-        rgba(246, 243, 236, 0.18) 74%,
-        transparent 88%
-      );
-    }
-
-    .tc-cobalt-scrim {
-      background: linear-gradient(
-        to top,
-        rgba(8, 28, 69, 0.96) 0%,
-        rgba(10, 46, 110, 0.86) 46%,
-        rgba(10, 46, 110, 0.45) 68%,
-        rgba(10, 46, 110, 0.14) 100%
+        to bottom,
+        rgba(247, 246, 242, 0.94) 0%,
+        rgba(247, 246, 242, 0.88) 42%,
+        rgba(247, 246, 242, 0.62) 66%,
+        rgba(247, 246, 242, 0.24) 84%,
+        transparent 100%
       );
     }
 
     .tc-hero-title.sc-display--xl {
-      font-size: clamp(1.68rem, 6.2vw, 2.35rem);
-      line-height: 1.03;
+      font-size: clamp(1.55rem, 6.2vw, 2.25rem);
+      line-height: 1.04;
     }
 
     .tc-act2-title.sc-display--lg {
-      font-size: clamp(1.8rem, 6.2vw, 2.5rem);
+      font-size: clamp(1.55rem, 5.8vw, 2.25rem);
       line-height: 1.06;
     }
   }
 
-  /* Desktop architectural cap so 3-line Hero statement never collides with 64px header */
   @media (min-width: 861px) {
     .tc-hero-title.sc-display--xl {
-      font-size: clamp(2.5rem, 1.5rem + 2.45vw, 4rem);
-      line-height: 1.02;
+      font-size: clamp(2.65rem, 1.45rem + 2.55vw, 4.15rem);
+      line-height: 1.01;
     }
   }
 
-  /* High-impact Signal Tangerine CTA with stencil Navy ink (6.1:1 WCAG AA contrast) */
+  /* Refined Architectural Vermilion CTA (4.81:1 contrast, zero harsh black border) */
   .tc-btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
-    min-height: 48px;
-    padding: 0.78rem 1.45rem;
-    border-radius: var(--sc-r-md);
+    gap: 0.5rem;
+    min-height: 46px;
+    padding: 0.72rem 1.4rem;
+    border-radius: 999px;
     background: var(--sc-accent);
     color: var(--sc-accent-ink);
     font-family: var(--sc-font-text);
-    font-weight: 800;
+    font-weight: 700;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid #09152b;
-    box-shadow: 0 3px 0 #09152b, var(--sc-e2);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: var(--sc-e2);
     transition: background-color 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out),
       box-shadow 150ms var(--sc-ease-out);
@@ -216,33 +199,32 @@
     .tc-btn-primary:hover {
       background: var(--sc-accent-hover);
       transform: translateY(-1px);
-      box-shadow: 0 4px 0 #09152b, var(--sc-e2);
+      box-shadow: var(--sc-e3);
     }
   }
 
   .tc-btn-primary:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #09152b;
+    transform: scale(0.97);
   }
 
-  /* Saturated Cargo Cobalt Authority CTA (12.1:1 contrast) */
+  /* Deep Slate Secondary CTA */
   .tc-btn-cobalt {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
-    min-height: 48px;
-    padding: 0.78rem 1.4rem;
-    border-radius: var(--sc-r-md);
-    background: #0a2e6e;
+    gap: 0.5rem;
+    min-height: 46px;
+    padding: 0.72rem 1.35rem;
+    border-radius: 999px;
+    background: #0d1522;
     color: #ffffff;
     font-family: var(--sc-font-text);
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid #071e49;
-    box-shadow: var(--sc-e2), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--sc-e1);
     transition: background-color 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out);
     white-space: nowrap;
@@ -251,30 +233,30 @@
 
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-cobalt:hover {
-      background: #124eb5;
+      background: #1a2840;
     }
   }
 
   .tc-btn-cobalt:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 
-  /* Clean Architectural Secondary Ghost Button */
+  /* Subtle Architectural Hairline Ghost CTA */
   .tc-btn-ghost {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    min-height: 48px;
-    padding: 0.78rem 1.25rem;
-    border-radius: var(--sc-r-md);
-    background: rgba(255, 255, 255, 0.92);
-    color: #09152b;
-    font-weight: 700;
+    gap: 0.45rem;
+    min-height: 46px;
+    padding: 0.72rem 1.25rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #0d131d;
+    font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid color-mix(in oklab, #09152b 24%, transparent);
+    border: 1px solid color-mix(in oklab, #0d131d 14%, transparent);
     box-shadow: var(--sc-e1);
     transition: background-color 150ms var(--sc-ease-out),
       border-color 150ms var(--sc-ease-out),
@@ -286,89 +268,91 @@
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-ghost:hover {
       background: #ffffff;
-      border-color: #0a2e6e;
+      border-color: color-mix(in oklab, #0d131d 28%, transparent);
     }
   }
 
   .tc-btn-ghost:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 
-  /* Ghost variant inside Cobalt bands */
+  .tc-slate-band .tc-btn-ghost,
   .tc-cobalt-band .tc-btn-ghost {
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.34);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f7fa;
+    border-color: rgba(255, 255, 255, 0.2);
     box-shadow: none;
   }
 
   @media (hover: hover) and (pointer: fine) {
+    .tc-slate-band .tc-btn-ghost:hover,
     .tc-cobalt-band .tc-btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.22);
-      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.4);
     }
   }
 
-  /* Alternating Cobalt Architectural Band — restates color directly for inherited specificity safety */
+  /* Deep Atlantic Slate Architectural Band */
+  .tc-slate-band,
   .tc-cobalt-band {
-    --sc-canvas: #0a2e6e;
-    --sc-surface: #113b86;
-    --sc-surface-elevated: #17469a;
-    --sc-ink: #f8fafc;
-    --sc-ink-soft: #cdddf8;
-    --sc-accent: #ff5c1b;
-    --sc-accent-ink: #09152b;
-    --sc-hairline: rgba(255, 255, 255, 0.16);
-    --sc-hairline-strong: rgba(255, 255, 255, 0.32);
-    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    --sc-canvas: #0d1522;
+    --sc-surface: #142033;
+    --sc-surface-elevated: #1c2c44;
+    --sc-ink: #f5f7fa;
+    --sc-ink-soft: #9eb0c9;
+    --sc-accent: #f0642d;
+    --sc-accent-ink: #0d131d;
+    --sc-hairline: rgba(255, 255, 255, 0.1);
+    --sc-hairline-strong: rgba(255, 255, 255, 0.22);
+    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.1);
     background: var(--sc-canvas);
     color: var(--sc-ink);
   }
 
-  /* Light Alabaster Band inside overall document */
+  /* Mineral Ivory Daylight Band */
   .tc-daylight-band {
-    --sc-canvas: #f6f3ec;
+    --sc-canvas: #f7f6f2;
     --sc-surface: #ffffff;
-    --sc-surface-elevated: #ebe5d8;
-    --sc-ink: #09152b;
-    --sc-ink-soft: #43506b;
-    --sc-accent: #ff5c1b;
-    --sc-accent-ink: #09152b;
-    --sc-hairline: color-mix(in oklab, #09152b 12%, transparent);
-    --sc-hairline-strong: color-mix(in oklab, #09152b 24%, transparent);
+    --sc-surface-elevated: #eeebe3;
+    --sc-ink: #0d131d;
+    --sc-ink-soft: #525e70;
+    --sc-accent: #c9410e;
+    --sc-accent-ink: #ffffff;
+    --sc-hairline: color-mix(in oklab, #0d131d 10%, transparent);
+    --sc-hairline-strong: color-mix(in oklab, #0d131d 20%, transparent);
     background: var(--sc-canvas);
     color: var(--sc-ink);
   }
 
-  /* Horizontal Pan Corridors (Act 5 Cobalt Rail) */
+  /* Horizontal Pan Corridors (Act 6) */
   .tc-rail-track {
     display: flex;
     align-items: center;
     gap: clamp(1rem, 2.2vw, 2.1rem);
     padding-inline: var(--sc-gutter);
-    padding-top: 4.5rem;
+    padding-top: 2rem;
     padding-bottom: 1.5rem;
     height: 100%;
     width: max-content;
   }
 
   .tc-rail-lead {
-    flex: 0 0 clamp(16rem, 74vw, 24rem);
+    flex: 0 0 clamp(16rem, 74vw, 23rem);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-right: clamp(0.25rem, 1.2vw, 1.25rem);
+    padding-right: clamp(0.25rem, 1.2vw, 1rem);
   }
 
   .tc-lane-card {
-    flex: 0 0 clamp(16.75rem, 76vw, 25.5rem);
-    min-height: 360px;
-    max-height: calc(100svh - 6.25rem);
+    flex: 0 0 clamp(16.75rem, 76vw, 25rem);
+    min-height: 350px;
+    max-height: calc(100svh - 6.5rem);
     display: flex;
     flex-direction: column;
-    background: #ffffff;
-    color: #09152b;
-    border: 1px solid rgba(9, 21, 43, 0.14);
+    background: #142033;
+    color: #f5f7fa;
+    border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: var(--sc-r-lg);
     overflow: hidden;
     box-shadow: var(--sc-e3);
@@ -377,41 +361,39 @@
 
   .tc-rail-end {
     flex: 0 0 clamp(16.25rem, 72vw, 21.5rem);
-    min-height: 320px;
-    max-height: calc(100svh - 6.25rem);
+    min-height: 310px;
+    max-height: calc(100svh - 6.5rem);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: #ff5c1b;
-    color: #09152b;
-    border: 2px solid #09152b;
+    background: #c9410e;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: var(--sc-r-lg);
-    padding: clamp(1.25rem, 2.5vw, 1.85rem);
-    box-shadow: 0 6px 0 #09152b, var(--sc-e3);
+    padding: clamp(1.35rem, 2.6vw, 2rem);
+    box-shadow: var(--sc-e3);
   }
 
   @media (min-width: 768px) {
     .tc-rail-lead {
-      flex: 0 0 clamp(19rem, 26vw, 25rem);
+      flex: 0 0 clamp(18rem, 25vw, 24rem);
     }
     .tc-lane-card {
-      flex: 0 0 clamp(21rem, 29vw, 26.5rem);
-      min-height: 410px;
+      flex: 0 0 clamp(21rem, 28vw, 26rem);
+      min-height: 400px;
     }
     .tc-rail-end {
       flex: 0 0 clamp(18rem, 24vw, 22rem);
-      min-height: 380px;
+      min-height: 370px;
     }
   }
 
-  /* Reduced spacing when flow follows a pinned act (devices.md §8) */
   .tc-flow-after-pin {
-    padding-top: clamp(2.5rem, 5vw, 4rem);
+    padding-top: clamp(3rem, 5.5vw, 4.75rem);
     padding-bottom: clamp(3.5rem, 6.5vw, 6rem);
   }
 }
 
-/* Print safety */
 @media print {
   body {
     background: #ffffff !important;
