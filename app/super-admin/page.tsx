@@ -13,6 +13,7 @@ import {
   Save,
   Search,
 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 import Navbar from "@/components/Navbar";
 import {
   Agency,
@@ -226,32 +227,37 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f3ec] text-[#09152b]">
+    <div className="min-h-screen flex flex-col bg-[#f7f6f2] text-[#0d131d]">
       <Navbar />
 
       {toast && (
         <div
           role="status"
-          className="fixed bottom-5 right-5 z-50 bg-[#0a2e6e] text-white px-4 py-3 rounded-[10px] shadow-2xl border border-[#ff5c1b] text-sm font-bold flex items-center gap-2"
+          className="fixed bottom-5 right-5 z-50 bg-[#0d1522] text-white px-4 py-3 rounded-full shadow-2xl border border-[#c9410e] text-sm font-semibold flex items-center gap-2"
         >
-          <Check className="w-4 h-4 text-[#ff5c1b]" aria-hidden="true" />
+          <Check className="w-4 h-4 text-[#f0642d]" aria-hidden="true" />
           <span>{toast}</span>
         </div>
       )}
 
       {/* Top Founder Banner */}
-      <div className="bg-[#0a2e6e] text-white border-b border-[#09152b]">
-        <div className="max-w-[82rem] mx-auto px-4 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="h-8 w-8 rounded-[8px] bg-[#ff5c1b] text-[#09152b] inline-flex items-center justify-center border border-[#09152b]">
+      <div className="bg-[#0d1522] text-white border-b border-white/10">
+        <div className="max-w-[82rem] mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="h-9 w-9 rounded-[10px] bg-[#c9410e] text-white inline-flex items-center justify-center shadow-sm shrink-0">
               <Crown className="w-4 h-4" aria-hidden="true" />
             </span>
             <div>
-              <div className="text-xs font-mono font-bold uppercase tracking-wider text-[#fef08a]">
+              <div className="text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#fde68a]">
                 Console Fondateur SaaS
               </div>
-              <h1 className="text-lg font-extrabold text-white">
-                Pilotage des agences &amp; abonnements Wave / OM
+              <h1 className="text-base sm:text-lg font-bold text-white flex flex-wrap items-center gap-2">
+                <span>Pilotage des agences &amp; abonnements</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <BrandLogo brand="wave" size="xs" decorative />
+                  <BrandLogo brand="orange-money" size="xs" decorative />
+                  <BrandLogo brand="whatsapp" size="xs" decorative />
+                </span>
               </h1>
             </div>
           </div>
@@ -260,7 +266,7 @@ export default function SuperAdminPage() {
             <Link
               href="/a/ivoire-cargo-express"
               target="_blank"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#16428f] hover:bg-[#1e53af] text-white font-bold text-xs border border-white/25 no-underline"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/18 text-white font-semibold text-xs border border-white/18 no-underline transition-colors"
             >
               <span>Portail démo</span>
               <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -268,7 +274,7 @@ export default function SuperAdminPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-rose-600 hover:bg-rose-500 border border-rose-800 text-white font-bold text-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Déconnexion</span>
@@ -277,53 +283,53 @@ export default function SuperAdminPage() {
         </div>
       </div>
 
-      <main className="flex-1 max-w-[82rem] w-full mx-auto px-4 sm:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-[82rem] w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 shadow-[var(--sc-e1)]">
-            <div className="text-xs font-mono font-bold text-[#43506b] uppercase">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="bg-white rounded-[16px] border border-[#0d131d]/10 p-4 shadow-xs">
+            <div className="text-[11px] font-mono font-bold text-[#525e70] uppercase">
               Total agences
             </div>
-            <div className="text-2xl font-extrabold font-mono text-[#09152b] mt-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-[#0d131d] mt-1">
               {kpis.total}
             </div>
           </div>
 
-          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 shadow-[var(--sc-e1)]">
-            <div className="text-xs font-mono font-bold text-emerald-800 uppercase">
+          <div className="bg-white rounded-[16px] border border-[#0d131d]/10 p-4 shadow-xs">
+            <div className="text-[11px] font-mono font-bold text-emerald-800 uppercase">
               Actives payées
             </div>
-            <div className="text-2xl font-extrabold font-mono text-emerald-700 mt-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-700 mt-1">
               {kpis.activeCount}
             </div>
           </div>
 
-          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 shadow-[var(--sc-e1)]">
-            <div className="text-xs font-mono font-bold text-[#0a2e6e] uppercase">
+          <div className="bg-white rounded-[16px] border border-[#0d131d]/10 p-4 shadow-xs">
+            <div className="text-[11px] font-mono font-bold text-[#0d1522] uppercase">
               En essai (14j)
             </div>
-            <div className="text-2xl font-extrabold font-mono text-[#0a2e6e] mt-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-[#0d1522] mt-1">
               {kpis.trialCount}
             </div>
           </div>
 
-          <div className="bg-white rounded-[14px] border border-[#09152b]/14 p-4 shadow-[var(--sc-e1)]">
-            <div className="text-xs font-mono font-bold text-amber-800 uppercase">
+          <div className="bg-white rounded-[16px] border border-[#0d131d]/10 p-4 shadow-xs">
+            <div className="text-[11px] font-mono font-bold text-amber-800 uppercase">
               Expirées / Suspendues
             </div>
-            <div className="text-2xl font-extrabold font-mono text-amber-700 mt-1">
+            <div className="text-xl sm:text-2xl font-bold font-mono text-amber-700 mt-1">
               {kpis.attentionCount}
             </div>
           </div>
 
-          <div className="bg-[#0a2e6e] text-white rounded-[14px] border border-[#09152b] p-4 shadow-[var(--sc-e2)] col-span-2 lg:col-span-1">
-            <div className="text-xs font-mono font-bold text-[#fef08a] uppercase">
+          <div className="bg-[#0d1522] text-white rounded-[16px] border border-[#0d1522] p-4 shadow-md col-span-2 lg:col-span-1">
+            <div className="text-[11px] font-mono font-bold text-[#fde68a] uppercase">
               MRR actif payant
             </div>
-            <div className="text-xl font-extrabold font-mono mt-1">
+            <div className="text-lg sm:text-xl font-bold font-mono mt-1">
               {formatFcfa(kpis.mrrActive)}
             </div>
-            <div className="text-[11px] text-[#c7d9f7]">
+            <div className="text-[11px] text-[#cbd5e1] mt-0.5">
               Potentiel avec essais : {formatFcfa(kpis.mrrPotential)}
             </div>
           </div>
@@ -332,31 +338,31 @@ export default function SuperAdminPage() {
         {/* Founder Billing Coordinates */}
         <form
           onSubmit={handleSavePlatformSettings}
-          className="bg-white rounded-[16px] border border-[#09152b]/14 p-5 sm:p-6 shadow-[var(--sc-e1)] space-y-4"
+          className="bg-white rounded-[18px] border border-[#0d131d]/10 p-5 sm:p-6 shadow-xs space-y-4"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 className="text-base font-extrabold text-[#09152b]">
+              <h2 className="text-base font-bold text-[#0d131d]">
                 Vos coordonnées d&apos;encaissement SaaS (affichées aux agences
                 expirées)
               </h2>
-              <p className="text-xs text-[#43506b]">
+              <p className="text-xs text-[#525e70] mt-0.5">
                 Toute agence dont l&apos;essai expire voit ce lien Wave et ce
                 numéro Orange Money sur son écran de renouvellement.
               </p>
             </div>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[8px] bg-[#0a2e6e] hover:bg-[#124eb5] text-white font-bold text-xs cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#c9410e] hover:bg-[#b5370a] text-white font-bold text-xs cursor-pointer shrink-0 transition-colors w-full sm:w-auto"
             >
               <Save className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Enregistrer mes liens</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             <div>
-              <label className="block text-[11px] font-mono font-bold text-[#43506b] mb-1">
+              <label className="block text-[11px] font-mono font-bold text-[#525e70] mb-1.5">
                 Nom affiché
               </label>
               <input
@@ -368,13 +374,14 @@ export default function SuperAdminPage() {
                     founderName: e.target.value,
                   })
                 }
-                className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-sm"
+                className="w-full h-10 px-3 rounded-[10px] border border-[#0d131d]/16 bg-[#f7f6f2] text-sm"
                 required
               />
             </div>
             <div>
-              <label className="block text-[11px] font-mono font-bold text-[#43506b] mb-1">
-                WhatsApp Fondateur
+              <label className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#525e70] mb-1.5">
+                <BrandLogo brand="whatsapp" size="xs" decorative />
+                <span>WhatsApp Fondateur</span>
               </label>
               <input
                 type="text"
@@ -385,13 +392,14 @@ export default function SuperAdminPage() {
                     founderWhatsapp: e.target.value,
                   })
                 }
-                className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-sm font-mono"
+                className="w-full h-10 px-3 rounded-[10px] border border-[#0d131d]/16 bg-[#f7f6f2] text-sm font-mono"
                 required
               />
             </div>
             <div>
-              <label className="block text-[11px] font-mono font-bold text-[#43506b] mb-1">
-                Numéro Orange Money
+              <label className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#525e70] mb-1.5">
+                <BrandLogo brand="orange-money" size="xs" withWhiteSurface={false} decorative />
+                <span>Numéro Orange Money</span>
               </label>
               <input
                 type="text"
@@ -402,13 +410,14 @@ export default function SuperAdminPage() {
                     founderOmNumber: e.target.value,
                   })
                 }
-                className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-sm font-mono"
+                className="w-full h-10 px-3 rounded-[10px] border border-[#0d131d]/16 bg-[#f7f6f2] text-sm font-mono"
                 required
               />
             </div>
             <div>
-              <label className="block text-[11px] font-mono font-bold text-[#43506b] mb-1">
-                Lien marchand Wave (https://)
+              <label className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#525e70] mb-1.5">
+                <BrandLogo brand="wave" size="xs" decorative />
+                <span>Lien marchand Wave (https://)</span>
               </label>
               <input
                 type="url"
@@ -419,7 +428,7 @@ export default function SuperAdminPage() {
                     founderWaveLink: e.target.value,
                   })
                 }
-                className="w-full h-10 px-3 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-sm font-mono"
+                className="w-full h-10 px-3 rounded-[10px] border border-[#0d131d]/16 bg-[#f7f6f2] text-sm font-mono"
                 required
               />
             </div>
@@ -442,10 +451,10 @@ export default function SuperAdminPage() {
                 key={key}
                 type="button"
                 onClick={() => setStatusFilter(key)}
-                className={`px-3.5 py-2 rounded-[8px] text-xs font-bold border cursor-pointer ${
+                className={`px-3.5 py-2 rounded-full text-xs font-bold border cursor-pointer transition-colors ${
                   statusFilter === key
-                    ? "bg-[#ff5c1b] text-[#09152b] border-[#09152b]"
-                    : "bg-white text-[#09152b] border-[#09152b]/18 hover:bg-[#dce7fa]/50"
+                    ? "bg-[#c9410e] text-white border-[#c9410e]"
+                    : "bg-white text-[#0d131d] border-[#0d131d]/14 hover:bg-[#eeebe3]"
                 }`}
               >
                 {label}
@@ -455,7 +464,7 @@ export default function SuperAdminPage() {
 
           <div className="relative w-full md:w-72">
             <Search
-              className="w-4 h-4 text-[#43506b] absolute left-3 top-1/2 -translate-y-1/2"
+              className="w-4 h-4 text-[#525e70] absolute left-3.5 top-1/2 -translate-y-1/2"
               aria-hidden="true"
             />
             <input
@@ -463,7 +472,7 @@ export default function SuperAdminPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filtrer par agence, slug ou commune..."
-              className="w-full h-10 pl-9 pr-3 rounded-[8px] border border-[#09152b]/22 bg-white text-sm"
+              className="w-full h-10 pl-9 pr-3 rounded-full border border-[#0d131d]/16 bg-white text-sm"
             />
           </div>
         </div>
@@ -476,7 +485,7 @@ export default function SuperAdminPage() {
               st === "ACTIVE"
                 ? "bg-emerald-100 text-emerald-900 border-emerald-300"
                 : st === "TRIAL"
-                ? "bg-[#dce7fa] text-[#0a2e6e] border-[#0a2e6e]/30"
+                ? "bg-[#eef2f9] text-[#0d1522] border-[#0d1522]/20"
                 : st === "PAST_DUE"
                 ? "bg-amber-100 text-amber-900 border-amber-300"
                 : "bg-rose-100 text-rose-900 border-rose-300";
@@ -484,32 +493,33 @@ export default function SuperAdminPage() {
             return (
               <div
                 key={ag.id}
-                className="bg-white rounded-[14px] border border-[#09152b]/14 p-5 shadow-[var(--sc-e1)] flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4"
+                className="bg-white rounded-[16px] border border-[#0d131d]/10 p-4 sm:p-5 shadow-xs flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4"
               >
                 <div className="space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-extrabold text-[#09152b]">
+                    <span className="text-base sm:text-lg font-bold text-[#0d131d]">
                       {ag.name}
                     </span>
                     {ag.isDemo && (
-                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-[5px] bg-[#ebe5d8] text-[#09152b]">
+                      <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#eeebe3] text-[#0d131d]">
                         DÉMO VITRINE
                       </span>
                     )}
                     <span
-                      className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-[6px] border ${statusChip}`}
+                      className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border ${statusChip}`}
                     >
                       {st}
                       {(st === "ACTIVE" || st === "TRIAL") &&
                         ` · ${ag.resolved.daysRemaining} j`}
                     </span>
                   </div>
-                  <div className="text-xs text-[#43506b] flex flex-wrap items-center gap-3">
+                  <div className="text-xs text-[#525e70] flex flex-wrap items-center gap-3">
                     <span>
-                      Commune : <strong className="text-[#09152b]">{ag.commune}</strong>
+                      Commune : <strong className="text-[#0d131d]">{ag.commune}</strong>
                     </span>
-                    <span>
-                      WhatsApp : <span className="font-mono">{ag.whatsappPhone}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <BrandLogo brand="whatsapp" size="xs" decorative />
+                      <span className="font-mono">{ag.whatsappPhone}</span>
                     </span>
                     <span>
                       Activité : <strong>{ag.batchCount}</strong> lots ·{" "}
@@ -518,7 +528,7 @@ export default function SuperAdminPage() {
                     <Link
                       href={`/a/${ag.slug}`}
                       target="_blank"
-                      className="inline-flex items-center gap-1 font-mono font-bold text-[#0a2e6e] hover:text-[#ff5c1b] hover:underline"
+                      className="inline-flex items-center gap-1 font-mono font-bold text-[#0d1522] hover:text-[#c9410e] hover:underline"
                     >
                       <span>/a/{ag.slug}</span>
                       <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
@@ -541,7 +551,7 @@ export default function SuperAdminPage() {
                         `Forfait de ${ag.name} mis à jour.`
                       )
                     }
-                    className="h-9 px-2.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-xs font-bold text-[#09152b]"
+                    className="h-9 px-3 rounded-full border border-[#0d131d]/16 bg-[#f7f6f2] text-xs font-bold text-[#0d131d] w-full sm:w-auto"
                   >
                     {(Object.keys(PLAN_META) as PlanTier[]).map((p) => (
                       <option key={p} value={p}>
@@ -560,7 +570,7 @@ export default function SuperAdminPage() {
                         `${ag.name} prolongée de +30 jours.`
                       )
                     }
-                    className="px-3.5 py-2 rounded-[8px] bg-[#10b981] hover:bg-[#34d399] text-[#042318] font-extrabold text-xs cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer disabled:opacity-50 transition-colors"
                   >
                     +30 jours (Payé)
                   </button>
@@ -576,7 +586,7 @@ export default function SuperAdminPage() {
                           `${ag.name} passée en attente de paiement.`
                         )
                       }
-                      className="px-3 py-2 rounded-[8px] bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs border border-amber-300 cursor-pointer disabled:opacity-50"
+                      className="px-3 py-2 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs border border-amber-300 cursor-pointer disabled:opacity-50"
                     >
                       Marquer expirée
                     </button>
@@ -593,7 +603,7 @@ export default function SuperAdminPage() {
                           `${ag.name} réactivée.`
                         )
                       }
-                      className="inline-flex items-center gap-1 px-3 py-2 rounded-[8px] bg-[#0a2e6e] hover:bg-[#124eb5] text-white font-bold text-xs cursor-pointer disabled:opacity-50"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-[#0d1522] hover:bg-[#1a2840] text-white font-bold text-xs cursor-pointer disabled:opacity-50"
                     >
                       <PlayCircle className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>Réactiver</span>
@@ -610,7 +620,7 @@ export default function SuperAdminPage() {
                             `${ag.name} suspendue.`
                           )
                         }
-                        className="inline-flex items-center gap-1 px-3 py-2 rounded-[8px] bg-rose-100 hover:bg-rose-200 text-rose-900 font-bold text-xs border border-rose-300 cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-900 font-bold text-xs border border-rose-300 cursor-pointer disabled:opacity-50"
                       >
                         <PauseCircle className="w-3.5 h-3.5" aria-hidden="true" />
                         <span>Suspendre</span>
@@ -625,26 +635,26 @@ export default function SuperAdminPage() {
 
         {/* Recent Billing Events */}
         {recentEvents.length > 0 && (
-          <section className="bg-white rounded-[16px] border border-[#09152b]/14 p-6 shadow-[var(--sc-e1)] space-y-4">
-            <h2 className="text-base font-extrabold text-[#09152b]">
+          <section className="bg-white rounded-[18px] border border-[#0d131d]/10 p-5 sm:p-6 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-[#0d131d]">
               Journal récent de facturation et d&apos;activation
             </h2>
-            <div className="divide-y divide-[#09152b]/10 text-xs">
+            <div className="divide-y divide-[#0d131d]/8 text-xs">
               {recentEvents.slice(0, 15).map((ev) => (
                 <div
                   key={ev.id}
                   className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono font-bold text-[#0a2e6e]">
+                    <span className="font-mono font-bold text-[#0d1522]">
                       {ev.action}
                     </span>
-                    <span className="text-[#09152b] font-semibold">
+                    <span className="text-[#0d131d] font-semibold">
                       {ev.note}
                     </span>
-                    <span className="text-[#43506b]">({ev.actorEmail})</span>
+                    <span className="text-[#525e70]">({ev.actorEmail})</span>
                   </div>
-                  <div className="flex items-center gap-3 font-mono text-[#43506b]">
+                  <div className="flex items-center gap-3 font-mono text-[#525e70]">
                     {ev.amountFcfa > 0 && (
                       <span className="font-bold text-emerald-700">
                         +{formatFcfa(ev.amountFcfa)}

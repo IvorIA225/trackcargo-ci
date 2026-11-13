@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import BrandLogo from "@/components/BrandLogo";
 import ContainerStage3D, { type CorridorId } from "@/components/ContainerStage3D";
 import Navbar from "@/components/Navbar";
 import ParcelShowcase3D from "@/components/ParcelShowcase3D";
 import ScrollCraftRunner from "@/components/ScrollCraftRunner";
 import TrackingLookup from "@/components/TrackingLookup";
-import { formatFcfa } from "@/lib/format";
 import { PLAN_META, type PlanTier } from "@/lib/types";
 
 type CorridorSpec = {
@@ -234,8 +234,6 @@ export default function HomePage() {
   const [corridor, setCorridor] = useState<CorridorId>("yiwu_sea");
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
   const [isCompactViewport, setIsCompactViewport] = useState(false);
-  const [parcelsPerMonth, setParcelsPerMonth] = useState<number>(650);
-  const [messagesPerParcel, setMessagesPerParcel] = useState<number>(4);
   const [activeTelemetryIdx, setActiveTelemetryIdx] = useState<number>(0);
   const [hideFloatingRoute, setHideFloatingRoute] = useState<boolean>(false);
 
@@ -313,13 +311,6 @@ export default function HomePage() {
     };
   }, []);
 
-  const roiStats = useMemo(() => {
-    const avoidedMessages = parcelsPerMonth * messagesPerParcel;
-    const hoursSaved = Math.round((avoidedMessages * 1.4) / 60);
-    const staffValueFcfa = Math.round(hoursSaved * 3200);
-    return { avoidedMessages, hoursSaved, staffValueFcfa };
-  }, [parcelsPerMonth, messagesPerParcel]);
-
   return (
     <div id="tc-showcase-root" className="min-h-screen bg-[#f7f6f2] text-[#0d131d]">
       <ScrollCraftRunner rootId="tc-showcase-root" />
@@ -335,7 +326,7 @@ export default function HomePage() {
         <section
           id="act-ouverture"
           data-sc-act="flow"
-          className="sc-act tc-daylight-band relative min-h-[calc(100svh-4.5rem)] flex items-center pt-5 pb-8 sm:pt-8 sm:pb-12 overflow-hidden"
+          className="sc-act tc-daylight-band relative min-h-[calc(100svh-4.5rem)] flex items-center pt-4 pb-6 sm:pt-8 sm:pb-12 overflow-hidden"
         >
           {/* Plan arrière : port d'Abidjan en plein jour + parallax doux */}
           <div className="tc-hero-plane z-0" data-sc-parallax="-0.12" aria-hidden="true">
@@ -354,24 +345,24 @@ export default function HomePage() {
           <div className="tc-day-floor" aria-hidden="true" />
 
           <div className="sc-wrap relative z-20 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-10 items-center">
               {/* Colonne gauche : 4 éléments stricts, zéro pilule eyebrow */}
-              <div className="lg:col-span-6 space-y-3.5 sm:space-y-5">
+              <div className="lg:col-span-6 space-y-3 sm:space-y-5">
                 <h1 className="sc-display sc-display--xl tc-hero-title text-[#0d131d] tracking-tight">
                   Vos clients suivent leur colis sans appeler le comptoir.
                 </h1>
 
-                <p className="text-[14.5px] sm:text-[17px] leading-[1.55] text-[#243247] max-w-[48ch]">
+                <p className="text-[14px] sm:text-[17px] leading-[1.55] text-[#243247] max-w-[48ch]">
                   Un code TC par carton, des alertes WhatsApp en un geste et un lien Wave ou Orange
                   Money prêt dès que le lot arrive à Vridi.
                 </p>
 
                 {/* Sélecteur de corridor synchronisé au modèle 3D */}
-                <div className="space-y-2 pt-0.5">
+                <div className="space-y-1.5 pt-0.5">
                   <div
                     role="group"
                     aria-label="Choisir une ligne logistique"
-                    className="inline-flex flex-wrap items-center gap-1 rounded-[16px] sm:rounded-full bg-white/95 p-1 border border-[#0d131d]/12 shadow-sm"
+                    className="grid grid-cols-3 sm:inline-flex items-center gap-1 rounded-[14px] sm:rounded-full bg-white/95 p-1 border border-[#0d131d]/12 shadow-sm w-full sm:w-auto"
                   >
                     {(Object.keys(CORRIDORS) as CorridorId[]).map((id) => {
                       const active = corridor === id;
@@ -381,7 +372,7 @@ export default function HomePage() {
                           type="button"
                           onClick={() => setCorridor(id)}
                           aria-pressed={active}
-                          className={`rounded-full px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11.5px] sm:text-[13px] font-semibold transition-all cursor-pointer ${
+                          className={`rounded-[10px] sm:rounded-full px-1.5 sm:px-3.5 py-2 text-[11px] sm:text-[13px] font-semibold transition-all cursor-pointer truncate text-center ${
                             active
                               ? "bg-[#0d1522] text-white shadow-sm"
                               : "text-[#334155] hover:text-[#0d131d] hover:bg-[#f1efe8]"
@@ -392,17 +383,17 @@ export default function HomePage() {
                       );
                     })}
                   </div>
-                  <p className="text-[11.5px] sm:text-[12.5px] font-mono text-[#334155] pl-1">
+                  <p className="text-[11px] sm:text-[12.5px] font-mono text-[#334155] pl-0.5">
                     {activeCorridor.unitName} · {activeCorridor.eta}
                   </p>
                 </div>
 
                 {/* Actions principales */}
-                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-0.5">
-                  <Link href="/register" className="tc-btn-primary">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-0.5">
+                  <Link href="/register" className="tc-btn-primary w-full sm:w-auto text-center">
                     Essayer 14 jours gratuits
                   </Link>
-                  <a href="#portail-live" className="tc-btn-ghost">
+                  <a href="#portail-live" className="tc-btn-ghost w-full sm:w-auto text-center">
                     Tester le suivi client
                   </a>
                 </div>
@@ -410,7 +401,7 @@ export default function HomePage() {
 
               {/* Colonne droite : Scène WebGL PBR sans socle artificiel ni badges superposés */}
               <div className="lg:col-span-6 relative">
-                <div className="relative h-[200px] sm:h-[340px] lg:h-[520px] w-full">
+                <div className="relative h-[220px] sm:h-[340px] lg:h-[520px] w-full">
                   <ContainerStage3D
                     corridor={corridor}
                     activeStep={currentStep.id}
@@ -615,13 +606,20 @@ export default function HomePage() {
                 </div>
 
                 {/* Aperçu WhatsApp & Wave en langage simple */}
-                <div className="rounded-[12px] bg-white/8 border border-white/10 px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <p className="text-[12.5px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
-                    {currentStep.whatsappSample}
-                  </p>
-                  <span className="shrink-0 text-[11px] font-mono text-[#fde68a]">
-                    {currentStep.waveState}
-                  </span>
+                <div className="rounded-[12px] bg-white/10 border border-white/12 px-3 py-2 sm:px-3.5 sm:py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-start sm:items-center gap-2.5">
+                    <BrandLogo brand="whatsapp" size="sm" decorative className="mt-0.5 sm:mt-0" />
+                    <p className="text-[12px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
+                      {currentStep.whatsappSample}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 pl-7 sm:pl-0">
+                    <BrandLogo brand="wave" size="xs" decorative />
+                    <BrandLogo brand="orange-money" size="xs" decorative />
+                    <span className="text-[11px] font-mono text-[#fde68a]">
+                      {currentStep.waveState}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -635,20 +633,34 @@ export default function HomePage() {
           id="portail-live"
           aria-label="Portail client public testable"
           data-sc-act="flow"
-          className="sc-act tc-daylight-band scroll-mt-20 py-12 sm:py-16"
+          className="sc-act tc-daylight-band scroll-mt-20 py-10 sm:py-16"
         >
           <div className="sc-wrap max-w-5xl">
-            <div data-sc-in="up" className="max-w-2xl mb-8 sm:mb-10 space-y-3">
+            <div data-sc-in="up" className="max-w-2xl mb-7 sm:mb-10 space-y-3">
               <p className="text-[12px] font-semibold uppercase tracking-[0.09em] text-[#c9410e]">
                 Démonstration en direct
               </p>
               <h2 className="sc-display sc-display--lg text-[#0d131d]">
                 Essayez le suivi exact que voit votre client.
               </h2>
-              <p className="text-[15.5px] text-[#475569] leading-[1.6]">
+              <p className="text-[15px] sm:text-[15.5px] text-[#475569] leading-[1.6]">
                 Cliquez sur l&apos;un des numéros ci-dessous pour consulter la position du lot, le
                 poids du carton et le bouton de paiement Wave ou Orange Money.
               </p>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155] shadow-xs">
+                  <BrandLogo brand="whatsapp" size="xs" decorative />
+                  <span>Alertes WhatsApp</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155] shadow-xs">
+                  <BrandLogo brand="wave" size="xs" decorative />
+                  <span>Wave</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155] shadow-xs">
+                  <BrandLogo brand="orange-money" size="xs" withWhiteSurface={false} decorative />
+                  <span>Orange Money</span>
+                </span>
+              </div>
             </div>
 
             <div data-sc-in="up">
@@ -658,186 +670,198 @@ export default function HomePage() {
         </section>
 
         {/* =================================================================
-            ACTE 6 — Les quatre lignes logistiques (pan horizontal 1.85vh)
+            ACTE 6 — Les quatre lignes logistiques (pan desktop / empilé mobile)
            ================================================================= */}
-        <section
-          id="act-lignes"
-          data-sc-act="pan"
-          data-sc-span="1.85"
-          className="sc-act tc-slate-band"
-        >
-          <div className="sc-stage tc-stage-below-nav bg-[#0d1522] overflow-hidden">
-            <div className="tc-rail-track" data-sc-pan="0.04">
-              <div className="tc-rail-lead">
-                <h2 className="sc-display sc-display--lg text-white mb-4">
+        <div id="act-lignes" className="tc-slate-band scroll-mt-20">
+          {/* Mobile (< md) : cartes empilées lisibles sans recadrage horizontal */}
+          <section data-sc-act="flow" className="md:hidden sc-act tc-slate-band py-10">
+            <div className="sc-wrap space-y-5">
+              <div className="space-y-2">
+                <h2 className="sc-display sc-display--lg text-white">
                   Un seul outil pour vos quatre lignes d&apos;activité.
                 </h2>
-                <p className="text-[15px] text-[#cbd5e1] leading-[1.6] max-w-[34ch]">
-                  Faites défiler pour voir comment votre équipe suit chaque trajet de la Chine ou
-                  de la Turquie jusqu&apos;à la remise au client.
+                <p className="text-[14.5px] text-[#cbd5e1] leading-[1.55]">
+                  Suivez chaque trajet de la Chine ou de la Turquie jusqu&apos;à la remise au
+                  comptoir.
                 </p>
               </div>
 
-              {CORRIDOR_CARDS.map((card, idx) => (
-                <article
-                  key={card.city}
-                  data-sc-tilt="4"
-                  className="tc-lane-card"
-                  style={
-                    idx > 0
-                      ? {
-                          opacity: "clamp(0.68, calc(0.58 + var(--sc-p, 1) * 0.75), 1)",
-                        }
-                      : undefined
-                  }
-                >
-                  <div className="h-48 sm:h-56 w-full overflow-hidden bg-[#142033]">
-                    <img
-                      src={card.image}
-                      alt={card.alt}
-                      className="w-full h-full object-cover object-center block"
-                    />
-                  </div>
-                  <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-4">
-                    <div className="space-y-2">
-                      <p className="text-[12px] font-mono text-[#cbd5e1]">
+              <div className="grid grid-cols-1 gap-4">
+                {CORRIDOR_CARDS.map((card) => (
+                  <article
+                    key={card.city}
+                    className="rounded-[18px] bg-[#142033] border border-white/12 overflow-hidden shadow-lg"
+                  >
+                    <div className="h-44 w-full overflow-hidden bg-[#1c2c44]">
+                      <img
+                        src={card.image}
+                        alt={card.alt}
+                        className="w-full h-full object-cover object-center block"
+                      />
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <p className="text-[11.5px] font-mono text-[#cbd5e1]">
                         {card.timing} · {card.billing}
                       </p>
-                      <h3 className="text-[20px] font-bold text-white tracking-tight">
+                      <h3 className="text-[18px] font-bold text-white tracking-tight">
                         {card.city}
                       </h3>
-                      <p className="text-[14px] text-[#cbd5e1] leading-[1.55]">{card.detail}</p>
+                      <p className="text-[13.5px] text-[#cbd5e1] leading-[1.5]">
+                        {card.detail}
+                      </p>
+                      {(card.city === "Istanbul & Dubaï" ||
+                        card.city === "Comptoir Abidjan" ||
+                        card.city === "Guangzhou · Aérien") && (
+                        <div className="pt-1.5 flex items-center gap-2">
+                          <BrandLogo brand="whatsapp" size="xs" decorative />
+                          <BrandLogo brand="wave" size="xs" decorative />
+                          {card.city === "Comptoir Abidjan" && (
+                            <BrandLogo brand="orange-money" size="xs" decorative />
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
+              </div>
 
-              <div className="tc-rail-end">
-                <div className="space-y-3">
-                  <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-white/90">
-                    Prêt pour votre agence
-                  </p>
-                  <h3 className="text-[24px] font-bold text-white leading-[1.15]">
-                    Configurez vos propres lignes en cinq minutes.
-                  </h3>
-                  <p className="text-[14px] text-white/90 leading-[1.55]">
-                    Votre lien personnalisé s&apos;adapte automatiquement à vos tarifs au kilo et au
-                    mètre cube.
+              <div className="rounded-[18px] bg-[#c9410e] border border-white/18 p-5 text-white space-y-3 shadow-lg">
+                <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-white/90">
+                  Prêt pour votre agence
+                </p>
+                <h3 className="text-[20px] font-bold leading-[1.2]">
+                  Configurez vos propres lignes en cinq minutes.
+                </h3>
+                <p className="text-[13.5px] text-white/90 leading-[1.5]">
+                  Votre lien personnalisé s&apos;adapte automatiquement à vos tarifs au kilo et au
+                  mètre cube.
+                </p>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 w-full hover:bg-[#f7f6f2] transition"
+                >
+                  Créer mon agence
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* Desktop (>= md) : rail horizontal ScrollCraft */}
+          <section
+            data-sc-act="pan"
+            data-sc-span="1.85"
+            className="hidden md:block sc-act tc-slate-band"
+          >
+            <div className="sc-stage tc-stage-below-nav bg-[#0d1522] overflow-hidden">
+              <div className="tc-rail-track" data-sc-pan="0.04">
+                <div className="tc-rail-lead">
+                  <h2 className="sc-display sc-display--lg text-white mb-4">
+                    Un seul outil pour vos quatre lignes d&apos;activité.
+                  </h2>
+                  <p className="text-[15px] text-[#cbd5e1] leading-[1.6] max-w-[34ch]">
+                    Faites défiler pour voir comment votre équipe suit chaque trajet de la Chine ou
+                    de la Turquie jusqu&apos;à la remise au client.
                   </p>
                 </div>
-                <div className="pt-4">
-                  <Link
-                    href="/register"
-                    className="inline-flex items-center justify-center rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 hover:bg-[#f7f6f2] transition"
+
+                {CORRIDOR_CARDS.map((card, idx) => (
+                  <article
+                    key={card.city}
+                    data-sc-tilt="4"
+                    className="tc-lane-card"
+                    style={
+                      idx > 0
+                        ? {
+                            opacity: "clamp(0.68, calc(0.58 + var(--sc-p, 1) * 0.75), 1)",
+                          }
+                        : undefined
+                    }
                   >
-                    Créer mon agence
-                  </Link>
+                    <div className="h-48 sm:h-56 w-full overflow-hidden bg-[#142033]">
+                      <img
+                        src={card.image}
+                        alt={card.alt}
+                        className="w-full h-full object-cover object-center block"
+                      />
+                    </div>
+                    <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-[12px] font-mono text-[#cbd5e1]">
+                          {card.timing} · {card.billing}
+                        </p>
+                        <h3 className="text-[20px] font-bold text-white tracking-tight">
+                          {card.city}
+                        </h3>
+                        <p className="text-[14px] text-[#cbd5e1] leading-[1.55]">{card.detail}</p>
+                      </div>
+                      {(card.city === "Comptoir Abidjan" || card.city === "Istanbul & Dubaï") && (
+                        <div className="pt-2 border-t border-white/10 flex items-center gap-2">
+                          <BrandLogo brand="whatsapp" size="xs" decorative />
+                          <BrandLogo brand="wave" size="xs" decorative />
+                          {card.city === "Comptoir Abidjan" && (
+                            <BrandLogo brand="orange-money" size="xs" decorative />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                ))}
+
+                <div className="tc-rail-end">
+                  <div className="space-y-3">
+                    <p className="text-[12px] font-mono uppercase tracking-[0.08em] text-white/90">
+                      Prêt pour votre agence
+                    </p>
+                    <h3 className="text-[24px] font-bold text-white leading-[1.15]">
+                      Configurez vos propres lignes en cinq minutes.
+                    </h3>
+                    <p className="text-[14px] text-white/90 leading-[1.55]">
+                      Votre lien personnalisé s&apos;adapte automatiquement à vos tarifs au kilo et
+                      au mètre cube.
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <Link
+                      href="/register"
+                      className="inline-flex items-center justify-center rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 hover:bg-[#f7f6f2] transition"
+                    >
+                      Créer mon agence
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         {/* =================================================================
-            ACTE 7 — Simulateur, Tarifs FCFA, FAQ & Clôture sobre (flow)
+            ACTE 7 — Tarifs FCFA, FAQ & Clôture sobre (flow)
            ================================================================= */}
         <section id="act-tarifs" data-sc-act="flow" className="sc-act tc-daylight-band">
-          {/* Simulateur de temps libéré */}
-          <div className="pt-10 pb-10 sm:pt-14 sm:pb-12">
-            <div className="sc-wrap max-w-5xl">
-              <div
-                data-sc-in="up"
-                className="rounded-[20px] bg-white border border-[#0d131d]/10 p-5 sm:p-8 shadow-[0_14px_34px_-14px_rgba(13,21,34,0.1)] grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center"
-              >
-                <div className="lg:col-span-6 space-y-5">
-                  <h2 className="sc-display sc-display--lg text-[#0d131d]">
-                    Combien d&apos;heures gagnez-vous chaque mois ?
-                  </h2>
-                  <p className="text-[15px] text-[#475569] leading-[1.6]">
-                    Ajustez le volume de colis traités par votre comptoir pour estimer les appels
-                    évités dès la mise en ligne du lien de suivi.
-                  </p>
-
-                  <div className="space-y-4 pt-2">
-                    <div>
-                      <div className="flex justify-between text-[13.5px] font-semibold mb-1.5">
-                        <label htmlFor="calc-parcels">Colis traités par mois</label>
-                        <span className="font-mono text-[#c9410e]">{parcelsPerMonth} colis</span>
-                      </div>
-                      <input
-                        id="calc-parcels"
-                        type="range"
-                        min={100}
-                        max={3000}
-                        step={50}
-                        value={parcelsPerMonth}
-                        onChange={(e) => setParcelsPerMonth(Number(e.target.value))}
-                        className="w-full accent-[#c9410e] cursor-pointer"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-[13.5px] font-semibold mb-1.5">
-                        <label htmlFor="calc-messages">Relances WhatsApp par colis</label>
-                        <span className="font-mono text-[#c9410e]">
-                          {messagesPerParcel} échanges
-                        </span>
-                      </div>
-                      <input
-                        id="calc-messages"
-                        type="range"
-                        min={2}
-                        max={8}
-                        step={1}
-                        value={messagesPerParcel}
-                        onChange={(e) => setMessagesPerParcel(Number(e.target.value))}
-                        className="w-full accent-[#c9410e] cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-6 rounded-[16px] bg-[#f7f6f2] border border-[#0d131d]/10 p-6 sm:p-8 space-y-4">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#525e70]">
-                    Estimation mensuelle pour votre équipe
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[28px] sm:text-[34px] font-bold text-[#0d131d] font-mono">
-                        {roiStats.hoursSaved} h
-                      </p>
-                      <p className="text-[13px] text-[#475569]">libérées au comptoir</p>
-                    </div>
-                    <div>
-                      <p className="text-[28px] sm:text-[34px] font-bold text-[#c9410e] font-mono">
-                        {roiStats.avoidedMessages.toLocaleString("fr-FR")}
-                      </p>
-                      <p className="text-[13px] text-[#475569]">messages évités</p>
-                    </div>
-                  </div>
-                  <div className="pt-3 border-t border-[#0d131d]/10 flex items-center justify-between gap-4">
-                    <span className="text-[13.5px] text-[#475569]">
-                      Temps équipe économisé estimé
-                    </span>
-                    <span className="text-[18px] font-bold text-[#0d131d] font-mono">
-                      {formatFcfa(roiStats.staffValueFcfa)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Tarifs clairs FCFA */}
-          <div id="tarifs" className="scroll-mt-24 pb-10 sm:pb-14">
+          <div id="tarifs" className="scroll-mt-24 pt-10 sm:pt-14 pb-10 sm:pb-14">
             <div className="sc-wrap max-w-5xl">
-              <div data-sc-in="up" className="max-w-2xl mb-7 space-y-2">
+              <div data-sc-in="up" className="max-w-2xl mb-7 space-y-2.5">
                 <h2 className="sc-display sc-display--lg text-[#0d131d]">
                   Des tarifs fixes en FCFA, sans commission sur vos encaissements.
                 </h2>
-                <p className="text-[15.5px] text-[#475569]">
+                <p className="text-[15px] sm:text-[15.5px] text-[#475569]">
                   Chaque forfait démarre avec 14 jours d&apos;essai complet sans engagement.
                 </p>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
+                    <BrandLogo brand="wave" size="xs" decorative />
+                    <span>Wave direct</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
+                    <BrandLogo brand="orange-money" size="xs" withWhiteSurface={false} decorative />
+                    <span>Orange Money</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
+                    <BrandLogo brand="whatsapp" size="xs" decorative />
+                    <span>Notifications WhatsApp</span>
+                  </span>
+                </div>
               </div>
 
               <div data-sc-in="" data-sc-stagger="80" className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -934,11 +958,11 @@ export default function HomePage() {
               Créez votre agence en quelques minutes, importez vos premiers codes TC et partagez
               le lien à vos clients dès aujourd&apos;hui.
             </p>
-            <div className="flex flex-wrap justify-center gap-3 pt-1">
-              <Link href="/register" className="tc-btn-primary">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2.5 sm:gap-3 pt-1">
+              <Link href="/register" className="tc-btn-primary w-full sm:w-auto">
                 Essayer 14 jours gratuits
               </Link>
-              <Link href="/login" className="tc-btn-ghost">
+              <Link href="/login" className="tc-btn-ghost w-full sm:w-auto">
                 Connexion agence
               </Link>
             </div>

@@ -25,28 +25,28 @@ export default function TrackCodePage({
   const [agency, setAgency] = useState<PublicAgencyProfile | null>(null);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f3ec] text-[#09152b]">
+    <div className="min-h-screen flex flex-col bg-[#f7f6f2] text-[#0d131d]">
       <Navbar agencyName={agency?.name} />
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 print:hidden">
           <div className="space-y-1">
             <Link
               href={agency?.slug ? `/a/${agency.slug}` : "/track"}
-              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0a2e6e] hover:text-[#ff5c1b] transition-colors mb-2 no-underline"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0d1522] hover:text-[#c9410e] transition-colors mb-2 no-underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Autre recherche</span>
             </Link>
-            <h1 className="sc-display sc-display--md text-[#09152b] font-bold">
+            <h1 className="sc-display sc-display--md text-[#0d131d] font-bold">
               Suivi du colis{" "}
-              <span className="font-mono text-[#0a2e6e]">{decodedCode}</span>
+              <span className="font-mono text-[#c9410e]">{decodedCode}</span>
             </h1>
             {agency && (
-              <p className="text-sm text-[#43506b]">
+              <p className="text-sm text-[#525e70]">
                 Expédié par{" "}
                 <Link
                   href={`/a/${agency.slug}`}
-                  className="font-bold text-[#0a2e6e] hover:text-[#ff5c1b] hover:underline"
+                  className="font-bold text-[#0d1522] hover:text-[#c9410e] hover:underline"
                 >
                   {agency.name}
                 </Link>{" "}

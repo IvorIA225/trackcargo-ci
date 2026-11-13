@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 import Navbar from "@/components/Navbar";
 import { PLAN_META, PlanTier } from "@/lib/types";
 import { formatFcfa } from "@/lib/format";
@@ -83,35 +84,39 @@ function RegisterFormContent() {
 
   return (
     <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left Value Panel — Cargo Cobalt */}
-      <aside className="lg:col-span-5 bg-[#0a2e6e] text-white rounded-[16px] border-2 border-[#09152b] shadow-[var(--sc-e3)] p-6 sm:p-7 space-y-5">
-        <span className="inline-flex items-center gap-1.5 text-xs font-mono font-extrabold uppercase tracking-[0.06em] px-2.5 py-1 rounded-[6px] bg-[#ff5c1b] text-[#09152b] border border-[#09152b]">
+      {/* Left Value Panel — Deep Atlantic Slate */}
+      <aside className="relative overflow-hidden lg:col-span-5 bg-[#0d1522] text-white rounded-[20px] border border-white/10 shadow-[0_24px_54px_-16px_rgba(13,21,34,0.28)] p-6 sm:p-7 space-y-5">
+        <div
+          className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[#c9410e]/20 blur-3xl"
+          aria-hidden="true"
+        />
+        <span className="relative inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.06em] px-3 py-1 rounded-full bg-[#c9410e] text-white">
           <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
           <span>14 jours gratuits</span>
         </span>
-        <div className="space-y-2">
-          <h1 className="sc-display sc-display--md text-white font-extrabold">
+        <div className="relative space-y-2">
+          <h1 className="sc-display sc-display--md text-white font-bold">
             Lancez le portail de votre agence en 2 minutes.
           </h1>
-          <p className="text-sm text-[#dce7fa] leading-relaxed">
+          <p className="text-sm text-[#cbd5e1] leading-relaxed">
             Aucune carte bancaire requise pour démarrer. Importez vos premiers
             colis et partagez immédiatement votre lien client personnalisé.
           </p>
         </div>
 
-        <ul className="space-y-3 text-sm text-[#f8fafc] pt-1">
+        <ul className="relative space-y-3 text-sm text-[#f1f5f9] pt-1">
           <li className="flex items-start gap-2.5">
             <Check
-              className="w-4 h-4 text-[#ff5c1b] shrink-0 mt-0.5"
+              className="w-4 h-4 text-[#f0642d] shrink-0 mt-0.5"
               aria-hidden="true"
             />
             <span>
-              Page de suivi dédiée à votre nom (<code className="font-mono text-[#fef08a]">/a/votre-agence</code>)
+              Page de suivi dédiée à votre nom (<code className="font-mono text-[#fde68a]">/a/votre-agence</code>)
             </span>
           </li>
           <li className="flex items-start gap-2.5">
             <Check
-              className="w-4 h-4 text-[#ff5c1b] shrink-0 mt-0.5"
+              className="w-4 h-4 text-[#f0642d] shrink-0 mt-0.5"
               aria-hidden="true"
             />
             <span>
@@ -120,7 +125,7 @@ function RegisterFormContent() {
           </li>
           <li className="flex items-start gap-2.5">
             <Check
-              className="w-4 h-4 text-[#ff5c1b] shrink-0 mt-0.5"
+              className="w-4 h-4 text-[#f0642d] shrink-0 mt-0.5"
               aria-hidden="true"
             />
             <span>
@@ -129,23 +134,30 @@ function RegisterFormContent() {
           </li>
         </ul>
 
-        <div className="pt-4 border-t border-white/15 text-xs text-[#c7d9f7]">
-          À la fin des 14 jours d&apos;essai, réglez facilement par Wave ou
-          Orange Money sans interruption pour vos clients.
+        <div className="relative pt-4 border-t border-white/12 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <BrandLogo brand="wave" size="sm" decorative />
+            <BrandLogo brand="orange-money" size="sm" decorative />
+            <BrandLogo brand="whatsapp" size="sm" decorative />
+          </div>
+          <p className="text-xs text-[#cbd5e1]">
+            À la fin des 14 jours d&apos;essai, réglez facilement par Wave ou
+            Orange Money sans interruption pour vos clients.
+          </p>
         </div>
       </aside>
 
       {/* Right Registration Card */}
-      <div className="lg:col-span-7 bg-white rounded-[16px] border border-[#09152b]/16 shadow-[var(--sc-e3)] p-6 sm:p-8 space-y-5">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.06em] text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-[6px]">
+      <div className="lg:col-span-7 bg-white rounded-[20px] border border-[#0d131d]/10 shadow-[0_22px_50px_-18px_rgba(13,21,34,0.14)] p-5 sm:p-8 space-y-5">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.06em] text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
             <ShieldCheck
               className="w-3.5 h-3.5 text-emerald-700"
               aria-hidden="true"
             />
             <span>Compte administrateur agence</span>
           </div>
-          <h2 className="font-[family-name:var(--font-archivo)] text-2xl font-extrabold text-[#09152b] pt-1">
+          <h2 className="font-[family-name:var(--font-archivo)] text-2xl font-bold text-[#0d131d] pt-1">
             Créer mon espace TrackCargo CI
           </h2>
         </div>
@@ -153,7 +165,7 @@ function RegisterFormContent() {
         {error && (
           <div
             role="alert"
-            className="p-3.5 rounded-[10px] bg-rose-50 border border-rose-400 text-sm text-rose-900 font-semibold"
+            className="p-3.5 rounded-[12px] bg-rose-50 border border-rose-300 text-sm text-rose-900 font-semibold"
           >
             {error}
           </div>
@@ -164,7 +176,7 @@ function RegisterFormContent() {
             <div>
               <label
                 htmlFor="reg-agency-name"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Nom de votre agence
               </label>
@@ -174,7 +186,7 @@ function RegisterFormContent() {
                 value={agencyName}
                 onChange={(e) => setAgencyName(e.target.value)}
                 placeholder="ex: Horizon Cargo CI"
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] text-sm"
                 required
               />
               {fieldErrors.agencyName && (
@@ -187,7 +199,7 @@ function RegisterFormContent() {
             <div>
               <label
                 htmlFor="reg-commune"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Commune / Ville
               </label>
@@ -197,7 +209,7 @@ function RegisterFormContent() {
                 value={commune}
                 onChange={(e) => setCommune(e.target.value)}
                 placeholder="Treichville, Adjamé, Marcory..."
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] text-sm"
                 required
               />
               {fieldErrors.commune && (
@@ -212,9 +224,10 @@ function RegisterFormContent() {
             <div>
               <label
                 htmlFor="reg-whatsapp"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
-                WhatsApp agence
+                <BrandLogo brand="whatsapp" size="xs" decorative />
+                <span>WhatsApp agence</span>
               </label>
               <input
                 id="reg-whatsapp"
@@ -222,7 +235,7 @@ function RegisterFormContent() {
                 value={whatsappPhone}
                 onChange={(e) => setWhatsappPhone(e.target.value)}
                 placeholder="+2250708123456"
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] text-sm font-mono"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] text-sm font-mono"
                 required
               />
               {fieldErrors.whatsappPhone && (
@@ -235,7 +248,7 @@ function RegisterFormContent() {
             <div>
               <label
                 htmlFor="reg-fullname"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Nom du gérant
               </label>
@@ -245,7 +258,7 @@ function RegisterFormContent() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="ex: Seydou Diallo"
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] text-sm"
               />
             </div>
           </div>
@@ -254,7 +267,7 @@ function RegisterFormContent() {
             <div>
               <label
                 htmlFor="reg-email"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Email de connexion
               </label>
@@ -265,7 +278,7 @@ function RegisterFormContent() {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 placeholder="contact@monagence.ci"
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] text-sm"
                 required
               />
               {fieldErrors.email && (
@@ -278,7 +291,7 @@ function RegisterFormContent() {
             <div>
               <label
                 htmlFor="reg-password"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Mot de passe (min. 8 car.)
               </label>
@@ -290,7 +303,7 @@ function RegisterFormContent() {
                 autoComplete="new-password"
                 placeholder="Au moins 8 caractères"
                 minLength={8}
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] text-sm"
                 required
               />
               {fieldErrors.password && (
@@ -302,7 +315,7 @@ function RegisterFormContent() {
           </div>
 
           <div>
-            <div className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-2">
+            <div className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-2">
               Formule souhaitée après l&apos;essai de 14 jours
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -315,16 +328,20 @@ function RegisterFormContent() {
                     type="button"
                     onClick={() => setPlan(tier)}
                     aria-pressed={selected}
-                    className={`text-left p-3 rounded-[10px] border transition-all cursor-pointer ${
+                    className={`text-left p-3 rounded-[12px] border transition-all cursor-pointer ${
                       selected
-                        ? "bg-[#dce7fa] border-[#0a2e6e] ring-2 ring-[#0a2e6e]/30"
-                        : "bg-[#f6f3ec] border-[#09152b]/18 hover:border-[#0a2e6e]"
+                        ? "bg-[#fff4ee] border-[#c9410e] ring-2 ring-[#c9410e]/25"
+                        : "bg-[#f7f6f2] border-[#0d131d]/12 hover:border-[#0d131d]/30"
                     }`}
                   >
-                    <div className="text-xs font-mono font-extrabold text-[#0a2e6e] uppercase">
+                    <div
+                      className={`text-xs font-mono font-bold uppercase ${
+                        selected ? "text-[#c9410e]" : "text-[#525e70]"
+                      }`}
+                    >
                       {meta.label}
                     </div>
-                    <div className="text-sm font-extrabold font-mono text-[#09152b] mt-0.5">
+                    <div className="text-sm font-bold font-mono text-[#0d131d] mt-0.5">
                       {formatFcfa(meta.priceFcfa)}
                     </div>
                   </button>
@@ -347,19 +364,19 @@ function RegisterFormContent() {
           </button>
         </form>
 
-        <div className="pt-3 border-t border-[#09152b]/10 flex flex-wrap items-center justify-between gap-2 text-xs text-[#43506b]">
+        <div className="pt-3 border-t border-[#0d131d]/10 flex flex-wrap items-center justify-between gap-2 text-xs text-[#525e70]">
           <span>
             Déjà inscrit ?{" "}
             <Link
               href="/login"
-              className="text-[#0a2e6e] font-bold hover:text-[#ff5c1b] hover:underline"
+              className="text-[#0d1522] font-bold hover:text-[#c9410e] hover:underline"
             >
               Se connecter ici
             </Link>
           </span>
           <Link
             href="/a/ivoire-cargo-express"
-            className="text-[#0a2e6e] font-bold hover:text-[#ff5c1b] hover:underline"
+            className="text-[#0d1522] font-bold hover:text-[#c9410e] hover:underline"
           >
             Voir un portail client démo
           </Link>
@@ -371,12 +388,12 @@ function RegisterFormContent() {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f3ec] text-[#09152b]">
+    <div className="min-h-screen flex flex-col bg-[#f7f6f2] text-[#0d131d]">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 py-10 sm:py-14">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
         <Suspense
           fallback={
-            <div className="text-sm font-semibold text-[#43506b]">
+            <div className="text-sm font-semibold text-[#525e70]">
               Chargement du formulaire d&apos;inscription...
             </div>
           }

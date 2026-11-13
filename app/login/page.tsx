@@ -52,29 +52,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f3ec] text-[#09152b]">
+    <div className="min-h-screen flex flex-col bg-[#f7f6f2] text-[#0d131d]">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-white rounded-[16px] border border-[#09152b]/16 shadow-[var(--sc-e3)] p-6 sm:p-8 space-y-6">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-md bg-white rounded-[20px] border border-[#0d131d]/10 shadow-[0_22px_50px_-18px_rgba(13,21,34,0.14)] p-6 sm:p-8 space-y-6">
           <div className="space-y-2.5">
-            <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.06em] text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-[6px]">
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.06em] text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
               <ShieldCheck
                 className="w-3.5 h-3.5 text-emerald-700"
                 aria-hidden="true"
               />
               <span>Accès agence sécurisé</span>
             </span>
-            <h1 className="sc-display sc-display--md text-[#09152b] font-bold">
+            <h1 className="sc-display sc-display--md text-[#0d131d] font-bold">
               Connexion à votre espace
             </h1>
-            <p className="text-sm text-[#43506b] leading-relaxed">
+            <p className="text-sm text-[#525e70] leading-relaxed">
               Connectez-vous avec l&apos;adresse email et le mot de passe de
               votre agence TrackCargo CI.
             </p>
           </div>
 
           {!configured && (
-            <div className="p-3.5 rounded-[10px] bg-amber-50 border border-amber-400 text-xs text-amber-950 space-y-1">
+            <div className="p-3.5 rounded-[12px] bg-amber-50 border border-amber-300 text-xs text-amber-950 space-y-1">
               <div className="font-bold text-amber-900">
                 Configuration serveur requise
               </div>
@@ -90,7 +90,7 @@ export default function LoginPage() {
           {error && (
             <div
               role="alert"
-              className="p-3.5 rounded-[10px] bg-rose-50 border border-rose-400 text-sm text-rose-900 font-semibold"
+              className="p-3.5 rounded-[12px] bg-rose-50 border border-rose-300 text-sm text-rose-900 font-semibold"
             >
               {error}
             </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login-email"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Adresse email professionnelle
               </label>
@@ -111,7 +111,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 placeholder="contact@monagence.ci"
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] focus:border-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] focus:border-[#c9410e] text-sm"
                 required
               />
             </div>
@@ -119,7 +119,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="admin-password"
-                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#43506b] mb-1.5"
+                className="block text-xs font-mono font-bold uppercase tracking-[0.05em] text-[#525e70] mb-1.5"
               >
                 Mot de passe
               </label>
@@ -130,7 +130,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 placeholder="Entrez votre mot de passe"
-                className="w-full h-11 px-3.5 rounded-[8px] border border-[#09152b]/22 bg-[#f6f3ec] text-[#09152b] placeholder:text-[#5c6a84] focus:outline-none focus:ring-2 focus:ring-[#0a2e6e] focus:border-[#0a2e6e] text-sm"
+                className="w-full h-11 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#c9410e] focus:border-[#c9410e] text-sm"
                 required
               />
             </div>
@@ -145,12 +145,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="pt-3 border-t border-[#09152b]/10 space-y-2 text-center text-xs text-[#43506b]">
+          <div className="pt-3 border-t border-[#0d131d]/10 space-y-2 text-center text-xs text-[#525e70]">
             <div>
               Pas encore de compte agence ?{" "}
               <Link
                 href="/register"
-                className="text-[#0a2e6e] font-bold hover:text-[#ff5c1b] hover:underline"
+                className="text-[#0d1522] font-bold hover:text-[#c9410e] hover:underline"
               >
                 Essayer 14 jours gratuits
               </Link>
@@ -159,7 +159,7 @@ export default function LoginPage() {
               Client cherchant un colis ?{" "}
               <Link
                 href="/track"
-                className="text-[#0a2e6e] font-bold hover:text-[#ff5c1b] hover:underline"
+                className="text-[#0d1522] font-bold hover:text-[#c9410e] hover:underline"
               >
                 Aller sur le suivi public
               </Link>

@@ -5,15 +5,14 @@ import {
   AlertTriangle,
   Check,
   MapPin,
-  MessageSquare,
   Package,
+  Plane,
   Printer,
   Search,
   Ship,
-  Plane,
-  Smartphone,
   X,
 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 import {
   PARCEL_STATUS_META,
   ParcelStatus,
@@ -517,14 +516,15 @@ export default function TrackingLookup({
                   )}
                 </div>
 
-                <div className="space-y-2 print:hidden">
+                <div className="space-y-2.5 print:hidden">
                   {!paymentMeta.isPaid && (
                     <button
                       type="button"
                       onClick={() => setShowPayModal(parcel)}
                       className="w-full py-2.5 px-4 rounded-full bg-[#0e7490] hover:bg-[#0c6078] text-white font-semibold text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <Smartphone className="w-4 h-4" aria-hidden="true" />
+                      <BrandLogo brand="wave" size="xs" decorative />
+                      <BrandLogo brand="orange-money" size="xs" decorative />
                       <span>Régler par Wave / Orange Money</span>
                     </button>
                   )}
@@ -540,7 +540,7 @@ export default function TrackingLookup({
                       rel="noopener noreferrer"
                       className="w-full py-2.5 px-4 rounded-full bg-[#047857] hover:bg-[#065f46] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
                     >
-                      <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                      <BrandLogo brand="whatsapp" size="xs" decorative />
                       <span>Contacter sur WhatsApp</span>
                     </a>
                   )}
@@ -568,7 +568,7 @@ export default function TrackingLookup({
           aria-modal="true"
           aria-labelledby="pay-modal-title"
         >
-          <div className="bg-white text-[#0d131d] rounded-[18px] max-w-md w-full p-6 shadow-2xl border border-[#0d131d]/12 space-y-4">
+          <div className="bg-white text-[#0d131d] rounded-[18px] max-w-md w-full p-5 sm:p-6 shadow-2xl border border-[#0d131d]/12 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 id="pay-modal-title" className="text-lg font-bold">
@@ -600,17 +600,19 @@ export default function TrackingLookup({
                   href={agency.waveLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full text-center py-3 px-4 rounded-full bg-[#0e7490] hover:bg-[#0c6078] text-white font-semibold text-sm transition-colors no-underline"
+                  className="w-full py-3 px-4 rounded-full bg-[#0e7490] hover:bg-[#0c6078] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2.5 no-underline"
                 >
-                  Payer avec Wave ({formatFcfa(showPayModal.amountFcfa)})
+                  <BrandLogo brand="wave" size="sm" decorative />
+                  <span>Payer avec Wave ({formatFcfa(showPayModal.amountFcfa)})</span>
                 </a>
               )}
 
               <div className="p-4 rounded-[12px] bg-[#fff4ee] border border-[#c9410e]/25 text-sm">
-                <div className="font-bold text-[#9a2e00]">
-                  Option Orange Money / MTN MoMo
+                <div className="flex items-center gap-2.5 font-bold text-[#9a2e00]">
+                  <BrandLogo brand="orange-money" size="sm" decorative />
+                  <span>Option Orange Money / MTN MoMo</span>
                 </div>
-                <div className="text-[#0d131d] mt-1">
+                <div className="text-[#0d131d] mt-2">
                   Envoyez{" "}
                   <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
                   numéro :{" "}
@@ -635,7 +637,7 @@ export default function TrackingLookup({
                 rel="noopener noreferrer"
                 className="w-full py-2.5 px-4 rounded-full bg-[#047857] hover:bg-[#065f46] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
               >
-                <Check className="w-4 h-4" aria-hidden="true" />
+                <BrandLogo brand="whatsapp" size="sm" decorative />
                 <span>Envoyer la capture sur WhatsApp</span>
               </a>
             </div>

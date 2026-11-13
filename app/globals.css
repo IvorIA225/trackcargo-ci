@@ -157,9 +157,15 @@
       line-height: 1.04;
     }
 
+    .sc-display.sc-display--xl {
+      font-size: clamp(1.65rem, 6.6vw, 2.45rem);
+      line-height: 1.04;
+    }
+
+    .sc-display.sc-display--lg,
     .tc-act2-title.sc-display--lg {
-      font-size: clamp(1.55rem, 5.8vw, 2.25rem);
-      line-height: 1.06;
+      font-size: clamp(1.48rem, 5.8vw, 2.15rem);
+      line-height: 1.07;
     }
   }
 
