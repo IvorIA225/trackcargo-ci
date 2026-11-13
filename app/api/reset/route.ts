@@ -5,7 +5,7 @@ import { resetDemoForCaller } from "@/lib/repository";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const auth = requireAdminSession(request);
+  const auth = await requireAdminSession(request);
   if (!auth.ok) return auth.response;
 
   try {

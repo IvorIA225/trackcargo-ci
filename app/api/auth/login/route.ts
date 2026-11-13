@@ -8,7 +8,7 @@ import {
   verifyAdminPassword,
   verifyScryptHash,
 } from "@/lib/auth";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkDurableRateLimit, getClientIp } from "@/lib/rate-limit";
 import { findUserByEmail, getSuperAdminEmail } from "@/lib/repository";
 import { validateLoginInput } from "@/lib/validation";
 
@@ -30,7 +30,12 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const limit = checkRateLimit("auth-login", ip, 10, 15 * 60 * 1000);
+  const limit = await checkDurableRateLimit(
+    "auth-login",
+    ip,
+    10,
+    15 * 60 * 1000
+  );
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Trop de tentatives de connexion. Réessayez plus tard." },
@@ -49,6 +54,26 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password } = parsed.data;
+    if (email) {
+      const emailLimit = await checkDurableRateLimit(
+        "auth-login-email",
+        email,
+        10,
+        15 * 60 * 1000
+      );
+      if (!emailLimit.allowed) {
+        return NextResponse.json(
+          {
+            error:
+              "Trop de tentatives pour cet identifiant. Réessayez plus tard.",
+          },
+          {
+            status: 429,
+            headers: { "Retry-After": String(emailLimit.retryAfterSec) },
+          }
+        );
+      }
+    }
     const superAdminEmail = getSuperAdminEmail();
 
     // 1. Founder SUPER_ADMIN login (explicit founder email or password-only compatibility)

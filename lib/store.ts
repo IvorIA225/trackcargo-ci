@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -30,6 +31,7 @@ export interface MultiTenantJsonDb {
   batches: Array<Batch & { agencyId: string }>;
   parcels: Array<Parcel & { agencyId: string }>;
   subscriptionEvents: SubscriptionEvent[];
+  revokedTokens?: Array<{ jti: string; expiresAt: number }>;
 }
 
 function getDbPaths(): { dataDir: string; dbPath: string } {
@@ -71,6 +73,7 @@ function createSeedMultiTenantJson(): MultiTenantJsonDb {
     batches: demo.batches.map((b) => ({ ...b, agencyId: DEMO_AGENCY_ID })),
     parcels: demo.parcels.map((p) => ({ ...p, agencyId: DEMO_AGENCY_ID })),
     subscriptionEvents: [],
+    revokedTokens: [],
   };
 }
 
@@ -122,6 +125,7 @@ export function readMultiTenantJsonDb(): MultiTenantJsonDb {
     mt.batches ||= [];
     mt.parcels ||= [];
     mt.subscriptionEvents ||= [];
+    mt.revokedTokens ||= [];
     return mt;
   } catch {
     if (!memoryMultiFallback) {
@@ -241,19 +245,22 @@ export function buildWhatsappNotifyUrl(
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
+const TRACKING_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+
+function randomTrackingSuffix(length: number): string {
+  let out = "";
+  for (let i = 0; i < length; i++) {
+    out += TRACKING_ALPHABET[crypto.randomInt(0, TRACKING_ALPHABET.length)];
+  }
+  return out;
+}
+
 export function generateTrackingCodeFromSet(existingCodes: Set<string>): string {
-  for (let attempt = 0; attempt < 25; attempt++) {
-    const num = Math.floor(1000 + Math.random() * 8999);
-    const code = `TC-${num}`;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const code = `TC-${randomTrackingSuffix(6)}`;
     if (!existingCodes.has(code)) return code;
   }
-  for (let attempt = 0; attempt < 40; attempt++) {
-    const num = Math.floor(10000 + Math.random() * 89999);
-    const code = `TC-${num}`;
-    if (!existingCodes.has(code)) return code;
-  }
-  const num = Math.floor(100000 + Math.random() * 899999);
-  return `TC-${num}`;
+  return `TC-${randomTrackingSuffix(8)}`;
 }
 
 export function generateTrackingCode(existing: Parcel[]): string {

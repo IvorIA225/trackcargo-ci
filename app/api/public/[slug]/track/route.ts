@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkDurableRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getPublicAgencyProfile, searchPublicBySlug } from "@/lib/repository";
 import { validateSlugParam, validateTrackingQuery } from "@/lib/validation";
 
@@ -11,7 +11,12 @@ export async function GET(
 ) {
   try {
     const ip = getClientIp(request);
-    const limit = checkRateLimit("track-lookup", ip, 30, 60 * 1000);
+    const limit = await checkDurableRateLimit(
+      "track-lookup",
+      ip,
+      30,
+      60 * 1000
+    );
     if (!limit.allowed) {
       return NextResponse.json(
         {

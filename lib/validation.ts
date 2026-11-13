@@ -17,7 +17,7 @@ export type ValidationResult<T> =
 const PHONE_REGEX = /^\+?[0-9\s\-().]{8,22}$/;
 const BATCH_CODE_REGEX = /^[A-Z0-9-]{3,32}$/;
 const DATE_ISO_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-const TRACKING_CODE_QUERY_REGEX = /^TC-\d{4,6}$/i;
+const TRACKING_CODE_QUERY_REGEX = /^(?:TC-\d{4,8}|TC-[A-Z0-9]{6,8})$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]?$/;
 
@@ -299,14 +299,14 @@ export function validateParcelPatch(body: unknown): ValidationResult<{
 
   if (
     r.status !== undefined &&
-    (typeof r.status !== "string" || !(r.status in PARCEL_STATUS_META))
+    (typeof r.status !== "string" || !Object.hasOwn(PARCEL_STATUS_META, r.status))
   ) {
     return { ok: false, error: "Statut du colis invalide." };
   }
   if (
     r.paymentStatus !== undefined &&
     (typeof r.paymentStatus !== "string" ||
-      !(r.paymentStatus in PAYMENT_STATUS_META))
+      !Object.hasOwn(PAYMENT_STATUS_META, r.paymentStatus))
   ) {
     return { ok: false, error: "Statut de paiement invalide." };
   }
@@ -387,7 +387,7 @@ export function validateRegisterInput(body: unknown): ValidationResult<{
 
   let plan: PlanTier = "PRO";
   if (r.plan !== undefined) {
-    if (typeof r.plan === "string" && r.plan in PLAN_META) {
+    if (typeof r.plan === "string" && Object.hasOwn(PLAN_META, r.plan)) {
       plan = r.plan as PlanTier;
     } else {
       details.plan = "Forfait sélectionné invalide.";
@@ -473,7 +473,7 @@ export function validateSuperAdminAction(body: unknown): ValidationResult<{
 
   let plan: PlanTier | undefined;
   if (r.plan !== undefined) {
-    if (typeof r.plan !== "string" || !(r.plan in PLAN_META)) {
+    if (typeof r.plan !== "string" || !Object.hasOwn(PLAN_META, r.plan)) {
       return { ok: false, error: "Forfait invalide." };
     }
     plan = r.plan as PlanTier;

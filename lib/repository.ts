@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
-import { and, desc, eq, inArray, sql as drizzleSql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lte, sql as drizzleSql } from "drizzle-orm";
 import {
   ensurePgInitialized,
+  getSqlClient,
   isDatabaseMisconfiguredInProd,
   shouldUsePostgres,
 } from "../db";
@@ -665,13 +666,6 @@ export async function bulkUpdateBatchStatusForTenant(
   const agency = mapRowToAgency(agencyRows[0]);
   const batch = mapRowToBatch(batchRows[0]);
 
-  await db
-    .update(schema.batches)
-    .set({ status: newStatus })
-    .where(
-      and(eq(schema.batches.id, batchId), eq(schema.batches.agencyId, agencyId))
-    );
-
   const batchParcels = await db
     .select()
     .from(schema.parcels)
@@ -682,8 +676,13 @@ export async function bulkUpdateBatchStatusForTenant(
       )
     );
 
-  let updatedCount = 0;
   const location = locationForStatus(newStatus, agency, batch);
+  const sql = getSqlClient();
+  const txQueries = [
+    sql`UPDATE batches SET status = ${newStatus} WHERE id = ${batchId} AND agency_id = ${agencyId}`,
+  ];
+  let updatedCount = 0;
+
   for (const row of batchParcels) {
     if (row.status !== newStatus) {
       const nextHistory = [
@@ -695,18 +694,16 @@ export async function bulkUpdateBatchStatusForTenant(
           timestamp: nowIso,
         },
       ];
-      await db
-        .update(schema.parcels)
-        .set({ status: newStatus, history: nextHistory })
-        .where(
-          and(
-            eq(schema.parcels.id, row.id),
-            eq(schema.parcels.agencyId, agencyId)
-          )
-        );
+      txQueries.push(
+        sql`UPDATE parcels SET status = ${newStatus}, history = ${JSON.stringify(
+          nextHistory
+        )}::jsonb WHERE id = ${row.id} AND agency_id = ${agencyId}`
+      );
       updatedCount++;
     }
   }
+
+  await sql.transaction(txQueries);
 
   return { batch: { ...batch, status: newStatus }, updatedCount };
 }
@@ -1505,4 +1502,94 @@ export async function applySuperAdminAgencyAction(
     agency: updated,
     resolved: resolveEffectiveSubscription(updated),
   };
+}
+
+const revokedJtiMemoryCache = new Map<string, number>();
+
+export async function revokeSessionJti(
+  jti: string,
+  expiresAt: number
+): Promise<void> {
+  const now = Date.now();
+  if (!jti || expiresAt <= now) return;
+
+  if (revokedJtiMemoryCache.size >= 5000) {
+    for (const [k, exp] of revokedJtiMemoryCache.entries()) {
+      if (exp <= now) revokedJtiMemoryCache.delete(k);
+    }
+    if (revokedJtiMemoryCache.size >= 5000) {
+      revokedJtiMemoryCache.clear();
+    }
+  }
+  revokedJtiMemoryCache.set(jti, expiresAt);
+
+  if (isDatabaseMisconfiguredInProd()) return;
+
+  if (!shouldUsePostgres()) {
+    const mt = readMultiTenantJsonDb();
+    mt.revokedTokens = (mt.revokedTokens || []).filter((r) => r.expiresAt > now);
+    if (!mt.revokedTokens.some((r) => r.jti === jti)) {
+      mt.revokedTokens.push({ jti, expiresAt });
+    }
+    writeMultiTenantJsonDb(mt);
+    return;
+  }
+
+  const db = await ensurePgInitialized();
+  await db
+    .delete(schema.revokedTokens)
+    .where(lte(schema.revokedTokens.expiresAt, now));
+  await db
+    .insert(schema.revokedTokens)
+    .values({
+      jti,
+      expiresAt,
+      revokedAt: new Date(now).toISOString(),
+    })
+    .onConflictDoNothing();
+}
+
+export async function isSessionJtiRevoked(jti: string): Promise<boolean> {
+  if (!jti) return false;
+  const now = Date.now();
+  const cachedExp = revokedJtiMemoryCache.get(jti);
+  if (cachedExp !== undefined) {
+    if (cachedExp > now) return true;
+    revokedJtiMemoryCache.delete(jti);
+  }
+
+  if (isDatabaseMisconfiguredInProd()) return false;
+
+  if (!shouldUsePostgres()) {
+    const mt = readMultiTenantJsonDb();
+    const match = (mt.revokedTokens || []).find(
+      (r) => r.jti === jti && r.expiresAt > now
+    );
+    if (match) {
+      revokedJtiMemoryCache.set(jti, match.expiresAt);
+      return true;
+    }
+    return false;
+  }
+
+  const db = await ensurePgInitialized();
+  const rows = await db
+    .select({
+      jti: schema.revokedTokens.jti,
+      expiresAt: schema.revokedTokens.expiresAt,
+    })
+    .from(schema.revokedTokens)
+    .where(
+      and(
+        eq(schema.revokedTokens.jti, jti),
+        gt(schema.revokedTokens.expiresAt, now)
+      )
+    )
+    .limit(1);
+
+  if (rows[0]) {
+    revokedJtiMemoryCache.set(jti, Number(rows[0].expiresAt));
+    return true;
+  }
+  return false;
 }

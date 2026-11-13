@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, it } from "node:test";
+import type { NextRequest } from "next/server";
 import {
   createSessionToken,
   hashPasswordScrypt,
@@ -11,11 +12,16 @@ import {
   verifyScryptHash,
   verifySessionToken,
 } from "../lib/auth";
-import { checkRateLimit, resetRateLimiterForTests } from "../lib/rate-limit";
+import {
+  checkRateLimit,
+  getClientIp,
+  resetRateLimiterForTests,
+} from "../lib/rate-limit";
 import { allocateUniqueSlug } from "../lib/repository";
 import {
   bulkUpdateBatchStatus,
   createParcelRecord,
+  generateTrackingCodeFromSet,
   maskClientName,
   maskPhone,
   readDb,
@@ -26,6 +32,7 @@ import {
   isSafeHttpsUrl,
   validateAgencyPatch,
   validateBatchCreate,
+  validateParcelPatch,
   validateRegisterInput,
   validateSingleParcel,
   validateSuperAdminAction,
@@ -63,9 +70,13 @@ describe("lib/auth security", () => {
     assert.equal(createSessionToken(), null);
   });
 
-  it("rejects weak session secrets under 16 chars", () => {
+  it("rejects weak session secrets under 32 chars", () => {
     process.env.TRACKCARGO_SESSION_SECRET = "too-short";
     process.env.TRACKCARGO_ADMIN_PASSWORD = "strong-password-123";
+    assert.equal(isAdminAuthConfigured(), false);
+    assert.equal(createSessionToken(), null);
+
+    process.env.TRACKCARGO_SESSION_SECRET = "secret-of-24-chars-12345";
     assert.equal(isAdminAuthConfigured(), false);
     assert.equal(createSessionToken(), null);
   });
@@ -330,5 +341,38 @@ describe("SaaS multi-tenant auth, slugs & subscription resolution", () => {
       validateSuperAdminAction({ action: "ACTIVATE_30D", plan: "PRO" }).ok,
       true
     );
+  });
+
+  it("blocks prototype-chain enum bypasses, uses high-entropy tracking codes, and resists XFF spoofing", () => {
+    assert.equal(validateParcelPatch({ status: "toString" }).ok, false);
+    assert.equal(
+      validateParcelPatch({ paymentStatus: "constructor" }).ok,
+      false
+    );
+    assert.equal(
+      validateSuperAdminAction({
+        action: "ACTIVATE_30D",
+        plan: "valueOf",
+      }).ok,
+      false
+    );
+
+    const code = generateTrackingCodeFromSet(new Set());
+    assert.match(code, /^TC-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{6,8}$/);
+    assert.equal(validateTrackingQuery(code).ok, true);
+    assert.equal(validateTrackingQuery("TC-AB12").ok, false);
+
+    const spoofedReq = {
+      headers: new Headers({ "x-forwarded-for": "1.2.3.4, 198.51.100.42" }),
+    } as unknown as NextRequest;
+    assert.equal(getClientIp(spoofedReq), "198.51.100.42");
+
+    const vercelReq = {
+      headers: new Headers({
+        "x-forwarded-for": "1.2.3.4",
+        "x-vercel-forwarded-for": "203.0.113.10",
+      }),
+    } as unknown as NextRequest;
+    assert.equal(getClientIp(vercelReq), "203.0.113.10");
   });
 });

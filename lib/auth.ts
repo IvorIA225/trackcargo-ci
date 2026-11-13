@@ -1,7 +1,11 @@
 import crypto from "node:crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getAgencyById, getSuperAdminEmail } from "./repository";
+import {
+  getAgencyById,
+  getSuperAdminEmail,
+  isSessionJtiRevoked,
+} from "./repository";
 import { resolveEffectiveSubscription } from "./subscription";
 import type {
   Agency,
@@ -14,6 +18,7 @@ const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 heures
 
 export interface AdminSessionPayload {
   sub: "agency-admin";
+  jti: string;
   userId: string;
   agencyId: string | null;
   role: UserRole;
@@ -32,7 +37,7 @@ export interface SessionCreateInput {
 
 function getSessionSecret(): string | null {
   const secret = process.env.TRACKCARGO_SESSION_SECRET?.trim();
-  if (!secret || secret.length < 16) {
+  if (!secret || secret.length < 32) {
     return null;
   }
   return secret;
@@ -106,6 +111,7 @@ export function createSessionToken(
 
   const payload: AdminSessionPayload = {
     sub: "agency-admin",
+    jti: crypto.randomUUID(),
     userId: opts.userId || (role === "SUPER_ADMIN" ? "super-admin" : "usr-demo-1"),
     agencyId: opts.agencyId === undefined ? null : opts.agencyId,
     role,
@@ -156,6 +162,8 @@ export function verifySessionToken(
     ) as AdminSessionPayload;
     if (
       parsed.sub !== "agency-admin" ||
+      typeof parsed.jti !== "string" ||
+      parsed.jti.length < 16 ||
       typeof parsed.exp !== "number" ||
       parsed.exp <= now ||
       (parsed.role !== "AGENCY_ADMIN" && parsed.role !== "SUPER_ADMIN")
@@ -168,11 +176,12 @@ export function verifySessionToken(
   }
 }
 
-export function requireAdminSession(
+export async function requireAdminSession(
   request: NextRequest
-):
+): Promise<
   | { ok: true; session: AdminSessionPayload }
-  | { ok: false; response: NextResponse } {
+  | { ok: false; response: NextResponse }
+> {
   if (!isSessionSecretConfigured()) {
     return {
       ok: false,
@@ -198,6 +207,17 @@ export function requireAdminSession(
     };
   }
 
+  const revoked = await isSessionJtiRevoked(session.jti).catch(() => false);
+  if (revoked) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Session révoquée ou expirée. Veuillez vous reconnecter." },
+        { status: 401 }
+      ),
+    };
+  }
+
   return { ok: true, session };
 }
 
@@ -212,7 +232,7 @@ export async function requireAgencySession(
     }
   | { ok: false; response: NextResponse }
 > {
-  const auth = requireAdminSession(request);
+  const auth = await requireAdminSession(request);
   if (!auth.ok) return auth;
 
   if (auth.session.role !== "AGENCY_ADMIN" || !auth.session.agencyId) {
@@ -311,12 +331,13 @@ export async function requireActiveAgencySession(
   return gate;
 }
 
-export function requireSuperAdminSession(
+export async function requireSuperAdminSession(
   request: NextRequest
-):
+): Promise<
   | { ok: true; session: AdminSessionPayload }
-  | { ok: false; response: NextResponse } {
-  const auth = requireAdminSession(request);
+  | { ok: false; response: NextResponse }
+> {
+  const auth = await requireAdminSession(request);
   if (!auth.ok) return auth;
 
   if (auth.session.role !== "SUPER_ADMIN") {

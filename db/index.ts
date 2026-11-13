@@ -166,6 +166,30 @@ export async function ensurePgInitialized(): Promise<
           )
         `,
         sql`CREATE INDEX IF NOT EXISTS sub_events_agency_id_idx ON subscription_events (agency_id)`,
+        sql`
+          CREATE TABLE IF NOT EXISTS revoked_tokens (
+            jti text PRIMARY KEY,
+            expires_at bigint NOT NULL,
+            revoked_at text NOT NULL
+          )
+        `,
+        sql`CREATE INDEX IF NOT EXISTS revoked_tokens_exp_idx ON revoked_tokens (expires_at)`,
+        sql`
+          CREATE TABLE IF NOT EXISTS rate_limits (
+            bucket_key text PRIMARY KEY,
+            count integer NOT NULL,
+            reset_at bigint NOT NULL
+          )
+        `,
+        // Defense-in-depth RLS: locks out non-owner / Neon Data API / PostgREST roles while keeping server owner queries operational
+        sql`ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE agencies ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE users ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE batches ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE parcels ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE subscription_events ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE revoked_tokens ENABLE ROW LEVEL SECURITY`,
+        sql`ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY`,
       ]);
 
       await seedDatabaseIdempotent(db);

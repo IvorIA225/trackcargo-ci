@@ -9,7 +9,7 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireSuperAdminSession(request);
+  const auth = await requireSuperAdminSession(request);
   if (!auth.ok) return auth.response;
 
   try {

@@ -9,7 +9,7 @@ import { validatePlatformSettingsPatch } from "@/lib/validation";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const auth = requireSuperAdminSession(request);
+  const auth = await requireSuperAdminSession(request);
   if (!auth.ok) return auth.response;
 
   try {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const auth = requireSuperAdminSession(request);
+  const auth = await requireSuperAdminSession(request);
   if (!auth.ok) return auth.response;
 
   try {

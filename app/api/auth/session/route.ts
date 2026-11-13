@@ -5,7 +5,7 @@ import {
   SESSION_COOKIE_NAME,
   verifySessionToken,
 } from "@/lib/auth";
-import { getAgencyById } from "@/lib/repository";
+import { getAgencyById, isSessionJtiRevoked } from "@/lib/repository";
 import { resolveEffectiveSubscription } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
   const configured = isSessionSecretConfigured();
   const superAdminConfigured = isAdminAuthConfigured();
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = configured ? verifySessionToken(token) : null;
+  const parsedSession = configured ? verifySessionToken(token) : null;
+  const revoked =
+    parsedSession?.jti &&
+    (await isSessionJtiRevoked(parsedSession.jti).catch(() => false));
+  const session = revoked ? null : parsedSession;
 
   if (!session) {
     return NextResponse.json({

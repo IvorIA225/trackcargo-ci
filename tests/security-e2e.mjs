@@ -189,7 +189,30 @@ async function main() {
     });
     assert.equal(throttledRes.status, 429);
     assert.ok(throttledRes.headers.get("retry-after"));
-    console.log("OK [rate-limit] Auth brute-force throttled with 429");
+
+    // Spoofed leftmost IP prepended to X-Forwarded-For must NOT bypass IP throttling
+    const spoofedXffRes = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "203.0.113.9, 198.51.100.77",
+      },
+      body: JSON.stringify({ password: "wrong-password" }),
+    });
+    assert.equal(spoofedXffRes.status, 429);
+
+    // Cross-site / forged Origin CSRF attempts MUST be rejected with 403
+    const csrfOriginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "https://evil.example",
+        "Sec-Fetch-Site": "cross-site",
+      },
+      body: JSON.stringify({ password: "wrong-password" }),
+    });
+    assert.equal(csrfOriginRes.status, 403);
+    console.log("OK [rate-limit+csrf] Auth brute-force, XFF rightmost IP & CSRF origin checks verified");
 
     // 7. Self-service multi-tenant registration (Agency A + duplicate email + duplicate slug Agency B)
     const regARes = await fetch(`${BASE_URL}/api/auth/register`, {
@@ -324,7 +347,18 @@ async function main() {
     assert.equal(pkgARes.status, 201);
     const pkgA = await pkgARes.json();
     assert.equal(pkgA.amountFcfa, 85000);
-    assert.match(pkgA.trackingCode, /^TC-\d{4,}$/);
+    assert.match(
+      pkgA.trackingCode,
+      /^TC-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{6,8}$/
+    );
+
+    // Prototype keys in status enum must be rejected (Object.hasOwn defense)
+    const protoBatchRes = await fetch(`${BASE_URL}/api/batches/${batchA.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Cookie: cookieA },
+      body: JSON.stringify({ status: "toString" }),
+    });
+    assert.equal(protoBatchRes.status, 422);
 
     // Cross-tenant isolation checks from Agency B
     const bPatchBatchA = await fetch(`${BASE_URL}/api/batches/${batchA.id}`, {
@@ -532,7 +566,25 @@ async function main() {
       headers: { Cookie: "" },
     });
     assert.equal(afterLogout.status, 401);
-    console.log("OK [billing-e2e] PAST_DUE (402), +30d unlock, SUSPEND (403), reset & logout verified");
+
+    // Server-side JTI revocation: replaying the logged-out superCookie MUST fail with 401
+    const replayAfterLogout = await fetch(
+      `${BASE_URL}/api/super-admin/agencies`,
+      {
+        headers: { Cookie: superCookie },
+      }
+    );
+    assert.equal(replayAfterLogout.status, 401);
+
+    const replaySessionAfterLogout = await fetch(
+      `${BASE_URL}/api/auth/session`,
+      {
+        headers: { Cookie: superCookie },
+      }
+    );
+    const replaySessionJson = await replaySessionAfterLogout.json();
+    assert.equal(replaySessionJson.authenticated, false);
+    console.log("OK [billing-e2e] PAST_DUE (402), +30d unlock, SUSPEND (403), reset, logout & JTI revocation verified");
     console.log("SECURITY_E2E_ALL_PASSED");
   } finally {
     server.kill("SIGTERM");

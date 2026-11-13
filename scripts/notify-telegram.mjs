@@ -121,6 +121,7 @@ async function main() {
         parse_mode: "HTML",
         disable_web_page_preview: true,
       }),
+      signal: AbortSignal.timeout(15_000),
     });
   } catch (networkErr) {
     console.log(

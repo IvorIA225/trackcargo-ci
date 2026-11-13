@@ -6,7 +6,7 @@ import {
   isSessionSecretConfigured,
   shouldUseSecureCookie,
 } from "@/lib/auth";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkDurableRateLimit, getClientIp } from "@/lib/rate-limit";
 import { registerAgencyWithAdmin } from "@/lib/repository";
 import { validateRegisterInput } from "@/lib/validation";
 
@@ -24,7 +24,12 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const limit = checkRateLimit("auth-register", ip, 12, 15 * 60 * 1000);
+  const limit = await checkDurableRateLimit(
+    "auth-register",
+    ip,
+    12,
+    15 * 60 * 1000
+  );
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Trop de créations de comptes depuis cette adresse. Réessayez plus tard." },

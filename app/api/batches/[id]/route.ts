@@ -24,7 +24,7 @@ export async function PATCH(
     const body = await request.json();
     const status = body?.status as ParcelStatus;
 
-    if (!status || !(status in PARCEL_STATUS_META)) {
+    if (typeof status !== "string" || !Object.hasOwn(PARCEL_STATUS_META, status)) {
       return NextResponse.json({ error: "Statut invalide." }, { status: 422 });
     }
 

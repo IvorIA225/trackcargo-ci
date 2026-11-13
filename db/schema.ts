@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   doublePrecision,
   index,
@@ -144,3 +145,19 @@ export const subscriptionEvents = pgTable(
   },
   (table) => [index("sub_events_agency_id_idx").on(table.agencyId)]
 );
+
+export const revokedTokens = pgTable(
+  "revoked_tokens",
+  {
+    jti: text("jti").primaryKey(),
+    expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
+    revokedAt: text("revoked_at").notNull(),
+  },
+  (table) => [index("revoked_tokens_exp_idx").on(table.expiresAt)]
+);
+
+export const rateLimits = pgTable("rate_limits", {
+  bucketKey: text("bucket_key").primaryKey(),
+  count: integer("count").notNull(),
+  resetAt: bigint("reset_at", { mode: "number" }).notNull(),
+});
