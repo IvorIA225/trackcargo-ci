@@ -607,19 +607,12 @@ export default function HomePage() {
 
                 {/* Aperçu WhatsApp & Wave en langage simple */}
                 <div className="rounded-[12px] bg-white/10 border border-white/12 px-3 py-2 sm:px-3.5 sm:py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-start sm:items-center gap-2.5">
-                    <BrandLogo brand="whatsapp" size="sm" decorative className="mt-0.5 sm:mt-0" />
-                    <p className="text-[12px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
-                      {currentStep.whatsappSample}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 pl-7 sm:pl-0">
-                    <BrandLogo brand="wave" size="xs" decorative />
-                    <BrandLogo brand="orange-money" size="xs" decorative />
-                    <span className="text-[11px] font-mono text-[#fde68a]">
-                      {currentStep.waveState}
-                    </span>
-                  </div>
+                  <p className="text-[12px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
+                    {currentStep.whatsappSample}
+                  </p>
+                  <span className="text-[11px] font-mono text-[#fde68a] shrink-0">
+                    {currentStep.waveState}
+                  </span>
                 </div>
               </div>
             </div>
@@ -709,17 +702,6 @@ export default function HomePage() {
                       <p className="text-[13.5px] text-[#cbd5e1] leading-[1.5]">
                         {card.detail}
                       </p>
-                      {(card.city === "Istanbul & Dubaï" ||
-                        card.city === "Comptoir Abidjan" ||
-                        card.city === "Guangzhou · Aérien") && (
-                        <div className="pt-1.5 flex items-center gap-2">
-                          <BrandLogo brand="whatsapp" size="xs" decorative />
-                          <BrandLogo brand="wave" size="xs" decorative />
-                          {card.city === "Comptoir Abidjan" && (
-                            <BrandLogo brand="orange-money" size="xs" decorative />
-                          )}
-                        </div>
-                      )}
                     </div>
                   </article>
                 ))}
@@ -794,15 +776,6 @@ export default function HomePage() {
                         </h3>
                         <p className="text-[14px] text-[#cbd5e1] leading-[1.55]">{card.detail}</p>
                       </div>
-                      {(card.city === "Comptoir Abidjan" || card.city === "Istanbul & Dubaï") && (
-                        <div className="pt-2 border-t border-white/10 flex items-center gap-2">
-                          <BrandLogo brand="whatsapp" size="xs" decorative />
-                          <BrandLogo brand="wave" size="xs" decorative />
-                          {card.city === "Comptoir Abidjan" && (
-                            <BrandLogo brand="orange-money" size="xs" decorative />
-                          )}
-                        </div>
-                      )}
                     </div>
                   </article>
                 ))}
@@ -849,17 +822,14 @@ export default function HomePage() {
                   Chaque forfait démarre avec 14 jours d&apos;essai complet sans engagement.
                 </p>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
-                    <BrandLogo brand="wave" size="xs" decorative />
-                    <span>Wave direct</span>
+                  <span className="inline-flex items-center rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
+                    Wave direct
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
-                    <BrandLogo brand="orange-money" size="xs" withWhiteSurface={false} decorative />
-                    <span>Orange Money</span>
+                  <span className="inline-flex items-center rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
+                    Orange Money
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
-                    <BrandLogo brand="whatsapp" size="xs" decorative />
-                    <span>Notifications WhatsApp</span>
+                  <span className="inline-flex items-center rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155]">
+                    Notifications WhatsApp
                   </span>
                 </div>
               </div>
