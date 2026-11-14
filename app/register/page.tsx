@@ -231,7 +231,8 @@ function RegisterFormContent() {
               </label>
               <input
                 id="reg-whatsapp"
-                type="text"
+                type="tel"
+                inputMode="tel"
                 value={whatsappPhone}
                 onChange={(e) => setWhatsappPhone(e.target.value)}
                 placeholder="+2250708123456"

@@ -68,11 +68,6 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>("batches");
   const [toast, setToast] = useState<string>("");
 
-  // Prospect Quick Demo Rebrander (demo agency only)
-  const [demoOpen, setDemoOpen] = useState(false);
-  const [demoName, setDemoName] = useState("");
-  const [demoCommune, setDemoCommune] = useState("");
-
   // New Batch Form
   const [batchCode, setBatchCode] = useState("AIR-GZ-2611C");
   const [batchMode, setBatchMode] = useState<TransportMode>("aerien");
@@ -140,8 +135,6 @@ export default function DashboardPage() {
       setSubscription(data.subscription || null);
       setPlatformSettings(data.platformSettings || null);
       setSettingsForm(data.agency || {});
-      setDemoName(data.agency?.name || "");
-      setDemoCommune(data.agency?.commune || "");
       if (data.batches?.[0]?.id) {
         setParcelBatchId((prev) => prev || data.batches[0].id);
         setImportBatchId((prev) => prev || data.batches[0].id);
@@ -171,22 +164,47 @@ export default function DashboardPage() {
     };
   }, [parcels]);
 
+  const selectedParcelBatch = useMemo(() => {
+    return batches.find((b) => b.id === parcelBatchId) || batches[0] || null;
+  }, [batches, parcelBatchId]);
+
+  const selectedImportBatch = useMemo(() => {
+    return batches.find((b) => b.id === importBatchId) || batches[0] || null;
+  }, [batches, importBatchId]);
+
+  const estimatedParcelFcfa = useMemo(() => {
+    if (!agency) return 0;
+    const mode = selectedParcelBatch?.mode || "aerien";
+    const w = Math.max(parseFloat(weightKg) || 0, 0.5);
+    const v = Math.max(parseFloat(volumeCbm) || 0, 0);
+    if (mode === "aerien") {
+      return Math.round(w * agency.ratePerKgAirFcfa);
+    }
+    if (v > 0) {
+      return Math.round(v * agency.ratePerCbmSeaFcfa);
+    }
+    return Math.round(Math.max(w, 1) * (agency.ratePerKgAirFcfa * 0.35));
+  }, [agency, selectedParcelBatch, weightKg, volumeCbm]);
+
   const parsedImportRows = useMemo(() => {
+    const isSea = selectedImportBatch?.mode === "maritime";
     return excelText
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => {
         const parts = line.includes("\t") ? line.split("\t") : line.split(";");
+        const numericVal = parseFloat((parts[3] || "1").replace(",", ".")) || 1;
         return {
           clientName: (parts[0] || "").trim(),
           clientPhone: (parts[1] || "").trim(),
           description: (parts[2] || "Colis groupage").trim(),
-          weightKg: parseFloat((parts[3] || "1").replace(",", ".")) || 1,
+          weightKg: isSea ? 1 : numericVal,
+          volumeCbm: isSea ? numericVal : 0,
         };
       })
       .filter((r) => r.clientName && r.clientPhone);
-  }, [excelText]);
+  }, [excelText, selectedImportBatch]);
 
   const filteredParcels = useMemo(() => {
     return parcels.filter((p) => {
@@ -218,29 +236,6 @@ export default function DashboardPage() {
     } catch {
       notifyToast(fallback);
     }
-  };
-
-  const handleApplyProspectDemo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demoName.trim()) return;
-    const res = await fetch("/api/agency", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: demoName.trim(),
-        commune: demoCommune.trim() || "Treichville",
-        address: `Entrepôt ${demoName.trim()}, ${
-          demoCommune.trim() || "Treichville"
-        }, Abidjan`,
-      }),
-    });
-    if (!res.ok) {
-      await handleApiError(res, "Impossible de rebrander le portail.");
-      return;
-    }
-    await loadOverview();
-    setDemoOpen(false);
-    notifyToast(`Portail rebrandé en direct pour "${demoName.trim()}".`);
   };
 
   const handleCreateBatch = async (e: React.FormEvent) => {
@@ -553,6 +548,18 @@ export default function DashboardPage() {
               <span className="truncate">Copier lien client</span>
             </button>
 
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                `📦 *${agency.name}* (${agency.commune})\nSuivez l'arrivée de vos colis et téléchargez votre reçu officiel en direct sur notre portail :\nhttps://trackcargo-ci.vercel.app/a/${agency.slug}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-[#047857] hover:bg-[#065f46] text-white font-semibold text-xs no-underline shadow-xs transition-colors"
+            >
+              <BrandLogo brand="whatsapp" size="xs" decorative />
+              <span className="truncate">Diffuser sur WhatsApp</span>
+            </a>
+
             <Link
               href={`/a/${agency.slug}`}
               target="_blank"
@@ -563,75 +570,26 @@ export default function DashboardPage() {
             </Link>
 
             {agency.isDemo && !isPastDue && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setDemoOpen((v) => !v)}
-                  className="inline-flex items-center justify-center px-3.5 py-2 rounded-full bg-white/12 hover:bg-white/20 text-white border border-white/18 font-semibold text-xs cursor-pointer transition-colors"
-                >
-                  {demoOpen ? "Fermer" : "Rebrander démo"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResetDemo}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-white/8 hover:bg-white/15 border border-white/15 text-[#e2e8f0] font-semibold text-xs cursor-pointer transition-colors"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  <span>Réinitialiser démo</span>
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={handleResetDemo}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-white/8 hover:bg-white/15 border border-white/15 text-[#e2e8f0] font-semibold text-xs cursor-pointer transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                <span>Réinitialiser démo</span>
+              </button>
             )}
 
             <button
               type="button"
               onClick={handleLogout}
-              className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer transition-colors ${
-                agency.isDemo && !isPastDue ? "col-span-2 sm:col-span-1" : "col-span-2 sm:col-span-1"
-              }`}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white font-semibold text-xs cursor-pointer transition-colors col-span-2 sm:col-span-1"
             >
               <LogOut className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
               <span>Déconnexion</span>
             </button>
           </div>
         </div>
-
-        {demoOpen && agency.isDemo && !isPastDue && (
-          <form
-            onSubmit={handleApplyProspectDemo}
-            className="relative max-w-[82rem] mx-auto px-4 sm:px-8 pb-5 pt-3 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end border-t border-white/12"
-          >
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-mono text-[#cbd5e1] mb-1">
-                Nom du prospect (ex: A-Cargo Logistique, World Transit)
-              </label>
-              <input
-                type="text"
-                value={demoName}
-                onChange={(e) => setDemoName(e.target.value)}
-                className="w-full h-10 px-3.5 rounded-[12px] border border-white/20 bg-white text-[#0d131d] text-sm font-semibold"
-                required
-              />
-            </div>
-            <div className="w-full sm:w-56">
-              <label className="block text-xs font-mono text-[#cbd5e1] mb-1">
-                Commune Abidjan
-              </label>
-              <input
-                type="text"
-                value={demoCommune}
-                onChange={(e) => setDemoCommune(e.target.value)}
-                placeholder="Treichville / Adjamé / Cocody"
-                className="w-full h-10 px-3.5 rounded-[12px] border border-white/20 bg-white text-[#0d131d] text-sm font-semibold"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-10 px-5 rounded-full bg-[#c9410e] hover:bg-[#b5370a] text-white font-bold text-sm cursor-pointer whitespace-nowrap transition-colors"
-            >
-              Appliquer le branding
-            </button>
-          </form>
-        )}
       </header>
 
       <main className="flex-1 max-w-[82rem] w-full mx-auto px-3.5 sm:px-8 py-5 sm:py-8 space-y-5 sm:space-y-7">
@@ -983,12 +941,15 @@ export default function DashboardPage() {
                               onClick={() => {
                                 setFilterBatch(batch.id);
                                 setActiveTab("parcels");
+                                notifyToast(
+                                  `Lot ${batch.code} filtré : cliquez sur WhatsApp en face d'un colis pour envoyer son message pré-rempli.`
+                                );
                               }}
                               className="col-span-2 sm:col-span-1 sm:ml-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-[#047857] hover:bg-[#065f46] text-white cursor-pointer transition-colors"
                             >
                               <BrandLogo brand="whatsapp" size="xs" decorative />
                               <span>
-                                Notifier les {batchParcels.length} clients
+                                Voir &amp; notifier ({batchParcels.length})
                               </span>
                               <ArrowUpRight
                                 className="w-3.5 h-3.5"
@@ -1307,7 +1268,8 @@ export default function DashboardPage() {
                       <span>Téléphone WhatsApp (CI)</span>
                     </label>
                     <input
-                      type="text"
+                      type="tel"
+                      inputMode="tel"
                       value={clientPhone}
                       onChange={(e) => setClientPhone(e.target.value)}
                       placeholder="+22507..."
@@ -1328,10 +1290,42 @@ export default function DashboardPage() {
                       required
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  {selectedParcelBatch?.mode === "maritime" ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-[#0d131d] mb-1">
+                          Volume facturé (CBM)
+                        </label>
+                        <input
+                          type="number"
+                          min={0.01}
+                          max={1000}
+                          step="0.01"
+                          value={volumeCbm}
+                          onChange={(e) => setVolumeCbm(e.target.value)}
+                          className="w-full h-10 px-3.5 rounded-[12px] border border-[#c9410e]/40 bg-[#fff4ee] text-[#0d131d] text-sm font-mono font-bold"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-[#525e70] mb-1">
+                          Poids indicatif (kg)
+                        </label>
+                        <input
+                          type="number"
+                          min={0.1}
+                          max={50000}
+                          step="0.1"
+                          value={weightKg}
+                          onChange={(e) => setWeightKg(e.target.value)}
+                          className="w-full h-10 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] text-sm font-mono"
+                        />
+                      </div>
+                    </div>
+                  ) : (
                     <div>
-                      <label className="block text-xs font-mono font-bold text-[#525e70] mb-1">
-                        Poids (kg)
+                      <label className="block text-xs font-mono font-bold text-[#0d131d] mb-1">
+                        Poids facturé (kg)
                       </label>
                       <input
                         type="number"
@@ -1339,32 +1333,31 @@ export default function DashboardPage() {
                         max={50000}
                         step="0.1"
                         value={weightKg}
-                        onChange={(e) => setWeightKg(e.target.value)}
-                        className="w-full h-10 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] text-sm font-mono"
+                        onChange={(e) => {
+                          setWeightKg(e.target.value);
+                          setVolumeCbm("0");
+                        }}
+                        className="w-full h-10 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] text-sm font-mono font-bold"
                         required
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-mono font-bold text-[#525e70] mb-1">
-                        Volume (CBM)
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={1000}
-                        step="0.01"
-                        value={volumeCbm}
-                        onChange={(e) => setVolumeCbm(e.target.value)}
-                        className="w-full h-10 px-3.5 rounded-[12px] border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] text-sm font-mono"
-                      />
-                    </div>
+                  )}
+                  <div className="rounded-[12px] bg-[#f7f6f2] border border-[#0d131d]/10 px-3.5 py-2.5 flex items-center justify-between text-xs">
+                    <span className="font-mono text-[#525e70]">
+                      {selectedParcelBatch?.mode === "maritime"
+                        ? `Tarif maritime (${formatFcfa(agency.ratePerCbmSeaFcfa)}/CBM)`
+                        : `Tarif aérien (${formatFcfa(agency.ratePerKgAirFcfa)}/kg)`}
+                    </span>
+                    <span className="font-mono font-bold text-sm text-[#0d131d]">
+                      {formatFcfa(estimatedParcelFcfa)}
+                    </span>
                   </div>
                   <button
                     type="submit"
                     disabled={batches.length === 0}
                     className="tc-btn-primary w-full disabled:opacity-50"
                   >
-                    Enregistrer et calculer le tarif FCFA
+                    Enregistrer ({formatFcfa(estimatedParcelFcfa)})
                   </button>
                 </form>
               </div>
@@ -1385,7 +1378,10 @@ export default function DashboardPage() {
                     </code>
                     ) au format :{" "}
                     <strong className="text-[#0d131d]">
-                      Nom ; Téléphone ; Description ; Poids(kg)
+                      Nom ; Téléphone ; Description ;{" "}
+                      {selectedImportBatch?.mode === "maritime"
+                        ? "Volume(CBM)"
+                        : "Poids(kg)"}
                     </strong>
                   </p>
                 </div>

@@ -1,7 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, Check } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import ContainerStage3D, { type CorridorId } from "@/components/ContainerStage3D";
 import Navbar from "@/components/Navbar";
@@ -53,7 +55,7 @@ const CORRIDORS: Record<CorridorId, CorridorSpec> = {
     eta: "6 à 12 jours",
     rateLabel: "Colis et valeur",
     summary:
-      "Adapté aux boutiques de prêt-à-porter et d'électronique. Vos clientes reçoivent la photo au départ puis viennent retirer leurs sacs avec un reçu Wave prêt.",
+      "Adapté aux boutiques de prêt-à-porter et d'électronique. Vos clientes reçoivent leur code TC dès le départ puis retirent leurs sacs avec leur pass QR officiel.",
   },
 };
 
@@ -121,7 +123,7 @@ const CORRIDOR_CARDS = [
     timing: "5 à 8 jours",
     billing: "Au kilogramme",
     detail:
-      "Pesée à l'entrepôt en Chine, photo jointe au dossier et lien Wave prêt avant même l'atterrissage à Abidjan.",
+      "Pesée exacte à l'entrepôt en Chine, code TC attribué et solde en FCFA prêt avant même l'atterrissage à Abidjan.",
     image: "/media/v2-lane-air.webp",
     alt: "Soute fret aérien sur piste en plein jour entre Guangzhou et Abidjan",
   },
@@ -346,23 +348,27 @@ export default function HomePage() {
 
           <div className="sc-wrap relative z-20 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-10 items-center">
-              {/* Colonne gauche : 4 éléments stricts, zéro pilule eyebrow */}
+              {/* Colonne gauche : hiérarchie éditoriale lumineuse */}
               <div className="lg:col-span-6 space-y-3 sm:space-y-5">
+                <p className="inline-flex items-center gap-2 border-l-2 border-[#c9410e] pl-2.5 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-[0.12em] text-[#334155]">
+                  <span>Abidjan · Groupage Maritime &amp; Aérien</span>
+                </p>
+
                 <h1 className="sc-display sc-display--xl tc-hero-title text-[#0d131d] tracking-tight">
                   Vos clients suivent leur colis sans appeler le comptoir.
                 </h1>
 
-                <p className="text-[14px] sm:text-[17px] leading-[1.55] text-[#243247] max-w-[48ch]">
+                <p className="text-[14px] sm:text-[17px] leading-[1.58] text-[#243247] max-w-[48ch]">
                   Un code TC par carton, des alertes WhatsApp en un geste et un lien Wave ou Orange
                   Money prêt dès que le lot arrive à Vridi.
                 </p>
 
                 {/* Sélecteur de corridor synchronisé au modèle 3D */}
-                <div className="space-y-1.5 pt-0.5">
+                <div className="space-y-2 pt-0.5">
                   <div
                     role="group"
                     aria-label="Choisir une ligne logistique"
-                    className="grid grid-cols-3 sm:inline-flex items-center gap-1 rounded-[14px] sm:rounded-full bg-white/95 p-1 border border-[#0d131d]/12 shadow-sm w-full sm:w-auto"
+                    className="grid grid-cols-3 sm:inline-flex items-center gap-1 rounded-[14px] sm:rounded-full bg-white/95 backdrop-blur-md p-1 border border-[#0d131d]/12 shadow-[var(--sc-e1)] w-full sm:w-auto"
                   >
                     {(Object.keys(CORRIDORS) as CorridorId[]).map((id) => {
                       const active = corridor === id;
@@ -372,26 +378,40 @@ export default function HomePage() {
                           type="button"
                           onClick={() => setCorridor(id)}
                           aria-pressed={active}
-                          className={`rounded-[10px] sm:rounded-full px-1.5 sm:px-3.5 py-2 text-[11px] sm:text-[13px] font-semibold transition-all cursor-pointer truncate text-center ${
+                          className={`inline-flex items-center justify-center gap-1.5 rounded-[10px] sm:rounded-full px-1.5 sm:px-3.5 py-2 text-[11px] sm:text-[13px] font-semibold transition-all cursor-pointer truncate text-center ${
                             active
                               ? "bg-[#0d1522] text-white shadow-sm"
                               : "text-[#334155] hover:text-[#0d131d] hover:bg-[#f1efe8]"
                           }`}
                         >
-                          {CORRIDORS[id].label}
+                          {active && (
+                            <span
+                              className="hidden sm:inline-block h-1.5 w-1.5 rounded-full bg-[#f0642d] shrink-0"
+                              aria-hidden="true"
+                            />
+                          )}
+                          <span className="truncate">{CORRIDORS[id].label}</span>
                         </button>
                       );
                     })}
                   </div>
-                  <p className="text-[11px] sm:text-[12.5px] font-mono text-[#334155] pl-0.5">
-                    {activeCorridor.unitName} · {activeCorridor.eta}
-                  </p>
+                  <div className="inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-[12px] bg-white/85 backdrop-blur-xs border border-[#0d131d]/10 px-3 py-1.5 text-[11px] sm:text-[12px] font-mono text-[#243247] shadow-2xs">
+                    <span className="font-semibold text-[#0d131d]">
+                      {activeCorridor.origin} → {activeCorridor.arrival}
+                    </span>
+                    <span className="text-[#c9410e] font-bold">·</span>
+                    <span>{activeCorridor.eta}</span>
+                    <span className="hidden sm:inline text-[#525e70]">
+                      ({activeCorridor.rateLabel})
+                    </span>
+                  </div>
                 </div>
 
                 {/* Actions principales */}
                 <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-0.5">
                   <Link href="/register" className="tc-btn-primary w-full sm:w-auto text-center">
-                    Essayer 14 jours gratuits
+                    <span>Essayer 14 jours gratuits</span>
+                    <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                   </Link>
                   <a href="#portail-live" className="tc-btn-ghost w-full sm:w-auto text-center">
                     Tester le suivi client
@@ -399,8 +419,12 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Colonne droite : Scène WebGL PBR sans socle artificiel ni badges superposés */}
+              {/* Colonne droite : Scène WebGL PBR avec halo solaire subtil */}
               <div className="lg:col-span-6 relative">
+                <div
+                  className="pointer-events-none absolute inset-0 -m-4 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.68)_0%,rgba(201,65,14,0.08)_46%,transparent_72%)]"
+                  aria-hidden="true"
+                />
                 <div className="relative h-[220px] sm:h-[340px] lg:h-[520px] w-full">
                   <ContainerStage3D
                     corridor={corridor}
@@ -422,10 +446,13 @@ export default function HomePage() {
           data-sc-span="1.65"
           className="sc-act tc-daylight-band"
         >
-          <div className="sc-stage tc-stage-below-nav bg-[#f7f6f2] flex items-start pt-4 sm:items-center sm:pt-0">
+          <div className="sc-stage tc-stage-below-nav bg-[#f7f6f2] flex items-start pt-3 sm:items-center sm:pt-0">
             <div className="sc-wrap w-full">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5 lg:gap-12 items-center">
                 <div className="lg:col-span-6 space-y-2.5 sm:space-y-5">
+                  <p className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-[0.1em] text-[#c9410e]">
+                    Le quotidien du comptoir
+                  </p>
                   <h2 className="sc-display sc-display--lg tc-act2-title text-[#0d131d]">
                     Fini les captures Wave perdues et les appels à 22 heures.
                   </h2>
@@ -435,22 +462,22 @@ export default function HomePage() {
                     remise au comptoir à Abidjan.
                   </p>
 
-                  {/* Comparatif épuré sans encadrés lourds */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-2 border-t border-[#0d131d]/12">
-                    <div className="space-y-1">
-                      <p className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#525e70]">
-                        Avant, sur papier et groupes
+                  {/* Comparatif sculpté Avant / Avec TrackCargo CI */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 pt-1">
+                    <div className="rounded-[14px] bg-[#eeebe3]/85 border border-[#0d131d]/10 p-3 sm:p-4 space-y-1">
+                      <p className="text-[10.5px] sm:text-[11.5px] font-mono font-bold uppercase tracking-[0.08em] text-[#525e70]">
+                        Avant · Papier &amp; groupes
                       </p>
-                      <p className="text-[12.5px] sm:text-[13.5px] text-[#475569] leading-[1.45] sm:leading-[1.55]">
+                      <p className="text-[12px] sm:text-[13.5px] text-[#475569] leading-[1.45] sm:leading-[1.52]">
                         Les clients demandent chaque jour où est le bateau, et les reçus Mobile
                         Money se mélangent dans WhatsApp.
                       </p>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.08em] text-[#c9410e]">
+                    <div className="rounded-[14px] bg-white border border-[#c9410e]/30 border-t-2 border-t-[#c9410e] p-3 sm:p-4 space-y-1 shadow-[0_14px_32px_-14px_rgba(201,65,14,0.16)]">
+                      <p className="text-[10.5px] sm:text-[11.5px] font-mono font-bold uppercase tracking-[0.08em] text-[#c9410e]">
                         Avec TrackCargo CI
                       </p>
-                      <p className="text-[12.5px] sm:text-[13.5px] text-[#0d131d] font-medium leading-[1.45] sm:leading-[1.55]">
+                      <p className="text-[12px] sm:text-[13.5px] text-[#0d131d] font-medium leading-[1.45] sm:leading-[1.52]">
                         Une mise à jour sur le lot prévient quarante clients avec leur code TC et
                         leur solde prêt à régler.
                       </p>
@@ -459,13 +486,20 @@ export default function HomePage() {
                 </div>
 
                 {/* Scène 3D macro : carton TC-8841 cerclé sur palette bois */}
-                <div className="lg:col-span-6">
-                  <div className="relative h-[165px] sm:h-[260px] lg:h-[450px] w-full">
+                <div className="lg:col-span-6 relative">
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.75)_0%,transparent_70%)]"
+                    aria-hidden="true"
+                  />
+                  <div className="relative h-[155px] sm:h-[250px] lg:h-[440px] w-full">
                     <ParcelShowcase3D className="w-full h-full" />
                   </div>
-                  <p className="hidden sm:block text-center text-[12px] font-mono text-[#525e70] mt-2">
-                    Colis TC-8841 · 14,5 kg · Étiquette et cerclage synchronisés au défilement
-                  </p>
+                  <div className="hidden sm:flex justify-center mt-2">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-[#0d131d]/10 px-3.5 py-1 text-[11.5px] font-mono text-[#334155] shadow-2xs">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#c9410e]" aria-hidden="true" />
+                      Colis TC-8841 · 14,5 kg · Étiquette QR et cerclage synchronisés
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -478,24 +512,59 @@ export default function HomePage() {
         <section
           id="act-entrepot"
           data-sc-act="flow"
-          className="sc-act tc-daylight-band py-8 sm:py-14"
+          className="sc-act tc-daylight-band py-8 sm:py-16"
         >
-          <div className="sc-wrap">
+          <div className="sc-wrap space-y-6">
             <figure
               data-sc-reveal="up"
               data-sc-reveal-at="0.06 0.62"
-              className="overflow-hidden rounded-[20px] bg-[#eeebe3] shadow-[0_24px_60px_-20px_rgba(13,21,34,0.16)]"
+              className="relative overflow-hidden rounded-[24px] p-2 sm:p-3 bg-white border border-[#0d131d]/10 shadow-[0_28px_68px_-20px_rgba(13,21,34,0.18)]"
             >
-              <img
-                src="/media/v2-warehouse-day.webp"
-                alt="Baie de pesée et palettes rangées dans l'entrepôt clair de Treichville"
-                className="w-full h-[34svh] sm:h-[48svh] lg:h-[54svh] object-cover object-center block"
-              />
+              <div className="relative overflow-hidden rounded-[16px] bg-[#eeebe3]">
+                <img
+                  src="/media/v2-warehouse-day.webp"
+                  alt="Baie de pesée et palettes rangées dans l'entrepôt clair de Treichville"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-[34svh] sm:h-[48svh] lg:h-[54svh] object-cover object-center block"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d1522]/65 via-transparent to-transparent"
+                  aria-hidden="true"
+                />
+                <figcaption className="absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-5 sm:right-auto inline-flex items-center gap-2.5 rounded-full bg-[#0d1522]/85 backdrop-blur-md border border-white/15 px-3.5 py-1.5 text-[11.5px] sm:text-xs font-mono text-white">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
+                  <span>Baie de réception &amp; pesée · Treichville, Abidjan</span>
+                </figcaption>
+              </div>
             </figure>
-            <p className="mt-3.5 text-center text-[14px] sm:text-[15px] text-[#525e70] max-w-[54ch] mx-auto">
-              À Treichville, chaque carton pesé reçoit son code TC et son avis de retrait dès son
-              entrée en rayon.
-            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
+              <div className="rounded-[16px] bg-white border border-[#0d131d]/10 px-4 py-3.5 shadow-2xs text-center sm:text-left">
+                <div className="text-base sm:text-lg font-bold font-mono text-[#0d131d]">
+                  &lt; 10 secondes
+                </div>
+                <p className="text-xs sm:text-[13px] text-[#525e70] mt-0.5">
+                  pour peser un carton, générer son code TC et son pass QR
+                </p>
+              </div>
+              <div className="rounded-[16px] bg-white border border-[#0d131d]/10 px-4 py-3.5 shadow-2xs text-center sm:text-left">
+                <div className="text-base sm:text-lg font-bold font-mono text-[#c9410e]">
+                  0 FCFA de commission
+                </div>
+                <p className="text-xs sm:text-[13px] text-[#525e70] mt-0.5">
+                  les règlements Wave et Orange Money arrivent sur votre compte
+                </p>
+              </div>
+              <div className="rounded-[16px] bg-white border border-[#0d131d]/10 px-4 py-3.5 shadow-2xs text-center sm:text-left">
+                <div className="text-base sm:text-lg font-bold font-mono text-[#0d131d]">
+                  100 % navigateur
+                </div>
+                <p className="text-xs sm:text-[13px] text-[#525e70] mt-0.5">
+                  vos clients consultent leur colis en un clic depuis WhatsApp
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -541,7 +610,7 @@ export default function HomePage() {
 
             {/* Dock verre dépoli compact centré en bas (sans cap 46rem) */}
             <div className="absolute z-20 bottom-3 sm:bottom-6 inset-x-0 px-4 sm:px-8">
-              <div className="max-w-4xl mx-auto rounded-[18px] bg-[#0d1522]/88 backdrop-blur-xl border border-white/14 p-3.5 sm:p-5 shadow-2xl space-y-3">
+              <div className="max-w-4xl mx-auto rounded-[20px] bg-[#0d1522]/90 backdrop-blur-2xl border border-white/16 p-3.5 sm:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_28px_64px_-12px_rgba(0,0,0,0.65)] space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#cbd5e1]">
@@ -595,8 +664,8 @@ export default function HomePage() {
                         onClick={() => setActiveStepIndex(idx)}
                         className={`rounded-full px-3 py-2 text-left text-[12px] font-semibold transition-all cursor-pointer truncate ${
                           selected
-                            ? "bg-[#c9410e] text-white shadow-sm"
-                            : "bg-white/10 text-[#e2e8f0] hover:bg-white/18"
+                            ? "bg-gradient-to-b from-[#d84812] to-[#b83809] text-white shadow-sm border border-white/20"
+                            : "bg-white/10 text-[#e2e8f0] hover:bg-white/18 border border-transparent"
                         }`}
                       >
                         {step.buttonLabel}
@@ -606,7 +675,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Aperçu WhatsApp & Wave en langage simple */}
-                <div className="rounded-[12px] bg-white/10 border border-white/12 px-3 py-2 sm:px-3.5 sm:py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="rounded-[12px] bg-white/10 border border-white/14 px-3 py-2 sm:px-3.5 sm:py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <p className="text-[12px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
                     {currentStep.whatsappSample}
                   </p>
@@ -629,16 +698,16 @@ export default function HomePage() {
           className="sc-act tc-daylight-band scroll-mt-20 py-10 sm:py-16"
         >
           <div className="sc-wrap max-w-5xl">
-            <div data-sc-in="up" className="max-w-2xl mb-7 sm:mb-10 space-y-3">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.09em] text-[#c9410e]">
-                Démonstration en direct
+            <div data-sc-in="up" className="max-w-2xl mb-7 sm:mb-9 space-y-3">
+              <p className="text-[12px] font-mono font-bold uppercase tracking-[0.1em] text-[#c9410e]">
+                Démonstration interactive en direct
               </p>
               <h2 className="sc-display sc-display--lg text-[#0d131d]">
                 Essayez le suivi exact que voit votre client.
               </h2>
               <p className="text-[15px] sm:text-[15.5px] text-[#475569] leading-[1.6]">
                 Cliquez sur l&apos;un des numéros ci-dessous pour consulter la position du lot, le
-                poids du carton et le bouton de paiement Wave ou Orange Money.
+                pass QR de retrait et le bouton de paiement Wave ou Orange Money.
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0d131d]/10 px-3 py-1 text-[12px] font-medium text-[#334155] shadow-xs">
@@ -656,7 +725,24 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div data-sc-in="up">
+            <div
+              data-sc-in="up"
+              className="rounded-[24px] bg-[#eeebe3]/85 border border-[#0d131d]/12 p-2.5 sm:p-5 shadow-[0_28px_68px_-22px_rgba(13,21,34,0.16)] space-y-3"
+            >
+              <div className="flex items-center justify-between gap-2 px-2 py-1 text-xs font-mono text-[#525e70]">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#c9410e]/80" aria-hidden="true" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" aria-hidden="true" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" aria-hidden="true" />
+                  <span className="ml-2 text-[#0d131d] font-semibold truncate">
+                    trackcargo.ci/a/votre-agence
+                  </span>
+                </div>
+                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-0.5 text-[11px] text-emerald-800 border border-[#0d131d]/10">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
+                  Portail dédié par agence
+                </span>
+              </div>
               <TrackingLookup initialQuery="TC-8841" compact />
             </div>
           </div>
@@ -670,6 +756,9 @@ export default function HomePage() {
           <section data-sc-act="flow" className="md:hidden sc-act tc-slate-band py-10">
             <div className="sc-wrap space-y-5">
               <div className="space-y-2">
+                <p className="text-[11px] font-mono uppercase tracking-[0.1em] text-[#f0642d]">
+                  Corridors internationaux
+                </p>
                 <h2 className="sc-display sc-display--lg text-white">
                   Un seul outil pour vos quatre lignes d&apos;activité.
                 </h2>
@@ -680,21 +769,33 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4">
-                {CORRIDOR_CARDS.map((card) => (
+                {CORRIDOR_CARDS.map((card, idx) => (
                   <article
                     key={card.city}
-                    className="rounded-[18px] bg-[#142033] border border-white/12 overflow-hidden shadow-lg"
+                    className="rounded-[18px] bg-[#142033] border border-white/14 overflow-hidden shadow-lg"
                   >
-                    <div className="h-44 w-full overflow-hidden bg-[#1c2c44]">
+                    <div className="relative h-44 w-full overflow-hidden bg-[#1c2c44]">
                       <img
                         src={card.image}
                         alt={card.alt}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover object-center block"
                       />
+                      <div
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#142033] via-transparent to-transparent"
+                        aria-hidden="true"
+                      />
+                      <span className="absolute top-3 left-3 rounded-full bg-[#0d1522]/80 backdrop-blur-md border border-white/15 px-2.5 py-0.5 text-[11px] font-mono text-white">
+                        0{idx + 1}
+                      </span>
+                      <span className="absolute top-3 right-3 rounded-full bg-[#0d1522]/80 backdrop-blur-md border border-white/15 px-2.5 py-0.5 text-[11px] font-mono text-[#fde68a]">
+                        {card.timing}
+                      </span>
                     </div>
                     <div className="p-4 space-y-2">
-                      <p className="text-[11.5px] font-mono text-[#cbd5e1]">
-                        {card.timing} · {card.billing}
+                      <p className="text-[11.5px] font-mono text-[#9eb0c9] uppercase tracking-wider">
+                        {card.billing}
                       </p>
                       <h3 className="text-[18px] font-bold text-white tracking-tight">
                         {card.city}
@@ -707,7 +808,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <div className="rounded-[18px] bg-[#c9410e] border border-white/18 p-5 text-white space-y-3 shadow-lg">
+              <div className="rounded-[18px] bg-gradient-to-br from-[#d84812] to-[#b13507] border border-white/22 p-5 text-white space-y-3 shadow-lg">
                 <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-white/90">
                   Prêt pour votre agence
                 </p>
@@ -720,9 +821,10 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 w-full hover:bg-[#f7f6f2] transition"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 w-full hover:bg-[#f7f6f2] transition"
                 >
-                  Créer mon agence
+                  <span>Créer mon agence</span>
+                  <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
               </div>
             </div>
@@ -737,6 +839,9 @@ export default function HomePage() {
             <div className="sc-stage tc-stage-below-nav bg-[#0d1522] overflow-hidden">
               <div className="tc-rail-track" data-sc-pan="0.04">
                 <div className="tc-rail-lead">
+                  <p className="text-xs font-mono uppercase tracking-[0.12em] text-[#f0642d] mb-2">
+                    Corridors internationaux
+                  </p>
                   <h2 className="sc-display sc-display--lg text-white mb-4">
                     Un seul outil pour vos quatre lignes d&apos;activité.
                   </h2>
@@ -750,7 +855,7 @@ export default function HomePage() {
                   <article
                     key={card.city}
                     data-sc-tilt="4"
-                    className="tc-lane-card"
+                    className="tc-lane-card group"
                     style={
                       idx > 0
                         ? {
@@ -759,17 +864,29 @@ export default function HomePage() {
                         : undefined
                     }
                   >
-                    <div className="h-48 sm:h-56 w-full overflow-hidden bg-[#142033]">
+                    <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-[#142033]">
                       <img
                         src={card.image}
                         alt={card.alt}
-                        className="w-full h-full object-cover object-center block"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover object-center block group-hover:scale-105 transition-transform duration-500"
                       />
+                      <div
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#16243a] via-transparent to-transparent"
+                        aria-hidden="true"
+                      />
+                      <span className="absolute top-3.5 left-3.5 rounded-full bg-[#0d1522]/80 backdrop-blur-md border border-white/15 px-2.5 py-0.5 text-[11px] font-mono text-white">
+                        0{idx + 1}
+                      </span>
+                      <span className="absolute top-3.5 right-3.5 rounded-full bg-[#0d1522]/80 backdrop-blur-md border border-white/15 px-3 py-0.5 text-[11px] font-mono text-[#fde68a]">
+                        {card.timing}
+                      </span>
                     </div>
                     <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-4">
                       <div className="space-y-2">
-                        <p className="text-[12px] font-mono text-[#cbd5e1]">
-                          {card.timing} · {card.billing}
+                        <p className="text-[11.5px] font-mono uppercase tracking-wider text-[#9eb0c9]">
+                          {card.billing}
                         </p>
                         <h3 className="text-[20px] font-bold text-white tracking-tight">
                           {card.city}
@@ -796,9 +913,10 @@ export default function HomePage() {
                   <div className="pt-4">
                     <Link
                       href="/register"
-                      className="inline-flex items-center justify-center rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 hover:bg-[#f7f6f2] transition"
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#0d131d] font-bold text-[14px] px-5 py-3 hover:bg-[#f7f6f2] transition shadow-md"
                     >
-                      Créer mon agence
+                      <span>Créer mon agence</span>
+                      <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
@@ -812,9 +930,12 @@ export default function HomePage() {
            ================================================================= */}
         <section id="act-tarifs" data-sc-act="flow" className="sc-act tc-daylight-band">
           {/* Tarifs clairs FCFA */}
-          <div id="tarifs" className="scroll-mt-24 pt-10 sm:pt-14 pb-10 sm:pb-14">
+          <div id="tarifs" className="scroll-mt-24 pt-12 sm:pt-16 pb-10 sm:pb-14">
             <div className="sc-wrap max-w-5xl">
-              <div data-sc-in="up" className="max-w-2xl mb-7 space-y-2.5">
+              <div data-sc-in="up" className="max-w-2xl mb-8 space-y-2.5">
+                <p className="text-xs font-mono font-bold uppercase tracking-[0.1em] text-[#c9410e]">
+                  Abonnements transparents
+                </p>
                 <h2 className="sc-display sc-display--lg text-[#0d131d]">
                   Des tarifs fixes en FCFA, sans commission sur vos encaissements.
                 </h2>
@@ -834,19 +955,24 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div data-sc-in="" data-sc-stagger="80" className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div data-sc-in="" data-sc-stagger="80" className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
                 {PLANS.map((plan) => (
                   <div
                     key={plan.name}
-                    className={`rounded-[18px] p-6 sm:p-7 flex flex-col justify-between gap-6 ${
+                    className={`relative rounded-[20px] p-6 sm:p-7 flex flex-col justify-between gap-6 transition-transform duration-200 ${
                       plan.featured
-                        ? "bg-[#0d1522] text-white shadow-[0_24px_54px_-16px_rgba(13,21,34,0.28)]"
-                        : "bg-white text-[#0d131d] border border-[#0d131d]/10 shadow-sm"
+                        ? "bg-gradient-to-b from-[#162540] to-[#0d1522] text-white border border-white/15 shadow-[0_28px_60px_-16px_rgba(13,21,34,0.34)] md:-translate-y-1.5"
+                        : "bg-white text-[#0d131d] border border-[#0d131d]/12 shadow-[var(--sc-e1)]"
                     }`}
                   >
                     <div className="space-y-4">
-                      <div>
-                        <h3 className="text-[19px] font-bold tracking-tight">{plan.name}</h3>
+                      <div className="space-y-2">
+                        {plan.featured && (
+                          <span className="inline-flex items-center rounded-full bg-[#c9410e] text-white text-[11px] font-mono font-bold uppercase tracking-[0.06em] px-3 py-0.5">
+                            Le plus choisi à Abidjan
+                          </span>
+                        )}
+                        <h3 className="text-[20px] font-bold tracking-tight">{plan.name}</h3>
                         <p
                           className={`mt-1 text-[13.5px] leading-[1.5] ${
                             plan.featured ? "text-[#cbd5e1]" : "text-[#475569]"
@@ -856,22 +982,28 @@ export default function HomePage() {
                         </p>
                       </div>
 
-                      <p className="text-[30px] font-bold font-mono tracking-tight">
-                        {plan.price.toLocaleString("fr-FR")}{" "}
-                        <span className="text-[14px] font-sans font-medium opacity-80">
-                          FCFA / mois
-                        </span>
-                      </p>
+                      <div className="pt-1 pb-2 border-b border-current/10">
+                        <p className="text-[30px] font-bold font-mono tracking-tight">
+                          {plan.price.toLocaleString("fr-FR")}{" "}
+                          <span className="text-[14px] font-sans font-medium opacity-80">
+                            FCFA / mois
+                          </span>
+                        </p>
+                      </div>
 
                       <ul className="space-y-2.5 text-[13.5px]">
                         {plan.features.map((feat) => (
                           <li key={feat} className="flex items-start gap-2.5">
                             <span
-                              className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${
-                                plan.featured ? "bg-[#f0642d]" : "bg-[#c9410e]"
+                              className={`mt-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center shrink-0 ${
+                                plan.featured
+                                  ? "bg-[#f0642d]/20 text-[#ff966b]"
+                                  : "bg-[#fff4ee] text-[#c9410e]"
                               }`}
                               aria-hidden="true"
-                            />
+                            >
+                              <Check className="w-3 h-3" />
+                            </span>
                             <span className={plan.featured ? "text-[#e2e8f0]" : "text-[#334155]"}>
                               {feat}
                             </span>
@@ -884,7 +1016,8 @@ export default function HomePage() {
                       href={`/register?plan=${plan.tier}`}
                       className={plan.featured ? "tc-btn-primary w-full" : "tc-btn-cobalt w-full"}
                     >
-                      Essayer 14 jours gratuits
+                      <span>Essayer 14 jours gratuits</span>
+                      <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                     </Link>
                   </div>
                 ))}
@@ -892,22 +1025,25 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Questions directes */}
-          <div className="pb-10 sm:pb-14">
+          {/* Questions directes sous forme de cartes sculptées */}
+          <div className="pb-12 sm:pb-16">
             <div data-sc-in="up" className="sc-wrap max-w-4xl">
               <h2 className="text-[22px] sm:text-[28px] font-bold text-[#0d131d] mb-5 tracking-tight">
                 Questions fréquentes
               </h2>
-              <div className="divide-y divide-[#0d131d]/12 border-y border-[#0d131d]/12">
+              <div className="space-y-3">
                 {FAQS.map((item) => (
-                  <details key={item.q} className="group py-3.5 sm:py-4">
+                  <details
+                    key={item.q}
+                    className="group rounded-[16px] bg-white border border-[#0d131d]/10 px-5 py-4 shadow-2xs open:border-[#c9410e]/35 open:shadow-md transition-all"
+                  >
                     <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-[15px] sm:text-[16px] font-semibold text-[#0d131d]">
                       <span>{item.q}</span>
-                      <span className="text-[#c9410e] font-mono text-[18px] group-open:rotate-45 transition-transform">
+                      <span className="h-7 w-7 rounded-full bg-[#f7f6f2] text-[#c9410e] font-mono text-[18px] inline-flex items-center justify-center shrink-0 group-open:rotate-45 group-open:bg-[#fff4ee] transition-transform">
                         +
                       </span>
                     </summary>
-                    <p className="mt-2 text-[14px] text-[#475569] leading-[1.6] max-w-[66ch]">
+                    <p className="mt-2.5 text-[14px] text-[#475569] leading-[1.6] max-w-[66ch]">
                       {item.a}
                     </p>
                   </details>
@@ -915,12 +1051,21 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-
         </section>
 
         {/* Clôture architecturale ardoise sobre + pied de page */}
-        <section id="act-cloture" className="tc-slate-band py-12 sm:py-16">
-          <div data-sc-in="up" className="sc-wrap max-w-4xl text-center space-y-5">
+        <section
+          id="act-cloture"
+          className="tc-slate-band relative overflow-hidden py-14 sm:py-20"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(240,100,45,0.18)_0%,transparent_62%)]"
+            aria-hidden="true"
+          />
+          <div data-sc-in="up" className="sc-wrap relative z-10 max-w-4xl text-center space-y-5">
+            <p className="text-xs font-mono uppercase tracking-[0.12em] text-[#ff966b]">
+              Démarrage immédiat · Sans carte bancaire
+            </p>
             <h2 className="sc-display sc-display--xl text-white">
               Ouvrez votre lien client sur le prochain arrivage.
             </h2>
@@ -928,9 +1073,10 @@ export default function HomePage() {
               Créez votre agence en quelques minutes, importez vos premiers codes TC et partagez
               le lien à vos clients dès aujourd&apos;hui.
             </p>
-            <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2.5 sm:gap-3 pt-1">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2.5 sm:gap-3 pt-2">
               <Link href="/register" className="tc-btn-primary w-full sm:w-auto">
-                Essayer 14 jours gratuits
+                <span>Essayer 14 jours gratuits</span>
+                <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </Link>
               <Link href="/login" className="tc-btn-ghost w-full sm:w-auto">
                 Connexion agence

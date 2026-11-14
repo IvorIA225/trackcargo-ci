@@ -76,13 +76,10 @@ export default function LoginPage() {
           {!configured && (
             <div className="p-3.5 rounded-[12px] bg-amber-50 border border-amber-300 text-xs text-amber-950 space-y-1">
               <div className="font-bold text-amber-900">
-                Configuration serveur requise
+                Service momentanément indisponible
               </div>
               <p>
-                Définissez{" "}
-                <code className="font-mono">TRACKCARGO_SESSION_SECRET</code> dans{" "}
-                <code className="font-mono">.env.local</code> ou vos variables
-                Vercel.
+                Le service d&apos;authentification est en cours de maintenance. Veuillez réessayer dans quelques instants.
               </p>
             </div>
           )}

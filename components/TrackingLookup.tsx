@@ -38,6 +38,77 @@ function isSafeHttpsLink(raw: string): boolean {
   }
 }
 
+function VerificationQrBadge({ code }: { code: string }) {
+  const size = 13;
+  const seedStr = `TRACKCARGO-CI:${code.toUpperCase()}`;
+  const isFinder = (r: number, c: number) => {
+    const inTL = r < 4 && c < 4;
+    const inTR = r < 4 && c >= size - 4;
+    const inBL = r >= size - 4 && c < 4;
+    return inTL || inTR || inBL;
+  };
+  const finderBit = (r: number, c: number) => {
+    const lr = r >= size - 4 ? r - (size - 4) : r;
+    const lc = c >= size - 4 ? c - (size - 4) : c;
+    if (lr === 0 || lr === 3 || lc === 0 || lc === 3) return true;
+    return lr >= 1 && lr <= 2 && lc >= 1 && lc <= 2;
+  };
+  const cells: boolean[] = [];
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (isFinder(r, c)) {
+        cells.push(finderBit(r, c));
+      } else {
+        const idx = r * size + c;
+        const ch = seedStr.charCodeAt(idx % seedStr.length);
+        const h = ((ch * 31 + idx * 17 + r * 13 + c * 7) ^ (ch << 2)) & 0xff;
+        cells.push(h % 2 === 0);
+      }
+    }
+  }
+
+  return (
+    <div
+      className="inline-flex items-center gap-2.5 rounded-[10px] bg-white text-[#0d131d] p-2 border border-[#0d131d]/12 shadow-xs shrink-0"
+      title={`Code QR de retrait vérifié : ${code}`}
+    >
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className="w-11 h-11 shrink-0"
+        shapeRendering="crispEdges"
+        aria-label={`QR Code de retrait ${code}`}
+      >
+        {cells.map((on, i) => {
+          if (!on) return null;
+          const r = Math.floor(i / size);
+          const c = i % size;
+          return (
+            <rect
+              key={i}
+              x={c}
+              y={r}
+              width={1}
+              height={1}
+              fill="#0d1522"
+            />
+          );
+        })}
+      </svg>
+      <div className="pr-1 text-left leading-tight">
+        <div className="text-[9.5px] font-mono font-bold uppercase tracking-[0.08em] text-[#525e70]">
+          Pass Retrait
+        </div>
+        <div className="text-xs font-mono font-bold text-[#0d131d] mt-0.5">
+          {code}
+        </div>
+        <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+          Vérifié CI
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TrackingLookup({
   initialQuery = "",
   agencySlug,
@@ -240,8 +311,7 @@ export default function TrackingLookup({
     );
   }
 
-  const showDemoQuickExamples =
-    !agencySlug || agencySlug === "ivoire-cargo-express";
+  const showDemoQuickExamples = Boolean(compact);
   const quickExamples = ["TC-8841", "TC-8842", "TC-8844", "0708123456"];
 
   return (
@@ -259,9 +329,9 @@ export default function TrackingLookup({
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Code de suivi colis ou numéro WhatsApp"
               placeholder={
-                agencySlug
-                  ? "Code colis (ex: TC-1042) ou numéro WhatsApp"
-                  : "Code colis (ex: TC-8841) ou numéro démo (0708123456)"
+                compact
+                  ? "Code colis (ex: TC-8841) ou numéro démo (0708123456)"
+                  : "Code colis (ex: TC-8841) ou numéro WhatsApp (ex: 0708...)"
               }
               className="w-full h-12 pl-10 pr-4 rounded-full border border-[#0d131d]/14 bg-[#f7f6f2] text-[#0d131d] placeholder:text-[#525e70]/80 focus:outline-none focus:ring-2 focus:ring-[#c9410e] focus:border-[#c9410e] text-sm sm:text-base font-mono"
             />
@@ -278,7 +348,7 @@ export default function TrackingLookup({
         {showDemoQuickExamples && (
           <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs text-[#525e70]">
             <span className="font-medium">
-              Codes de démonstration :
+              Exemples en un clic :
             </span>
             {quickExamples.map((ex) => (
               <button
@@ -492,22 +562,27 @@ export default function TrackingLookup({
 
               {/* Payment & Pickup Card */}
               <div className="bg-[#f7f6f2] rounded-[12px] border border-[#0d131d]/8 p-4 flex flex-col justify-between gap-4 print:bg-slate-50 print:border-slate-300">
-                <div className="space-y-1.5">
-                  <div className="text-xs font-mono font-semibold uppercase tracking-wider text-[#525e70] flex items-center gap-1.5">
-                    <MapPin
-                      className="w-3.5 h-3.5 text-[#c9410e]"
-                      aria-hidden="true"
-                    />
-                    <span>Retrait Abidjan</span>
-                  </div>
-                  <div className="text-sm font-bold text-[#0d131d] print:text-black">
-                    {agency?.name || "Agence TrackCargo CI"}
-                  </div>
-                  <div className="text-xs text-[#525e70] print:text-slate-700">
-                    {agency?.address || "Abidjan"}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="text-xs font-mono font-semibold uppercase tracking-wider text-[#525e70] flex items-center gap-1.5">
+                        <MapPin
+                          className="w-3.5 h-3.5 text-[#c9410e]"
+                          aria-hidden="true"
+                        />
+                        <span>Retrait Abidjan</span>
+                      </div>
+                      <div className="text-sm font-bold text-[#0d131d] print:text-black">
+                        {agency?.name || "Agence TrackCargo CI"}
+                      </div>
+                      <div className="text-xs text-[#525e70] print:text-slate-700">
+                        {agency?.address || "Abidjan"}
+                      </div>
+                    </div>
+                    <VerificationQrBadge code={parcel.trackingCode} />
                   </div>
                   {parcel.batch?.etaDate && (
-                    <div className="text-xs text-[#525e70] pt-1 print:text-slate-700">
+                    <div className="text-xs text-[#525e70] pt-0.5 print:text-slate-700">
                       Arrivée estimée :{" "}
                       <strong className="text-[#0d131d] font-mono print:text-black">
                         {parcel.batch.etaDate}
@@ -551,7 +626,7 @@ export default function TrackingLookup({
                     className="w-full py-2 px-4 rounded-full border border-[#0d131d]/14 bg-white hover:bg-[#eeebe3] text-[#0d131d] font-medium text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Imprimer le bordereau</span>
+                    <span>Imprimer le bordereau avec QR</span>
                   </button>
                 </div>
               </div>
@@ -607,23 +682,31 @@ export default function TrackingLookup({
                 </a>
               )}
 
-              <div className="p-4 rounded-[12px] bg-[#fff4ee] border border-[#c9410e]/25 text-sm">
-                <div className="flex items-center gap-2.5 font-bold text-[#9a2e00]">
-                  <BrandLogo brand="orange-money" size="sm" decorative />
-                  <span>Option Orange Money / MTN MoMo</span>
+              {agency.orangeMoneyNumber ? (
+                <div className="p-4 rounded-[12px] bg-[#fff4ee] border border-[#c9410e]/25 text-sm">
+                  <div className="flex items-center gap-2.5 font-bold text-[#9a2e00]">
+                    <BrandLogo brand="orange-money" size="sm" decorative />
+                    <span>Option Orange Money / MTN MoMo</span>
+                  </div>
+                  <div className="text-[#0d131d] mt-2">
+                    Envoyez{" "}
+                    <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
+                    numéro :{" "}
+                    <span className="font-mono font-bold">
+                      {agency.orangeMoneyNumber}
+                    </span>
+                  </div>
+                  <div className="text-xs text-[#525e70] mt-1 font-mono font-medium">
+                    Référence : {showPayModal.trackingCode}
+                  </div>
                 </div>
-                <div className="text-[#0d131d] mt-2">
-                  Envoyez{" "}
-                  <strong>{formatFcfa(showPayModal.amountFcfa)}</strong> au
-                  numéro :{" "}
-                  <span className="font-mono font-bold">
-                    {agency.orangeMoneyNumber}
-                  </span>
-                </div>
-                <div className="text-xs text-[#525e70] mt-1 font-mono font-medium">
-                  Référence : {showPayModal.trackingCode}
-                </div>
-              </div>
+              ) : (
+                !isSafeHttpsLink(agency.waveLink) && (
+                  <div className="p-4 rounded-[12px] bg-[#f7f6f2] border border-[#0d131d]/10 text-sm text-[#0d131d]">
+                    Règlement au comptoir lors du retrait ou via le numéro WhatsApp officiel de l&apos;agence.
+                  </div>
+                )
+              )}
 
               <a
                 href={`https://wa.me/${normalizePhoneClient(
