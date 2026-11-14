@@ -435,9 +435,9 @@ export default function TrackingLookup({
               </div>
             </div>
 
-            {/* Stepper */}
-            <div className="p-5 sm:p-6 border-b border-[#0d131d]/8 bg-[#faf9f6] print:border-slate-200">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {/* Stepper — Architectural Hairline Strip (zero nested cards) */}
+            <div className="border-b border-[#11161f]/10 bg-[#faf8f4] print:border-slate-200">
+              <div className="grid grid-cols-2 sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-[#11161f]/10">
                 {ORDERED_STEPS.map((st) => {
                   const meta = PARCEL_STATUS_META[st];
                   const done = meta.step <= currentStep;
@@ -445,22 +445,22 @@ export default function TrackingLookup({
                   return (
                     <div
                       key={st}
-                      className={`rounded-[12px] p-3 border transition-colors ${
+                      className={`p-3.5 sm:p-4 transition-colors ${
                         active
-                          ? "bg-[#fff4ee] border-[#c9410e]/40 text-[#0d131d]"
+                          ? "bg-[#fff4ee] text-[#11161f]"
                           : done
-                          ? "bg-emerald-50/70 border-emerald-200 text-[#0d131d]"
-                          : "bg-white border-[#0d131d]/8 text-[#525e70]"
+                          ? "bg-white text-[#11161f]"
+                          : "bg-[#faf8f4] text-[#4e5969]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span
                           className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold font-mono ${
                             active
-                              ? "bg-[#c9410e] text-white"
+                              ? "bg-[#c8430e] text-white"
                               : done
                               ? "bg-emerald-600 text-white"
-                              : "bg-[#eeebe3] text-[#525e70]"
+                              : "bg-[#eae5da] text-[#4e5969]"
                           }`}
                         >
                           {done && !active ? (
@@ -469,11 +469,11 @@ export default function TrackingLookup({
                             meta.step
                           )}
                         </span>
-                        <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#525e70]">
+                        <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#4e5969]">
                           Étape {meta.step}
                         </span>
                       </div>
-                      <div className="text-xs font-semibold leading-snug text-[#0d131d]">
+                      <div className="text-xs font-semibold leading-snug text-[#11161f]">
                         {meta.shortLabel}
                       </div>
                     </div>
@@ -482,47 +482,47 @@ export default function TrackingLookup({
               </div>
             </div>
 
-            {/* Details + Actions */}
-            <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#f7f6f2] rounded-[12px] p-4 border border-[#0d131d]/8 text-sm print:bg-slate-50 print:border-slate-300">
-                  <div>
-                    <div className="text-xs font-mono text-[#525e70] flex items-center gap-1.5">
+            {/* Details + Actions — Hairline-Divided Manifest Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#11161f]/10">
+              <div className="lg:col-span-2 p-5 sm:p-6 space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0 sm:divide-x divide-[#11161f]/10 text-sm">
+                  <div className="sm:pr-4">
+                    <div className="text-xs font-mono text-[#4e5969] flex items-center gap-1.5">
                       <Package
-                        className="w-3.5 h-3.5 text-[#0d1522]"
+                        className="w-3.5 h-3.5 text-[#0f1724]"
                         aria-hidden="true"
                       />
                       <span>Contenu déclaré</span>
                     </div>
-                    <div className="font-semibold text-[#0d131d] mt-1 print:text-black">
+                    <div className="font-semibold text-[#11161f] mt-1 print:text-black">
                       {parcel.description}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-mono text-[#525e70]">
+                  <div className="sm:px-4">
+                    <div className="text-xs font-mono text-[#4e5969]">
                       Poids / Volume
                     </div>
-                    <div className="font-semibold text-[#0d131d] mt-1 font-mono tabular-nums print:text-black">
+                    <div className="font-semibold text-[#11161f] mt-1 font-mono tabular-nums print:text-black">
                       {parcel.weightKg} kg
                       {parcel.volumeCbm > 0 ? ` · ${parcel.volumeCbm} CBM` : ""}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-mono text-[#525e70] flex items-center gap-1.5">
+                  <div className="sm:pl-4">
+                    <div className="text-xs font-mono text-[#4e5969] flex items-center gap-1.5">
                       {parcel.batch?.mode === "maritime" ? (
                         <Ship
-                          className="w-3.5 h-3.5 text-[#0d1522]"
+                          className="w-3.5 h-3.5 text-[#0f1724]"
                           aria-hidden="true"
                         />
                       ) : (
                         <Plane
-                          className="w-3.5 h-3.5 text-[#0d1522]"
+                          className="w-3.5 h-3.5 text-[#0f1724]"
                           aria-hidden="true"
                         />
                       )}
                       <span>Lot / Transport</span>
                     </div>
-                    <div className="font-semibold text-[#0d131d] mt-1 font-mono print:text-black">
+                    <div className="font-semibold text-[#11161f] mt-1 font-mono print:text-black">
                       {parcel.batch
                         ? `${parcel.batch.code} (${
                             parcel.batch.mode === "maritime"
@@ -535,22 +535,22 @@ export default function TrackingLookup({
                 </div>
 
                 {!compact && (
-                  <div>
-                    <h4 className="text-sm font-bold text-[#0d131d] mb-3 print:text-black">
+                  <div className="pt-4 border-t border-[#11161f]/10">
+                    <h4 className="text-sm font-bold text-[#11161f] mb-3 print:text-black">
                       Historique d&apos;acheminement
                     </h4>
-                    <div className="space-y-3 border-l-2 border-[#0d1522]/15 ml-2 pl-4 print:border-slate-300">
+                    <div className="space-y-3 border-l border-[#11161f]/20 ml-2 pl-4 print:border-slate-300">
                       {[...parcel.history].reverse().map((ev, idx) => (
                         <div key={`${ev.timestamp}-${idx}`} className="relative">
                           <span
-                            className={`absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full ${
-                              idx === 0 ? "bg-[#c9410e]" : "bg-emerald-600"
+                            className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full ${
+                              idx === 0 ? "bg-[#c8430e]" : "bg-emerald-600"
                             }`}
                           />
-                          <div className="text-sm font-semibold text-[#0d131d] print:text-black">
+                          <div className="text-sm font-semibold text-[#11161f] print:text-black">
                             {ev.label}
                           </div>
-                          <div className="text-xs text-[#525e70] print:text-slate-600">
+                          <div className="text-xs text-[#4e5969] print:text-slate-600">
                             {ev.location} · {formatDateFr(ev.timestamp)}
                           </div>
                         </div>
@@ -560,46 +560,45 @@ export default function TrackingLookup({
                 )}
               </div>
 
-              {/* Payment & Pickup Card */}
-              <div className="bg-[#f7f6f2] rounded-[12px] border border-[#0d131d]/8 p-4 flex flex-col justify-between gap-4 print:bg-slate-50 print:border-slate-300">
+              {/* Payment & Pickup Column */}
+              <div className="p-5 sm:p-6 flex flex-col justify-between gap-4 bg-[#faf8f4]/60">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1">
-                      <div className="text-xs font-mono font-semibold uppercase tracking-wider text-[#525e70] flex items-center gap-1.5">
+                      <div className="text-xs font-mono font-semibold uppercase tracking-wider text-[#4e5969] flex items-center gap-1.5">
                         <MapPin
-                          className="w-3.5 h-3.5 text-[#c9410e]"
+                          className="w-3.5 h-3.5 text-[#c8430e]"
                           aria-hidden="true"
                         />
                         <span>Retrait Abidjan</span>
                       </div>
-                      <div className="text-sm font-bold text-[#0d131d] print:text-black">
+                      <div className="text-sm font-bold text-[#11161f] print:text-black">
                         {agency?.name || "Agence TrackCargo CI"}
                       </div>
-                      <div className="text-xs text-[#525e70] print:text-slate-700">
+                      <div className="text-xs text-[#4e5969] print:text-slate-700">
                         {agency?.address || "Abidjan"}
                       </div>
                     </div>
                     <VerificationQrBadge code={parcel.trackingCode} />
                   </div>
                   {parcel.batch?.etaDate && (
-                    <div className="text-xs text-[#525e70] pt-0.5 print:text-slate-700">
+                    <div className="text-xs text-[#4e5969] pt-0.5 print:text-slate-700">
                       Arrivée estimée :{" "}
-                      <strong className="text-[#0d131d] font-mono print:text-black">
+                      <strong className="text-[#11161f] font-mono print:text-black">
                         {parcel.batch.etaDate}
                       </strong>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2.5 print:hidden">
+                <div className="space-y-2 print:hidden">
                   {!paymentMeta.isPaid && (
                     <button
                       type="button"
                       onClick={() => setShowPayModal(parcel)}
                       className="w-full py-2.5 px-4 rounded-full bg-[#0e7490] hover:bg-[#0c6078] text-white font-semibold text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <BrandLogo brand="wave" size="xs" decorative />
-                      <BrandLogo brand="orange-money" size="xs" decorative />
+                      {!compact && <BrandLogo brand="wave" size="xs" decorative />}
                       <span>Régler par Wave / Orange Money</span>
                     </button>
                   )}
@@ -615,7 +614,7 @@ export default function TrackingLookup({
                       rel="noopener noreferrer"
                       className="w-full py-2.5 px-4 rounded-full bg-[#047857] hover:bg-[#065f46] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 no-underline"
                     >
-                      <BrandLogo brand="whatsapp" size="xs" decorative />
+                      {!compact && <BrandLogo brand="whatsapp" size="xs" decorative />}
                       <span>Contacter sur WhatsApp</span>
                     </a>
                   )}
@@ -623,7 +622,7 @@ export default function TrackingLookup({
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="w-full py-2 px-4 rounded-full border border-[#0d131d]/14 bg-white hover:bg-[#eeebe3] text-[#0d131d] font-medium text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-2 px-4 rounded-full border border-[#11161f]/14 bg-white hover:bg-[#eae5da] text-[#11161f] font-medium text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Printer className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Imprimer le bordereau avec QR</span>

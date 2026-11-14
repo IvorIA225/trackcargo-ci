@@ -2,38 +2,38 @@
 @import "../styles/scrollcraft.css" layer(base);
 
 /* ============================================================================
-   TrackCargo CI v3 — Studio Maritime Épuré
+   TrackCargo CI v4 — Registre d'Armement & Quai Synchronisé
    ----------------------------------------------------------------------------
-   Mineral Ivory (#F7F6F2), Abyssal Slate (#0D131D), Deep Atlantic (#0D1522),
-   and Rich Signal Vermilion (#C9410E — 4.81:1 contrast with white ink).
+   Warm Limestone (#F4F1EA), Travertine (#EAE5DA), Obsidian Harbor Ink (#11161F),
+   Vridi Night Slate (#0F1724), and Burnished Signal Copper (#C8430E — >4.9:1 AA).
    ========================================================================== */
 
 @layer base {
   :root {
-    --sc-canvas: #f7f6f2;
+    --sc-canvas: #f4f1ea;
     --sc-surface: #ffffff;
-    --sc-surface-elevated: #eeebe3;
-    --sc-ink: #0d131d;
-    --sc-ink-soft: #525e70;
-    --sc-accent: #c9410e;
-    --sc-accent-hover: #b1370a;
+    --sc-surface-elevated: #eae5da;
+    --sc-ink: #11161f;
+    --sc-ink-soft: #4e5969;
+    --sc-accent: #c8430e;
+    --sc-accent-hover: #ad3709;
     --sc-accent-ink: #ffffff;
 
-    --sc-slate-deep: #0d1522;
-    --sc-slate-surface: #142033;
+    --sc-slate-deep: #0f1724;
+    --sc-slate-surface: #162133;
     --sc-cobalt: #153766;
     --sc-cobalt-soft: #e3ebf6;
 
-    --sc-hairline: color-mix(in oklab, var(--sc-ink) 10%, transparent);
-    --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 20%, transparent);
+    --sc-hairline: color-mix(in oklab, var(--sc-ink) 12%, transparent);
+    --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 22%, transparent);
 
     --sc-shadow-color: 218 38% 12%;
-    --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.05),
-             0 4px 12px -2px hsl(var(--sc-shadow-color) / 0.07);
-    --sc-e2: 0 2px 6px hsl(var(--sc-shadow-color) / 0.06),
-             0 14px 30px -8px hsl(var(--sc-shadow-color) / 0.11);
-    --sc-e3: 0 8px 18px hsl(var(--sc-shadow-color) / 0.08),
-             0 28px 56px -14px hsl(var(--sc-shadow-color) / 0.16);
+    --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.04),
+             0 4px 12px -2px hsl(var(--sc-shadow-color) / 0.06);
+    --sc-e2: 0 2px 6px hsl(var(--sc-shadow-color) / 0.05),
+             0 14px 30px -8px hsl(var(--sc-shadow-color) / 0.1);
+    --sc-e3: 0 8px 18px hsl(var(--sc-shadow-color) / 0.07),
+             0 28px 56px -14px hsl(var(--sc-shadow-color) / 0.14);
     --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
     --sc-font-display: var(--font-archivo), "Geist", system-ui, sans-serif;
@@ -60,11 +60,11 @@
     transition-duration: 320ms;
   }
 
-  /* Pinned stages clear the floating pill navbar cleanly on desktop and mobile */
+  /* Flush 4rem (h-16) navbar alignment: pinned stages lock seamlessly with zero gap */
   .sc-stage.tc-stage-below-nav {
-    top: 4.5rem;
-    height: calc(100vh - 4.5rem);
-    height: calc(100svh - 4.5rem);
+    top: 4rem;
+    height: calc(100vh - 4rem);
+    height: calc(100svh - 4rem);
   }
 
   .sc-copy.sc-copy--center {
@@ -78,54 +78,55 @@
   }
 
   .sc-grain {
-    opacity: 0.022;
+    opacity: 0.02;
   }
 
-  .tc-hero-plane {
+  /* Framed 3-Plane Dimensional Stage (Hero Right Column — hero-depth.md) */
+  .tc-hero-viewport {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #eae5da 0%, #f4f1ea 100%);
+    border: 1px solid color-mix(in oklab, #11161f 14%, transparent);
+    box-shadow: var(--sc-edge), var(--sc-e2);
+  }
+
+  .tc-hero-rear-plate {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    will-change: transform, opacity;
-  }
-
-  .tc-hero-plane img,
-  .tc-hero-plane svg,
-  .tc-hero-plane canvas {
-    max-width: none;
-  }
-
-  /* Directional soft atmospheric mineral-ivory veil on the left copy side */
-  .tc-day-scrim {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 6;
-    background: linear-gradient(
-      102deg,
-      rgba(247, 246, 242, 0.96) 0%,
-      rgba(247, 246, 242, 0.88) 34%,
-      rgba(247, 246, 242, 0.44) 52%,
-      rgba(247, 246, 242, 0.05) 70%,
-      transparent 84%
+    z-index: 1;
+    will-change: transform;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.65) 45%,
+      rgba(0, 0, 0, 0.14) 82%,
+      transparent 100%
     );
-  }
-
-  .tc-day-floor {
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: clamp(64px, 11vh, 120px);
-    z-index: 8;
-    pointer-events: none;
-    background: linear-gradient(
-      to top,
-      #f7f6f2 0%,
-      rgba(247, 246, 242, 0.82) 38%,
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.65) 45%,
+      rgba(0, 0, 0, 0.14) 82%,
       transparent 100%
     );
   }
 
-  /* Localized bottom scrim for the Peak scrub dock (keeps upper 70% of port bright) */
+  .tc-hero-mid-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background-image:
+      linear-gradient(to right, rgba(17, 22, 31, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(17, 22, 31, 0.05) 1px, transparent 1px);
+    background-size: 36px 36px;
+    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
+    mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
+  }
+
+  /* Localized bottom scrim for the Peak scrub dock (keeps upper 75% of port bright) */
   .tc-slate-scrim {
     position: absolute;
     inset: 0;
@@ -133,50 +134,39 @@
     z-index: 3;
     background: linear-gradient(
       to top,
-      rgba(13, 21, 34, 0.82) 0%,
-      rgba(13, 21, 34, 0.34) 28%,
-      rgba(13, 21, 34, 0.06) 52%,
-      transparent 74%
+      rgba(15, 23, 36, 0.86) 0%,
+      rgba(15, 23, 36, 0.36) 28%,
+      rgba(15, 23, 36, 0.04) 50%,
+      transparent 72%
     );
   }
 
   @media (max-width: 860px) {
-    .tc-day-scrim {
-      background: linear-gradient(
-        to bottom,
-        rgba(247, 246, 242, 0.94) 0%,
-        rgba(247, 246, 242, 0.88) 42%,
-        rgba(247, 246, 242, 0.62) 66%,
-        rgba(247, 246, 242, 0.24) 84%,
-        transparent 100%
-      );
-    }
-
     .tc-hero-title.sc-display--xl {
-      font-size: clamp(1.55rem, 6.2vw, 2.25rem);
+      font-size: clamp(1.62rem, 6.4vw, 2.3rem);
       line-height: 1.04;
     }
 
     .sc-display.sc-display--xl {
-      font-size: clamp(1.65rem, 6.6vw, 2.45rem);
+      font-size: clamp(1.68rem, 6.6vw, 2.45rem);
       line-height: 1.04;
     }
 
     .sc-display.sc-display--lg,
     .tc-act2-title.sc-display--lg {
-      font-size: clamp(1.48rem, 5.8vw, 2.15rem);
+      font-size: clamp(1.5rem, 5.8vw, 2.15rem);
       line-height: 1.07;
     }
   }
 
   @media (min-width: 861px) {
     .tc-hero-title.sc-display--xl {
-      font-size: clamp(2.65rem, 1.45rem + 2.55vw, 4.15rem);
+      font-size: clamp(2.65rem, 1.45rem + 2.55vw, 4.1rem);
       line-height: 1.01;
     }
   }
 
-  /* Refined Architectural Vermilion CTA (4.81:1 contrast, zero harsh black border) */
+  /* Burnished Signal Copper Primary CTA (>4.9:1 contrast with white ink) */
   .tc-btn-primary {
     display: inline-flex;
     align-items: center;
@@ -185,7 +175,7 @@
     min-height: 46px;
     padding: 0.72rem 1.45rem;
     border-radius: 999px;
-    background: linear-gradient(180deg, #d64711 0%, #bf3c0b 100%);
+    background: linear-gradient(180deg, #d44811 0%, #b83b09 100%);
     color: var(--sc-accent-ink);
     font-family: var(--sc-font-text);
     font-weight: 700;
@@ -193,8 +183,8 @@
     line-height: 1;
     text-decoration: none;
     border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28),
-      0 8px 22px -6px rgba(201, 65, 14, 0.38),
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26),
+      0 8px 20px -6px rgba(200, 67, 14, 0.36),
       var(--sc-e2);
     transition: background 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out),
@@ -205,10 +195,10 @@
 
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-primary:hover {
-      background: linear-gradient(180deg, #c63f0d 0%, #ab3408 100%);
+      background: linear-gradient(180deg, #c23f0c 0%, #a33307 100%);
       transform: translateY(-1px);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34),
-        0 12px 28px -6px rgba(201, 65, 14, 0.48),
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32),
+        0 12px 26px -6px rgba(200, 67, 14, 0.44),
         var(--sc-e3);
     }
   }
@@ -217,7 +207,7 @@
     transform: scale(0.97);
   }
 
-  /* Deep Slate Secondary CTA */
+  /* Deep Harbor Obsidian Secondary CTA */
   .tc-btn-cobalt {
     display: inline-flex;
     align-items: center;
@@ -226,14 +216,14 @@
     min-height: 46px;
     padding: 0.72rem 1.35rem;
     border-radius: 999px;
-    background: #0d1522;
+    background: #0f1724;
     color: #ffffff;
     font-family: var(--sc-font-text);
     font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: var(--sc-e1);
     transition: background-color 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out);
@@ -243,7 +233,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-cobalt:hover {
-      background: #1a2840;
+      background: #1b2940;
     }
   }
 
@@ -260,13 +250,13 @@
     min-height: 46px;
     padding: 0.72rem 1.25rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.88);
-    color: #0d131d;
+    background: rgba(255, 255, 255, 0.92);
+    color: #11161f;
     font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid color-mix(in oklab, #0d131d 14%, transparent);
+    border: 1px solid color-mix(in oklab, #11161f 15%, transparent);
     box-shadow: var(--sc-e1);
     transition: background-color 150ms var(--sc-ease-out),
       border-color 150ms var(--sc-ease-out),
@@ -278,7 +268,7 @@
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-ghost:hover {
       background: #ffffff;
-      border-color: color-mix(in oklab, #0d131d 28%, transparent);
+      border-color: color-mix(in oklab, #11161f 28%, transparent);
     }
   }
 
@@ -302,45 +292,45 @@
     }
   }
 
-  /* Deep Atlantic Slate Architectural Band */
+  /* Vridi Night Slate Band */
   .tc-slate-band,
   .tc-cobalt-band {
-    --sc-canvas: #0d1522;
-    --sc-surface: #142033;
-    --sc-surface-elevated: #1c2c44;
+    --sc-canvas: #0f1724;
+    --sc-surface: #162133;
+    --sc-surface-elevated: #1e2d45;
     --sc-ink: #f5f7fa;
     --sc-ink-soft: #9eb0c9;
     --sc-accent: #f0642d;
-    --sc-accent-ink: #0d131d;
-    --sc-hairline: rgba(255, 255, 255, 0.1);
+    --sc-accent-ink: #11161f;
+    --sc-hairline: rgba(255, 255, 255, 0.11);
     --sc-hairline-strong: rgba(255, 255, 255, 0.22);
     --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.1);
     background: var(--sc-canvas);
     color: var(--sc-ink);
   }
 
-  /* Mineral Ivory Daylight Band */
+  /* Warm Limestone Daylight Band */
   .tc-daylight-band {
-    --sc-canvas: #f7f6f2;
+    --sc-canvas: #f4f1ea;
     --sc-surface: #ffffff;
-    --sc-surface-elevated: #eeebe3;
-    --sc-ink: #0d131d;
-    --sc-ink-soft: #525e70;
-    --sc-accent: #c9410e;
+    --sc-surface-elevated: #eae5da;
+    --sc-ink: #11161f;
+    --sc-ink-soft: #4e5969;
+    --sc-accent: #c8430e;
     --sc-accent-ink: #ffffff;
-    --sc-hairline: color-mix(in oklab, #0d131d 10%, transparent);
-    --sc-hairline-strong: color-mix(in oklab, #0d131d 20%, transparent);
+    --sc-hairline: color-mix(in oklab, #11161f 12%, transparent);
+    --sc-hairline-strong: color-mix(in oklab, #11161f 22%, transparent);
     background: var(--sc-canvas);
     color: var(--sc-ink);
   }
 
-  /* Horizontal Pan Corridors (Act 6) */
+  /* Horizontal Pan Corridors (Act 5) */
   .tc-rail-track {
     display: flex;
     align-items: center;
     gap: clamp(1rem, 2.2vw, 2.1rem);
     padding-inline: var(--sc-gutter);
-    padding-top: 2rem;
+    padding-top: 1.5rem;
     padding-bottom: 1.5rem;
     height: 100%;
     width: max-content;
@@ -357,15 +347,15 @@
   .tc-lane-card {
     flex: 0 0 clamp(16.75rem, 76vw, 25rem);
     min-height: 350px;
-    max-height: calc(100svh - 6.5rem);
+    max-height: calc(100svh - 6rem);
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, #16243a 0%, #101b2c 100%);
+    background: #162133;
     color: #f5f7fa;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: var(--sc-r-lg);
     overflow: hidden;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), var(--sc-e3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), var(--sc-e3);
     transition: border-color 180ms var(--sc-ease-out),
       transform 220ms var(--sc-ease-out);
   }
@@ -379,11 +369,11 @@
   .tc-rail-end {
     flex: 0 0 clamp(16.25rem, 72vw, 21.5rem);
     min-height: 310px;
-    max-height: calc(100svh - 6.5rem);
+    max-height: calc(100svh - 6rem);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: linear-gradient(155deg, #d84812 0%, #b13507 100%);
+    background: linear-gradient(155deg, #d44811 0%, #a83306 100%);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.24);
     border-radius: var(--sc-r-lg);
