@@ -191,8 +191,8 @@ export default function GlobeStage3D({
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
-        camera.position.set(0, 0.25, 5.15);
-        camera.lookAt(0, -0.05, 0);
+        camera.position.set(0, 0.12, 5.65);
+        camera.lookAt(0, 0.02, 0);
 
         // Tropical sun + ocean atmosphere lighting
         const ambient = new THREE.AmbientLight(0xdbeafe, 1.35);
@@ -213,7 +213,7 @@ export default function GlobeStage3D({
         const globeGroup = new THREE.Group();
         scene.add(globeGroup);
 
-        const GLOBE_R = 1.62;
+        const GLOBE_R = 1.44;
 
         // Convert (lat, lon) in degrees to 3D Vector3 on sphere of radius r
         const latLonToVec3 = (lat: number, lon: number, r: number) => {
@@ -450,7 +450,7 @@ export default function GlobeStage3D({
           globeGroup.rotation.x = currentPitch + smoothPointerY * 0.14;
 
           // Scroll-driven camera zoom toward Abidjan hub
-          const targetZ = 5.15 - scrollP * 0.85;
+          const targetZ = 5.65 - scrollP * 0.75;
           camera.position.z += (targetZ - camera.position.z) * 0.08;
 
           // Pulse Abidjan radar ring

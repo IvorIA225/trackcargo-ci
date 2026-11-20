@@ -2,38 +2,38 @@
 @import "../styles/scrollcraft.css" layer(base);
 
 /* ============================================================================
-   TrackCargo CI v4 — Registre d'Armement & Quai Synchronisé
+   TrackCargo CI v6 — Odyssée Atlantique & Horizon Solaire
    ----------------------------------------------------------------------------
-   Warm Limestone (#F4F1EA), Travertine (#EAE5DA), Obsidian Harbor Ink (#11161F),
-   Vridi Night Slate (#0F1724), and Burnished Signal Copper (#C8430E — >4.9:1 AA).
+   Abyssal Sapphire (#050D1A), Night Harbor (#0A182E), Polar Daylight (#F8FAFC),
+   Crisp Slate Ink (#0B1324), Radiant Signal Orange (#E84A14), Horizon Cyan (#38BDF8).
    ========================================================================== */
 
 @layer base {
   :root {
-    --sc-canvas: #f4f1ea;
+    --sc-canvas: #f8fafc;
     --sc-surface: #ffffff;
-    --sc-surface-elevated: #eae5da;
-    --sc-ink: #11161f;
-    --sc-ink-soft: #4e5969;
-    --sc-accent: #c8430e;
-    --sc-accent-hover: #ad3709;
+    --sc-surface-elevated: #eef2f6;
+    --sc-ink: #0b1324;
+    --sc-ink-soft: #475569;
+    --sc-accent: #d9460f;
+    --sc-accent-hover: #b83809;
     --sc-accent-ink: #ffffff;
 
-    --sc-slate-deep: #0f1724;
-    --sc-slate-surface: #162133;
-    --sc-cobalt: #153766;
-    --sc-cobalt-soft: #e3ebf6;
+    --sc-slate-deep: #050d1a;
+    --sc-slate-surface: #0c1b33;
+    --sc-cobalt: #0e3a6c;
+    --sc-cobalt-soft: #e0f2fe;
 
-    --sc-hairline: color-mix(in oklab, var(--sc-ink) 12%, transparent);
+    --sc-hairline: color-mix(in oklab, var(--sc-ink) 11%, transparent);
     --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 22%, transparent);
 
-    --sc-shadow-color: 218 38% 12%;
+    --sc-shadow-color: 220 45% 10%;
     --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.04),
              0 4px 12px -2px hsl(var(--sc-shadow-color) / 0.06);
-    --sc-e2: 0 2px 6px hsl(var(--sc-shadow-color) / 0.05),
-             0 14px 30px -8px hsl(var(--sc-shadow-color) / 0.1);
-    --sc-e3: 0 8px 18px hsl(var(--sc-shadow-color) / 0.07),
-             0 28px 56px -14px hsl(var(--sc-shadow-color) / 0.14);
+    --sc-e2: 0 4px 10px hsl(var(--sc-shadow-color) / 0.06),
+             0 16px 34px -8px hsl(var(--sc-shadow-color) / 0.11);
+    --sc-e3: 0 10px 22px hsl(var(--sc-shadow-color) / 0.08),
+             0 32px 64px -14px hsl(var(--sc-shadow-color) / 0.18);
     --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
     --sc-font-display: var(--font-archivo), "Geist", system-ui, sans-serif;
@@ -41,8 +41,8 @@
     --sc-font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
     --sc-r-sm: 8px;
-    --sc-r-md: 12px;
-    --sc-r-lg: 18px;
+    --sc-r-md: 14px;
+    --sc-r-lg: 20px;
   }
 }
 
@@ -67,106 +67,86 @@
     height: calc(100svh - 4rem);
   }
 
-  .sc-copy.sc-copy--center {
-    inset-inline: auto;
-    left: 50%;
-    top: 50%;
-    width: min(44rem, calc(100vw - 2 * var(--sc-gutter)));
-    max-width: none;
-    translate: -50% -50%;
-    text-align: center;
-  }
-
   .sc-grain {
-    opacity: 0.02;
+    opacity: 0.018;
   }
 
-  /* Framed 3-Plane Dimensional Stage (Hero Right Column — hero-depth.md) */
-  .tc-hero-viewport {
-    position: relative;
-    overflow: hidden;
-    border-radius: 22px;
-    background: radial-gradient(ellipse at 50% 38%, #0d2b52 0%, #07162c 68%, #050e1d 100%);
-    border: 1px solid color-mix(in oklab, #11161f 18%, transparent);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      0 28px 64px -16px rgba(7, 22, 44, 0.36);
+  /* Full-Bleed Deep Ocean & Constellation 3D Hero Stage */
+  .tc-ocean-hero {
+    background:
+      radial-gradient(ellipse 68% 75% at 72% 48%, rgba(14, 68, 130, 0.52) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 22% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 65%),
+      linear-gradient(180deg, #050d1a 0%, #08172e 55%, #050d1a 100%);
+    color: #f8fafc;
   }
 
-  .tc-hero-rear-plate {
+  .tc-ocean-hero-backdrop {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
     will-change: transform;
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.72) 0%,
-      rgba(0, 0, 0, 0.45) 55%,
-      rgba(0, 0, 0, 0.15) 85%,
-      transparent 100%
+    -webkit-mask-image: radial-gradient(
+      ellipse 85% 80% at 68% 50%,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.22) 55%,
+      transparent 90%
     );
-    mask-image: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.72) 0%,
-      rgba(0, 0, 0, 0.45) 55%,
-      rgba(0, 0, 0, 0.15) 85%,
-      transparent 100%
+    mask-image: radial-gradient(
+      ellipse 85% 80% at 68% 50%,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.22) 55%,
+      transparent 90%
     );
   }
 
-  .tc-hero-mid-grid {
+  .tc-ocean-hero-grid {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 2;
     background-image:
-      linear-gradient(to right, rgba(125, 211, 252, 0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(125, 211, 252, 0.08) 1px, transparent 1px);
-    background-size: 36px 36px;
-    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 82%);
-    mask-image: radial-gradient(ellipse at center, black 35%, transparent 82%);
+      linear-gradient(to right, rgba(56, 189, 248, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(56, 189, 248, 0.055) 1px, transparent 1px);
+    background-size: 48px 48px;
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 65% 50%, black 20%, transparent 80%);
+    mask-image: radial-gradient(ellipse 75% 70% at 65% 50%, black 20%, transparent 80%);
   }
 
-  /* Atmospheric Hero Backdrop Left-to-Right Mask */
-  .tc-hero-ambient-photo {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    -webkit-mask-image: linear-gradient(
-      105deg,
-      rgba(0, 0, 0, 0.06) 0%,
-      rgba(0, 0, 0, 0.14) 38%,
-      rgba(0, 0, 0, 0.48) 72%,
-      rgba(0, 0, 0, 0.72) 100%
-    );
-    mask-image: linear-gradient(
-      105deg,
-      rgba(0, 0, 0, 0.06) 0%,
-      rgba(0, 0, 0, 0.14) 38%,
-      rgba(0, 0, 0, 0.48) 72%,
-      rgba(0, 0, 0, 0.72) 100%
-    );
-  }
-
-  /* Localized bottom scrim for the Peak scrub dock (keeps upper 75% of port bright) */
-  .tc-slate-scrim {
+  /* Directional Left HUD Scrim for Act 4 Peak Odyssey Scrub */
+  .tc-odyssey-scrim {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 3;
-    background: linear-gradient(
-      to top,
-      rgba(15, 23, 36, 0.86) 0%,
-      rgba(15, 23, 36, 0.36) 28%,
-      rgba(15, 23, 36, 0.04) 50%,
-      transparent 72%
-    );
+    background:
+      linear-gradient(
+        98deg,
+        rgba(5, 13, 26, 0.84) 0%,
+        rgba(5, 13, 26, 0.52) 34%,
+        rgba(5, 13, 26, 0.08) 58%,
+        transparent 78%
+      ),
+      linear-gradient(
+        to top,
+        rgba(5, 13, 26, 0.72) 0%,
+        transparent 35%
+      );
   }
 
   @media (max-width: 860px) {
+    .tc-odyssey-scrim {
+      background: linear-gradient(
+        to top,
+        rgba(5, 13, 26, 0.9) 0%,
+        rgba(5, 13, 26, 0.55) 38%,
+        rgba(5, 13, 26, 0.08) 65%,
+        transparent 85%
+      );
+    }
+
     .tc-hero-title.sc-display--xl {
-      font-size: clamp(1.62rem, 6.4vw, 2.3rem);
+      font-size: clamp(1.68rem, 6.4vw, 2.35rem);
       line-height: 1.04;
     }
 
@@ -175,8 +155,7 @@
       line-height: 1.04;
     }
 
-    .sc-display.sc-display--lg,
-    .tc-act2-title.sc-display--lg {
+    .sc-display.sc-display--lg {
       font-size: clamp(1.5rem, 5.8vw, 2.15rem);
       line-height: 1.07;
     }
@@ -184,31 +163,30 @@
 
   @media (min-width: 861px) {
     .tc-hero-title.sc-display--xl {
-      font-size: clamp(2.65rem, 1.45rem + 2.55vw, 4.1rem);
-      line-height: 1.01;
+      font-size: clamp(2.6rem, 1.4rem + 2.5vw, 4.05rem);
+      line-height: 1.02;
     }
   }
 
-  /* Burnished Signal Copper Primary CTA (>4.9:1 contrast with white ink) */
+  /* Radiant Signal Orange Primary CTA */
   .tc-btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     min-height: 46px;
-    padding: 0.72rem 1.45rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 999px;
-    background: linear-gradient(180deg, #d44811 0%, #b83b09 100%);
-    color: var(--sc-accent-ink);
+    background: linear-gradient(180deg, #ef5316 0%, #c83d09 100%);
+    color: #ffffff;
     font-family: var(--sc-font-text);
     font-weight: 700;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26),
-      0 8px 20px -6px rgba(200, 67, 14, 0.36),
-      var(--sc-e2);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 10px 24px -6px rgba(232, 74, 20, 0.45);
     transition: background 150ms var(--sc-ease-out),
       transform 120ms var(--sc-ease-out),
       box-shadow 150ms var(--sc-ease-out);
@@ -218,11 +196,10 @@
 
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-primary:hover {
-      background: linear-gradient(180deg, #c23f0c 0%, #a33307 100%);
+      background: linear-gradient(180deg, #df490e 0%, #b33406 100%);
       transform: translateY(-1px);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32),
-        0 12px 26px -6px rgba(200, 67, 14, 0.44),
-        var(--sc-e3);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36),
+        0 14px 30px -6px rgba(232, 74, 20, 0.55);
     }
   }
 
@@ -230,16 +207,16 @@
     transform: scale(0.97);
   }
 
-  /* Deep Harbor Obsidian Secondary CTA */
+  /* Deep Sapphire Secondary CTA */
   .tc-btn-cobalt {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     min-height: 46px;
-    padding: 0.72rem 1.35rem;
+    padding: 0.75rem 1.4rem;
     border-radius: 999px;
-    background: #0f1724;
+    background: #06101e;
     color: #ffffff;
     font-family: var(--sc-font-text);
     font-weight: 600;
@@ -256,7 +233,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .tc-btn-cobalt:hover {
-      background: #1b2940;
+      background: #102442;
     }
   }
 
@@ -271,15 +248,15 @@
     justify-content: center;
     gap: 0.45rem;
     min-height: 46px;
-    padding: 0.72rem 1.25rem;
+    padding: 0.75rem 1.3rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.92);
-    color: #11161f;
+    background: rgba(255, 255, 255, 0.94);
+    color: #0b1324;
     font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1;
     text-decoration: none;
-    border: 1px solid color-mix(in oklab, #11161f 15%, transparent);
+    border: 1px solid color-mix(in oklab, #0b1324 15%, transparent);
     box-shadow: var(--sc-e1);
     transition: background-color 150ms var(--sc-ease-out),
       border-color 150ms var(--sc-ease-out),
@@ -288,61 +265,49 @@
     cursor: pointer;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .tc-btn-ghost:hover {
-      background: #ffffff;
-      border-color: color-mix(in oklab, #11161f 28%, transparent);
-    }
-  }
-
-  .tc-btn-ghost:active {
-    transform: scale(0.97);
-  }
-
-  .tc-slate-band .tc-btn-ghost,
-  .tc-cobalt-band .tc-btn-ghost {
+  .tc-ocean-hero .tc-btn-ghost,
+  .tc-slate-band .tc-btn-ghost {
     background: rgba(255, 255, 255, 0.08);
-    color: #f5f7fa;
-    border-color: rgba(255, 255, 255, 0.2);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.22);
     box-shadow: none;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .tc-slate-band .tc-btn-ghost:hover,
-    .tc-cobalt-band .tc-btn-ghost:hover {
+    .tc-ocean-hero .tc-btn-ghost:hover,
+    .tc-slate-band .tc-btn-ghost:hover {
       background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.4);
+      border-color: rgba(255, 255, 255, 0.42);
     }
   }
 
-  /* Vridi Night Slate Band */
-  .tc-slate-band,
-  .tc-cobalt-band {
-    --sc-canvas: #0f1724;
-    --sc-surface: #162133;
-    --sc-surface-elevated: #1e2d45;
-    --sc-ink: #f5f7fa;
-    --sc-ink-soft: #9eb0c9;
-    --sc-accent: #f0642d;
-    --sc-accent-ink: #11161f;
+  /* Deep Ocean Night Band */
+  .tc-slate-band {
+    --sc-canvas: #050d1a;
+    --sc-surface: #0b1a30;
+    --sc-surface-elevated: #122847;
+    --sc-ink: #f8fafc;
+    --sc-ink-soft: #94a3b8;
+    --sc-accent: #ff6426;
+    --sc-accent-ink: #050d1a;
     --sc-hairline: rgba(255, 255, 255, 0.11);
     --sc-hairline-strong: rgba(255, 255, 255, 0.22);
-    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --sc-edge: inset 0 1px 0 rgba(255, 255, 255, 0.12);
     background: var(--sc-canvas);
     color: var(--sc-ink);
   }
 
-  /* Warm Limestone Daylight Band */
+  /* Crisp Polar Daylight Band */
   .tc-daylight-band {
-    --sc-canvas: #f4f1ea;
+    --sc-canvas: #f8fafc;
     --sc-surface: #ffffff;
-    --sc-surface-elevated: #eae5da;
-    --sc-ink: #11161f;
-    --sc-ink-soft: #4e5969;
-    --sc-accent: #c8430e;
+    --sc-surface-elevated: #eef2f6;
+    --sc-ink: #0b1324;
+    --sc-ink-soft: #475569;
+    --sc-accent: #d9460f;
     --sc-accent-ink: #ffffff;
-    --sc-hairline: color-mix(in oklab, #11161f 12%, transparent);
-    --sc-hairline-strong: color-mix(in oklab, #11161f 22%, transparent);
+    --sc-hairline: color-mix(in oklab, #0b1324 11%, transparent);
+    --sc-hairline-strong: color-mix(in oklab, #0b1324 22%, transparent);
     background: var(--sc-canvas);
     color: var(--sc-ink);
   }
@@ -368,40 +333,40 @@
   }
 
   .tc-lane-card {
-    flex: 0 0 clamp(16.75rem, 76vw, 25rem);
-    min-height: 350px;
+    flex: 0 0 clamp(16.75rem, 76vw, 25.5rem);
+    min-height: 360px;
     max-height: calc(100svh - 6rem);
     display: flex;
     flex-direction: column;
-    background: #162133;
-    color: #f5f7fa;
+    background: #0b1a30;
+    color: #f8fafc;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: var(--sc-r-lg);
     overflow: hidden;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), var(--sc-e3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), var(--sc-e3);
     transition: border-color 180ms var(--sc-ease-out),
       transform 220ms var(--sc-ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .tc-lane-card:hover {
-      border-color: rgba(240, 100, 45, 0.45);
+      border-color: rgba(56, 189, 248, 0.48);
     }
   }
 
   .tc-rail-end {
     flex: 0 0 clamp(16.25rem, 72vw, 21.5rem);
-    min-height: 310px;
+    min-height: 320px;
     max-height: calc(100svh - 6rem);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: linear-gradient(155deg, #d44811 0%, #a83306 100%);
+    background: linear-gradient(155deg, #0e3a6c 0%, #071932 100%);
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    border: 1px solid rgba(56, 189, 248, 0.28);
     border-radius: var(--sc-r-lg);
     padding: clamp(1.35rem, 2.6vw, 2rem);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), var(--sc-e3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--sc-e3);
   }
 
   @media (min-width: 768px) {
@@ -409,18 +374,13 @@
       flex: 0 0 clamp(18rem, 25vw, 24rem);
     }
     .tc-lane-card {
-      flex: 0 0 clamp(21rem, 28vw, 26rem);
-      min-height: 400px;
+      flex: 0 0 clamp(21.5rem, 28vw, 26.5rem);
+      min-height: 410px;
     }
     .tc-rail-end {
       flex: 0 0 clamp(18rem, 24vw, 22rem);
-      min-height: 370px;
+      min-height: 380px;
     }
-  }
-
-  .tc-flow-after-pin {
-    padding-top: clamp(3rem, 5.5vw, 4.75rem);
-    padding-bottom: clamp(3.5rem, 6.5vw, 6rem);
   }
 }
 

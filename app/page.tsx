@@ -3,12 +3,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight, Check, MapPin, Plane, Ship } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import ContainerStage3D, { type CorridorId } from "@/components/ContainerStage3D";
 import GlobeStage3D from "@/components/GlobeStage3D";
 import Navbar from "@/components/Navbar";
-import ParcelShowcase3D from "@/components/ParcelShowcase3D";
 import ScrollCraftRunner from "@/components/ScrollCraftRunner";
 import TrackingLookup from "@/components/TrackingLookup";
 import { PLAN_META, type PlanTier } from "@/lib/types";
@@ -55,8 +54,10 @@ const CORRIDORS: Record<CorridorId, CorridorSpec> = {
 
 type BatchStep = {
   id: "RECUE_ORIGINE" | "EN_TRANSIT" | "ARRIVEE_ABIDJAN" | "PRET_RETRAIT";
+  code: string;
   buttonLabel: string;
   progressPct: number;
+  videoFraction: number;
   locationLine: string;
   whatsappSample: string;
   waveState: string;
@@ -65,39 +66,47 @@ type BatchStep = {
 const BATCH_STEPS: BatchStep[] = [
   {
     id: "RECUE_ORIGINE",
-    buttonLabel: "1. Reçu au dépôt",
+    code: "01",
+    buttonLabel: "Embarquement & Pesée",
     progressPct: 18,
-    locationLine: "Guangzhou · 42 colis pesés et étiquetés",
+    videoFraction: 0.1,
+    locationLine: "Guangzhou & Yiwu · 42 colis pesés et scellés",
     whatsappSample:
-      "Bonjour Aminata, votre colis TC-8841 (14,5 kg) est bien arrivé à notre dépôt de Guangzhou. Suivez son trajet ici sans nous appeler.",
-    waveState: "Montant bloqué à 48 000 FCFA, payable à l'arrivée",
+      "Bonjour Aminata, votre colis TC-8841 (14,5 kg) est bien enregistré au départ. Suivez son trajet en direct sans appeler le comptoir.",
+    waveState: "Montant fixé à 48 000 FCFA · Lien prêt dès le départ",
   },
   {
     id: "EN_TRANSIT",
-    buttonLabel: "2. En transit",
+    code: "02",
+    buttonLabel: "Traversée Air & Mer",
     progressPct: 52,
-    locationLine: "Lot #CG-402 · Traversée en cours vers Abidjan",
+    videoFraction: 0.38,
+    locationLine: "Lot #CG-402 · En transit direct vers Abidjan",
     whatsappSample:
       "Le lot #CG-402 qui contient votre colis TC-8841 est en route vers Abidjan. Arrivée estimée dans 9 jours.",
-    waveState: "Lien de prépaiement disponible à tout moment",
+    waveState: "Prépaiement Wave ou Orange Money ouvert 24h/24",
   },
   {
     id: "ARRIVEE_ABIDJAN",
-    buttonLabel: "3. Arrivé à Abidjan",
+    code: "03",
+    buttonLabel: "Accostage Quai de Vridi",
     progressPct: 82,
-    locationLine: "Port de Vridi · Dépotage prévu sous 24 h",
+    videoFraction: 0.66,
+    locationLine: "Port de Vridi · Déchargement sous portique",
     whatsappSample:
-      "Bonne nouvelle, le lot #CG-402 vient d'accoster à Vridi. Vous serez prévenue dès que votre colis passera au comptoir.",
-    waveState: "42 liens Wave préparés automatiquement pour le comptoir",
+      "Bonne nouvelle, le lot #CG-402 vient d'accoster au terminal de Vridi. Vous serez alertée dès l'ouverture du retrait.",
+    waveState: "42 invitations de règlement générées automatiquement",
   },
   {
     id: "PRET_RETRAIT",
-    buttonLabel: "4. Prêt au retrait",
+    code: "04",
+    buttonLabel: "Disponible à Abidjan",
     progressPct: 100,
-    locationLine: "Treichville · Prêt contre code TC ou pass QR",
+    videoFraction: 0.92,
+    locationLine: "Treichville · Prêt contre code TC ou Pass QR",
     whatsappSample:
-      "Votre colis TC-8841 est prêt au comptoir de Treichville. Réglez les 48 000 FCFA par Wave ou Orange Money avant de passer.",
-    waveState: "Reçu généré automatiquement après validation Wave",
+      "Votre colis TC-8841 est disponible au comptoir de Treichville. Réglez les 48 000 FCFA par Wave ou Orange Money et présentez votre QR.",
+    waveState: "Bon de sortie délivré dès confirmation du règlement",
   },
 ];
 
@@ -229,6 +238,38 @@ const ONBOARDING_STEPS = [
   },
 ];
 
+function CertifiedQrMatrix() {
+  const size = 11;
+  const pattern = [
+    1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1,
+    1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1,
+    1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1,
+    0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0,
+    1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1,
+    0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0,
+    1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1,
+    0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1,
+    1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1,
+    1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+  ];
+  return (
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      className="w-12 h-12 shrink-0"
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      {pattern.map((bit, idx) => {
+        if (!bit) return null;
+        const r = Math.floor(idx / size);
+        const c = idx % size;
+        return <rect key={idx} x={c} y={r} width={1} height={1} fill="#050d1a" />;
+      })}
+    </svg>
+  );
+}
+
 export default function HomePage() {
   const [corridor, setCorridor] = useState<CorridorId>("yiwu_sea");
   const [heroStageMode, setHeroStageMode] = useState<"globe" | "unit">("globe");
@@ -237,7 +278,7 @@ export default function HomePage() {
   const activeCorridor = CORRIDORS[corridor];
   const currentStep = BATCH_STEPS[activeStepIndex] ?? BATCH_STEPS[0];
 
-  // Synchronize Peak scrub progress (--sc-p) with the 4-stage batch console
+  // Synchronize Peak scrub progress (--sc-p) with the 4-stage Command HUD
   useEffect(() => {
     let raf = 0;
     const handleScroll = () => {
@@ -267,8 +308,20 @@ export default function HomePage() {
     };
   }, []);
 
+  const handleSelectBatchStep = (idx: number) => {
+    setActiveStepIndex(idx);
+    const step = BATCH_STEPS[idx];
+    const quayEl = document.getElementById("act-quai");
+    const videoEl = quayEl?.querySelector("video") as HTMLVideoElement | null;
+    if (videoEl && step && videoEl.duration > 0) {
+      try {
+        videoEl.currentTime = step.videoFraction * videoEl.duration;
+      } catch {}
+    }
+  };
+
   return (
-    <div id="tc-showcase-root" className="min-h-screen bg-[#f4f1ea] text-[#11161f]">
+    <div id="tc-showcase-root" className="min-h-screen bg-[#f8fafc] text-[#0b1324]">
       <ScrollCraftRunner rootId="tc-showcase-root" />
       <div data-sc-progress aria-hidden="true" />
       <div className="sc-grain" aria-hidden="true" />
@@ -277,45 +330,48 @@ export default function HomePage() {
 
       <main>
         {/* =================================================================
-            ACTE 1 — Reconnaissance : Globe 3D Constellation & Canal Air-Mer
-            (flow, 4 éléments texte stricts à gauche + Théâtre 3D multi-plans à droite)
+            ACTE 1 — Plein Écran : Horizon Océanique & Globe 3D Constellation
+            (flow, 100svh plein cadre saphir, Globe 3D flottant sans boîte fermée)
            ================================================================= */}
         <section
           id="act-ouverture"
           data-sc-act="flow"
-          className="sc-act tc-daylight-band relative min-h-[calc(100svh-4rem)] flex items-center py-6 sm:py-10 lg:py-12 border-b border-[#11161f]/12 overflow-hidden"
+          className="sc-act tc-ocean-hero relative min-h-[calc(100svh-4rem)] flex items-center py-8 sm:py-12 lg:py-14 overflow-hidden border-b border-white/10"
         >
-          {/* Plan d'ambiance aérien plein soleil (canal maritime + avion cargo) masqué vers la gauche */}
+          {/* Plan arrière : Porte-conteneurs & Constellation Mondiale fondus dans l'océan */}
           <div
-            className="tc-hero-ambient-photo"
+            className="tc-ocean-hero-backdrop"
             data-sc-parallax="-0.14"
             aria-hidden="true"
           >
             <img
-              src="/media/v5-air-sea-canal.webp"
+              src="/media/v5-ship-constellation.webp"
               alt=""
-              className="w-full h-full object-cover object-center opacity-35"
+              className="w-full h-full object-cover object-center opacity-50"
             />
           </div>
 
+          {/* Plan médian : Grille de navigation orbitale */}
+          <div className="tc-ocean-hero-grid" aria-hidden="true" />
+
           <div className="sc-wrap relative z-10 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
-              {/* Colonne gauche : exactement 4 éléments (h1, p, sélecteur, CTAs) */}
-              <div className="lg:col-span-6 space-y-4 sm:space-y-6">
-                <h1 className="sc-display sc-display--xl tc-hero-title text-[#11161f] tracking-tight">
-                  Chaque colis suivi en direct. Zéro appel au comptoir.
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
+              {/* Colonne gauche : 4 éléments stricts à contraste maximal sur fond saphir */}
+              <div className="lg:col-span-6 space-y-5 sm:space-y-6">
+                <h1 className="sc-display sc-display--xl tc-hero-title text-white tracking-tight">
+                  Chaque expédition suivie en direct, de l&apos;embarquement au retrait à Abidjan.
                 </h1>
 
-                <p className="text-[15px] sm:text-[17px] leading-[1.6] text-[#243247] max-w-[46ch]">
-                  Attribuez un code TC dès la pesée, prévenez tout un conteneur sur WhatsApp et
-                  encaissez par Wave ou Orange Money à Abidjan.
+                <p className="text-[15.5px] sm:text-[17.5px] leading-[1.6] text-[#cbd5e1] max-w-[46ch]">
+                  Attribuez un code TC dès la pesée, alertez quarante clients sur WhatsApp en un
+                  geste et encaissez par Wave ou Orange Money avant le passage au comptoir.
                 </p>
 
-                {/* Élément 3 : Sélecteur tactile de corridor synchronisé au Globe 3D & à l'Unité 3D */}
+                {/* Élément 3 : Sélecteur de corridor en verre saphir */}
                 <div
                   role="group"
                   aria-label="Choisir une ligne logistique"
-                  className="grid grid-cols-3 sm:inline-flex items-center gap-1 rounded-[12px] sm:rounded-full bg-white p-1 border border-[#11161f]/14 shadow-[var(--sc-e1)] w-full sm:w-auto"
+                  className="grid grid-cols-3 sm:inline-flex items-center gap-1 rounded-[14px] sm:rounded-full bg-white/8 backdrop-blur-xl p-1.5 border border-white/16 w-full sm:w-auto"
                 >
                   {(Object.keys(CORRIDORS) as CorridorId[]).map((id) => {
                     const active = corridor === id;
@@ -325,18 +381,12 @@ export default function HomePage() {
                         type="button"
                         onClick={() => setCorridor(id)}
                         aria-pressed={active}
-                        className={`inline-flex items-center justify-center gap-1.5 rounded-[8px] sm:rounded-full px-2 sm:px-3.5 py-2 text-[11px] sm:text-[13px] font-semibold transition-[background-color,color] duration-150 cursor-pointer truncate text-center ${
+                        className={`inline-flex items-center justify-center gap-1.5 rounded-[10px] sm:rounded-full px-2.5 sm:px-4 py-2 text-[11px] sm:text-[13px] font-semibold transition-[background-color,color] duration-150 cursor-pointer truncate text-center ${
                           active
-                            ? "bg-[#0f1724] text-white"
-                            : "text-[#4e5969] hover:text-[#11161f] hover:bg-[#f4f1ea]"
+                            ? "bg-gradient-to-b from-[#ff6426] to-[#d9460f] text-white shadow-sm"
+                            : "text-[#cbd5e1] hover:text-white hover:bg-white/10"
                         }`}
                       >
-                        {active && (
-                          <span
-                            className="hidden sm:inline-block h-1.5 w-1.5 rounded-full bg-[#f0642d] shrink-0"
-                            aria-hidden="true"
-                          />
-                        )}
                         <span className="truncate">{CORRIDORS[id].label}</span>
                       </button>
                     );
@@ -344,7 +394,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Élément 4 : Duo d'actions principales */}
-                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-0.5">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 pt-1">
                   <Link href="/register" className="tc-btn-primary w-full sm:w-auto text-center">
                     <span>Ouvrir mon agence</span>
                     <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
@@ -355,90 +405,80 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Colonne droite : Théâtre 3D Multi-Plans (Globe Constellation 3D + Conteneur/ULD 3D) */}
-              <div className="lg:col-span-6">
-                <div className="tc-hero-viewport">
-                  {/* Plan 1 (Arrière) : Carte mondiale des routes lumineuses & navires en parallaxe */}
-                  <div
-                    className="tc-hero-rear-plate"
-                    data-sc-parallax="-0.12"
-                    aria-hidden="true"
-                  >
-                    <img
-                      src="/media/v5-world-routes.webp"
-                      alt=""
-                      className="w-full h-full object-cover object-center opacity-45"
-                    />
-                  </div>
+              {/* Colonne droite : Globe 3D Constellation flottant librement dans l'espace (zéro boîte fermée) */}
+              <div className="lg:col-span-6 relative">
+                {/* Halo atmosphérique derrière la sphère 3D */}
+                <div
+                  className="pointer-events-none absolute inset-0 -m-6 rounded-full bg-[radial-gradient(circle_at_50%_48%,rgba(56,189,248,0.22)_0%,rgba(232,74,20,0.12)_42%,transparent_72%)]"
+                  aria-hidden="true"
+                />
 
-                  {/* Plan 2 (Médian) : Grille de coordonnées océanique */}
-                  <div className="tc-hero-mid-grid" aria-hidden="true" />
-
-                  {/* Sélecteur de caméra 3D (Globe Corridors 3D vs Unité de Fret 3D) */}
-                  <div className="absolute top-3 right-3 z-30 inline-flex items-center gap-1 rounded-full bg-[#07162c]/85 backdrop-blur-md p-1 border border-white/16">
+                {/* Bascule rapide Globe 3D / Conteneur 3D */}
+                <div className="relative z-20 flex justify-end mb-2">
+                  <div className="inline-flex items-center gap-1 rounded-full bg-[#09192f]/90 backdrop-blur-md p-1 border border-white/16">
                     <button
                       type="button"
                       onClick={() => setHeroStageMode("globe")}
                       aria-pressed={heroStageMode === "globe"}
-                      className={`rounded-full px-3 py-1 text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                      className={`rounded-full px-3.5 py-1 text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
                         heroStageMode === "globe"
-                          ? "bg-[#c8430e] text-white"
+                          ? "bg-[#38bdf8] text-[#050d1a]"
                           : "text-[#cbd5e1] hover:text-white"
                       }`}
                     >
-                      Globe 3D
+                      Globe Constellation 3D
                     </button>
                     <button
                       type="button"
                       onClick={() => setHeroStageMode("unit")}
                       aria-pressed={heroStageMode === "unit"}
-                      className={`rounded-full px-3 py-1 text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                      className={`rounded-full px-3.5 py-1 text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
                         heroStageMode === "unit"
-                          ? "bg-[#c8430e] text-white"
+                          ? "bg-[#38bdf8] text-[#050d1a]"
                           : "text-[#cbd5e1] hover:text-white"
                       }`}
                     >
-                      Unité 3D
+                      Unité Cargo 3D
                     </button>
                   </div>
+                </div>
 
-                  {/* Plan 3 (Premier plan) : Scène WebGL 3D Interactive */}
-                  <div className="relative z-10 h-[250px] sm:h-[360px] lg:h-[440px] w-full">
-                    {heroStageMode === "globe" ? (
-                      <GlobeStage3D
-                        corridor={corridor}
-                        activeStep={currentStep.id}
-                        className="w-full h-full"
-                      />
-                    ) : (
-                      <ContainerStage3D
-                        corridor={corridor}
-                        activeStep={currentStep.id}
-                        className="w-full h-full"
-                      />
-                    )}
+                {/* Scène WebGL 3D Plein Cadre */}
+                <div className="relative z-10 h-[310px] sm:h-[420px] lg:h-[490px] w-full">
+                  {heroStageMode === "globe" ? (
+                    <GlobeStage3D
+                      corridor={corridor}
+                      activeStep={currentStep.id}
+                      className="w-full h-full"
+                    />
+                  ) : (
+                    <ContainerStage3D
+                      corridor={corridor}
+                      activeStep={currentStep.id}
+                      className="w-full h-full"
+                    />
+                  )}
+                </div>
+
+                {/* Bandeau télémétrique flottant en verre dépoli */}
+                <div className="relative z-20 -mt-2 rounded-[16px] bg-[#09192f]/88 backdrop-blur-xl border border-white/15 px-4 py-3 grid grid-cols-3 divide-x divide-white/12 text-[11.5px] font-mono text-white shadow-2xl">
+                  <div className="pr-2 truncate">
+                    <span className="text-[#94a3b8] block text-[10px] uppercase">Corridor actif</span>
+                    <strong className="text-white font-semibold">
+                      {activeCorridor.origin} → Abidjan
+                    </strong>
                   </div>
-
-                  {/* Barre de lecture technique en filet 1px sous la scène 3D */}
-                  <div className="relative z-20 border-t border-white/14 bg-[#07162c]/92 backdrop-blur-md px-3.5 sm:px-5 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-3 sm:divide-x divide-white/12 text-[11.5px] font-mono text-white">
-                    <div className="truncate">
-                      <span className="text-[#9eb0c9]">Trajet : </span>
-                      <strong className="text-white font-semibold">
-                        {activeCorridor.origin} → Abidjan
-                      </strong>
-                    </div>
-                    <div className="sm:pl-3 truncate">
-                      <span className="text-[#9eb0c9]">Délai : </span>
-                      <strong className="text-[#fde68a] font-semibold">
-                        {activeCorridor.eta}
-                      </strong>
-                    </div>
-                    <div className="sm:pl-3 truncate">
-                      <span className="text-[#9eb0c9]">Mode : </span>
-                      <strong className="text-[#ff966b] font-semibold">
-                        {activeCorridor.rateLabel}
-                      </strong>
-                    </div>
+                  <div className="px-3 truncate">
+                    <span className="text-[#94a3b8] block text-[10px] uppercase">Transit moyen</span>
+                    <strong className="text-[#38bdf8] font-semibold">
+                      {activeCorridor.eta}
+                    </strong>
+                  </div>
+                  <div className="pl-3 truncate">
+                    <span className="text-[#94a3b8] block text-[10px] uppercase">Facturation</span>
+                    <strong className="text-[#ffb088] font-semibold">
+                      {activeCorridor.rateLabel}
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -447,93 +487,151 @@ export default function HomePage() {
         </section>
 
         {/* =================================================================
-            ACTE 2 — Tension & Bascule : Triptyque Multimodal & Scanner 3D QR
-            (pin 1.65vh, registre en filets 1px + scan laser 3D du colis TC-8841)
+            ACTE 2 — Architecture & Réalisme : Fresque Photographique Air-Mer & Pass Certifié
+            (flow, zéro coupure de titre, zéro cube beige, grandes photographies HD)
            ================================================================= */}
         <section
           id="act-comptoir"
-          data-sc-act="pin"
-          data-sc-span="1.65"
-          className="sc-act tc-daylight-band border-b border-[#11161f]/12"
+          data-sc-act="flow"
+          className="sc-act tc-daylight-band py-14 sm:py-20 lg:py-24 border-b border-[#0b1324]/10"
         >
-          <div
-            data-sc-stage
-            className="sc-stage tc-stage-below-nav bg-[#f4f1ea] flex items-center"
-          >
-            <div className="sc-wrap w-full">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-center">
-                <div className="lg:col-span-6 space-y-4 sm:space-y-5">
-                  <h2 className="sc-display sc-display--lg tc-act2-title text-[#11161f]">
-                    Fini les captures Wave perdues et les appels à 22 heures.
-                  </h2>
+          <div className="sc-wrap space-y-10 sm:space-y-12">
+            {/* En-tête éditorial aéré sur 12 colonnes (impossible à rogner) */}
+            <div
+              data-sc-in="up"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-10 items-end"
+            >
+              <div className="lg:col-span-7">
+                <h2 className="sc-display sc-display--lg text-[#0b1324]">
+                  Le comptoir respire enfin. Vos clients savent exactement où est leur colis.
+                </h2>
+              </div>
+              <div className="lg:col-span-5">
+                <p className="text-[15.5px] sm:text-[16.5px] leading-[1.6] text-[#475569]">
+                  Chaque expédition pesée à Guangzhou, Yiwu, Istanbul ou Dubaï génère son billet de
+                  fret numérique, son code TC et son pass QR jusqu&apos;à la remise à Abidjan.
+                </p>
+              </div>
+            </div>
 
-                  <p className="hidden sm:block text-[16px] leading-[1.6] text-[#4e5969] max-w-[48ch]">
-                    Chaque carton pesé en Chine, en Turquie ou à Dubaï garde sa fiche claire
-                    jusqu&apos;à la remise au comptoir à Abidjan.
-                  </p>
+            {/* Fresque asymétrique : Grande photo Canal Air-Mer à gauche + Grappin Doré & Pass TC-8841 à droite */}
+            <div
+              data-sc-in="up"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
+            >
+              {/* Colonne gauche (7 col) : Photographie grand angle Air + Mer + Comparatif Avant/Avec intégré */}
+              <div className="lg:col-span-7 relative rounded-[24px] overflow-hidden border border-[#0b1324]/12 bg-[#050d1a] shadow-[var(--sc-e3)] flex flex-col justify-end min-h-[420px] sm:min-h-[520px]">
+                <img
+                  src="/media/v5-air-sea-canal.webp"
+                  alt="Avion cargo décollant au-dessus d'un canal maritime et d'un porte-conteneurs sous un ciel bleu éclatant"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050d1a]/95 via-[#050d1a]/45 to-transparent"
+                  aria-hidden="true"
+                />
 
-                  {/* Registre comparatif en filets 1px (zéro cartes imbriquées) */}
-                  <div className="border-y border-[#11161f]/14 divide-y divide-[#11161f]/12">
-                    <div className="py-3 sm:py-3.5 grid grid-cols-1 sm:grid-cols-12 gap-1.5 sm:gap-4 items-baseline">
-                      <span className="sm:col-span-4 text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#4e5969]">
-                        Avant · Sans registre
+                <div className="relative z-10 p-5 sm:p-7 space-y-4 text-white">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/16">
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#94a3b8]">
+                        Sans registre numérique
                       </span>
-                      <p className="sm:col-span-8 text-[13px] sm:text-[14px] text-[#4e5969] leading-[1.5]">
-                        Les clients demandent chaque jour où est le bateau, et les preuves Mobile
-                        Money se mélangent dans les groupes WhatsApp.
+                      <p className="text-[13.5px] text-[#cbd5e1] leading-[1.5]">
+                        Appels incessants jusqu&apos;à 22 h pour connaître la position du bateau et
+                        captures Mobile Money dispersées dans WhatsApp.
                       </p>
                     </div>
-                    <div className="py-3 sm:py-3.5 grid grid-cols-1 sm:grid-cols-12 gap-1.5 sm:gap-4 items-baseline">
-                      <span className="sm:col-span-4 text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#c8430e]">
+                    <div className="space-y-1 sm:pl-4 sm:border-l border-white/16">
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#38bdf8]">
                         Avec TrackCargo CI
                       </span>
-                      <p className="sm:col-span-8 text-[13px] sm:text-[14px] text-[#11161f] font-medium leading-[1.5]">
-                        Une mise à jour sur le lot prévient quarante clients avec leur code TC, leur
-                        pass QR et leur solde exact prêt à régler.
+                      <p className="text-[13.5px] text-white font-medium leading-[1.5]">
+                        Un seul clic sur le lot prévient quarante destinataires avec leur code TC,
+                        leur pass QR et leur montant exact prêt à régler.
                       </p>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  {/* Bandeau photographique multimodal Mer · Route · Air */}
-                  <div className="hidden sm:grid grid-cols-12 gap-3 items-center pt-1">
-                    <div className="col-span-5 h-20 rounded-[12px] overflow-hidden border border-[#11161f]/12">
-                      <img
-                        src="/media/v5-multimodal-triptych.webp"
-                        alt="Triptyque aérien du fret maritime, routier et aérien"
-                        className="w-full h-full object-cover object-center"
-                      />
-                    </div>
-                    <p className="col-span-7 text-xs font-mono text-[#4e5969] leading-[1.5]">
-                      <strong className="text-[#11161f] block">
-                        Suivi multimodal Mer · Air · Comptoir
-                      </strong>
-                      Facturation automatique au CBM (maritime) ou au kilogramme (aérien) dès
-                      l&apos;enregistrement du lot.
-                    </p>
+              {/* Colonne droite (5 col) : Diptyque photo HD (Grappin doré + Triptyque multimodal) & Billet de Fret TC-8841 */}
+              <div className="lg:col-span-5 flex flex-col justify-between gap-6">
+                {/* Duo photographique réaliste : Levage sous portique + Triptyque Mer / Route / Air */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative h-48 sm:h-52 rounded-[20px] overflow-hidden border border-[#0b1324]/12 shadow-[var(--sc-e2)] bg-[#050d1a]">
+                    <img
+                      src="/media/v5-crane-hoist.webp"
+                      alt="Grappin jaune de portique soulevant un conteneur maritime à l'heure dorée"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover object-center"
+                    />
+                  </div>
+                  <div className="relative h-48 sm:h-52 rounded-[20px] overflow-hidden border border-[#0b1324]/12 shadow-[var(--sc-e2)] bg-[#050d1a]">
+                    <img
+                      src="/media/v5-multimodal-triptych.webp"
+                      alt="Vue aérienne multimodale combinant porte-conteneurs, camion et avion cargo"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover object-center"
+                    />
                   </div>
                 </div>
 
-                {/* Scène 3D macro avec faisceau de scan laser QR + vignette grappin portuaire */}
-                <div className="lg:col-span-6">
-                  <div className="rounded-[20px] bg-white border border-[#11161f]/12 overflow-hidden shadow-[var(--sc-e2)]">
-                    <div className="relative h-[165px] sm:h-[260px] lg:h-[380px] w-full bg-gradient-to-b from-[#faf8f4] to-[#eae5da]/60">
-                      <ParcelShowcase3D className="w-full h-full" />
-                      {/* Vignette photo réaliste du grappin portuaire en médaillon discret */}
-                      <div className="hidden sm:block absolute top-3 right-3 w-20 h-24 rounded-[10px] overflow-hidden border border-[#11161f]/16 shadow-md pointer-events-none">
-                        <img
-                          src="/media/v5-crane-hoist.webp"
-                          alt="Levage d'un conteneur par portique à l'heure dorée"
-                          className="w-full h-full object-cover object-center"
-                        />
+                {/* Billet de Fret & Pass QR Certifié (remplace l'ancien cube carton 3D beige) */}
+                <div className="rounded-[22px] bg-white border border-[#0b1324]/14 shadow-[var(--sc-e2)] overflow-hidden flex-1 flex flex-col justify-between">
+                  <div className="bg-[#050d1a] text-white px-5 py-4 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10.5px] font-mono uppercase tracking-[0.1em] text-[#38bdf8] block">
+                        Bordereau numérique certifié
+                      </span>
+                      <div className="text-lg font-mono font-bold text-white mt-0.5">
+                        TC-8841 · Lot #CG-402
                       </div>
                     </div>
-                    <div className="border-t border-[#11161f]/10 bg-white px-4 py-2.5 flex items-center justify-between gap-2 text-[11.5px] font-mono text-[#11161f]">
-                      <span className="font-semibold">
-                        Scanner 3D · Colis TC-8841 (14,5 kg)
-                      </span>
-                      <span className="text-[#c8430e] font-semibold truncate">
-                        Pass QR &amp; Cerclage vérifiés
-                      </span>
+                    <span className="rounded-full bg-emerald-500/20 border border-emerald-400/35 text-emerald-300 text-xs font-semibold px-3 py-1">
+                      Prêt au retrait
+                    </span>
+                  </div>
+
+                  <div className="p-5 grid grid-cols-3 divide-x divide-[#0b1324]/10 text-xs font-mono">
+                    <div className="pr-3">
+                      <span className="text-[#475569] block">Origine</span>
+                      <strong className="text-[#0b1324] font-semibold mt-0.5 flex items-center gap-1">
+                        <Plane className="w-3.5 h-3.5 text-[#d9460f]" aria-hidden="true" />
+                        Guangzhou
+                      </strong>
+                    </div>
+                    <div className="px-3">
+                      <span className="text-[#475569] block">Arrivée</span>
+                      <strong className="text-[#0b1324] font-semibold mt-0.5 flex items-center gap-1">
+                        <Ship className="w-3.5 h-3.5 text-[#0e3a6c]" aria-hidden="true" />
+                        Vridi / FHB
+                      </strong>
+                    </div>
+                    <div className="pl-3">
+                      <span className="text-[#475569] block">Poids pesé</span>
+                      <strong className="text-[#0b1324] font-semibold mt-0.5 block">
+                        14,5 kg · 48 000 F
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[#0b1324]/10 bg-[#f8fafc] px-5 py-3.5 flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-[#0b1324] flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#d9460f]" aria-hidden="true" />
+                        <span>Retrait Comptoir Treichville</span>
+                      </div>
+                      <p className="text-[11.5px] text-[#475569]">
+                        Scan QR instantané à la remise · Zéro litige
+                      </p>
+                    </div>
+                    <div className="rounded-[10px] bg-white p-1.5 border border-[#0b1324]/12 shadow-2xs">
+                      <CertifiedQrMatrix />
                     </div>
                   </div>
                 </div>
@@ -544,46 +642,45 @@ export default function HomePage() {
 
         {/* =================================================================
             ACTE 3 — Silence Maîtrisé (Authored Silence avant le Pic)
-            Diptyque photographique grand angle (Portiques dorés + Cour tropicale)
-            Zéro badge sur les photos, une seule légende architecturale en filet 1px
+            Diptyque cinématique : Portiques à l'heure dorée & Corridor Drone
            ================================================================= */}
         <section
           id="act-entrepot"
           data-sc-act="flow"
-          className="sc-act tc-daylight-band py-10 sm:py-16"
+          className="sc-act tc-daylight-band py-12 sm:py-18"
         >
           <div className="sc-wrap">
             <figure
               data-sc-reveal="up"
               data-sc-reveal-at="0.06 0.62"
-              className="space-y-3"
+              className="space-y-3.5"
             >
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-7 overflow-hidden rounded-[20px] border border-[#11161f]/12 bg-[#eae5da] shadow-[var(--sc-e2)]">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                <div className="md:col-span-8 overflow-hidden rounded-[22px] border border-[#0b1324]/12 bg-[#050d1a] shadow-[var(--sc-e3)]">
                   <img
                     src="/media/v5-quay-golden.webp"
-                    alt="Portiques à conteneurs géants et opérateurs sur le quai à l'heure dorée"
+                    alt="Portiques géants bleus déchargeant un porte-conteneurs à l'heure dorée devant les équipes de quai"
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-[36svh] sm:h-[50svh] lg:h-[58svh] object-cover object-center block"
+                    className="w-full h-[38svh] sm:h-[52svh] lg:h-[62svh] object-cover object-center block"
                   />
                 </div>
-                <div className="md:col-span-5 overflow-hidden rounded-[20px] border border-[#11161f]/12 bg-[#eae5da] shadow-[var(--sc-e2)]">
+                <div className="md:col-span-4 overflow-hidden rounded-[22px] border border-[#0b1324]/12 bg-[#050d1a] shadow-[var(--sc-e3)]">
                   <img
-                    src="/media/v5-yard-tropical.webp"
-                    alt="Conteneurs maritimes alignés sous un ciel bleu tropical éclatant"
+                    src="/media/v5-drone-corridor.webp"
+                    alt="Vue aérienne verticale d'un avion cargo survolant un canal portuaire bordé de conteneurs"
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-[32svh] sm:h-[50svh] lg:h-[58svh] object-cover object-center block"
+                    className="w-full h-[34svh] sm:h-[52svh] lg:h-[62svh] object-cover object-center block"
                   />
                 </div>
               </div>
-              <figcaption className="pt-2.5 border-t border-[#11161f]/12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs sm:text-[13px] font-mono text-[#4e5969]">
-                <span className="text-[#11161f] font-semibold">
-                  Terminal à conteneurs &amp; Baie de dépotage · Port de Vridi, Abidjan
+              <figcaption className="pt-3 border-t border-[#0b1324]/12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs sm:text-[13px] font-mono text-[#475569]">
+                <span className="text-[#0b1324] font-semibold">
+                  Terminal Maritime &amp; Corridor Aérien · Connexion directe vers Abidjan
                 </span>
                 <span>
-                  Du déchargement sous portique au retrait client en un seul registre synchronisé.
+                  Traçabilité continue du chargement d&apos;origine jusqu&apos;à la remise au client.
                 </span>
               </figcaption>
             </figure>
@@ -591,8 +688,8 @@ export default function HomePage() {
         </section>
 
         {/* =================================================================
-            ACTE 4 — LE PIC : Quai de Vridi & Console de Dispatch (scrub 2.85vh)
-            75 % supérieurs dégagés au soleil + console unique en bas (0 logo)
+            ACTE 4 — LE PIC : Odyssée HD en 4 Étapes & HUD de Commande Latéral
+            (scrub 2.85vh sur v6-odyssey.mp4 encodé depuis vos 4 photos HD)
            ================================================================= */}
         <section
           id="act-quai"
@@ -603,17 +700,17 @@ export default function HomePage() {
         >
           <div
             data-sc-stage
-            className="sc-stage tc-stage-below-nav bg-[#0f1724] overflow-hidden"
+            className="sc-stage tc-stage-below-nav bg-[#050d1a] overflow-hidden"
           >
             <img
               src="/media/v5-quay-golden.webp"
-              alt="Terminal à conteneurs du port d'Abidjan sous le soleil"
+              alt="Portiques et porte-conteneurs au terminal maritime à l'heure dorée"
               className="sc-stage__poster"
             />
             <video
               data-sc-scrub
-              data-sc-src="/media/v2-quay.mp4"
-              data-sc-src-mobile="/media/v2-quay-m.mp4"
+              data-sc-src="/media/v6-odyssey.mp4"
+              data-sc-src-mobile="/media/v6-odyssey-m.mp4"
               muted
               playsInline
               preload="none"
@@ -621,102 +718,78 @@ export default function HomePage() {
               className="w-full h-full object-cover object-center"
             />
 
-            {/* Voile sombre uniquement en bas pour laisser ~75% du quai au soleil */}
-            <div className="tc-slate-scrim" aria-hidden="true" />
+            {/* Voile directionnel à gauche laissant toute la partie droite de l'image HD libre */}
+            <div className="tc-odyssey-scrim" aria-hidden="true" />
 
-            {/* Console de Dispatch unique en bas */}
-            <div className="absolute z-20 bottom-3 sm:bottom-6 inset-x-0 px-4 sm:px-8">
-              <div className="max-w-4xl mx-auto rounded-[20px] bg-[#0f1724]/92 backdrop-blur-2xl border border-white/16 p-3.5 sm:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_28px_64px_-12px_rgba(0,0,0,0.68)] space-y-3">
-                {/* Ligne supérieure : statut direct + tracé SVG d'itinéraire */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-white/12">
-                  <div className="flex items-center gap-2">
+            {/* HUD de Commande Latéral Asymétrique (remplace l'ancien bloc rectangulaire du bas) */}
+            <div className="relative z-20 h-full sc-wrap flex items-end md:items-center pb-4 sm:pb-6 md:pb-0">
+              <div
+                data-sc-cue="-0.2"
+                className="w-full md:max-w-[30rem] rounded-[24px] bg-[#050d1a]/92 text-white backdrop-blur-2xl border border-white/18 p-4 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_32px_72px_-12px_rgba(0,0,0,0.75)] space-y-4"
+              >
+                {/* En-tête du HUD avec arc SVG de progression */}
+                <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/12">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="h-2 w-2 rounded-full bg-[#f0642d] shrink-0"
+                      className="h-2 w-2 rounded-full bg-[#38bdf8] shrink-0"
                       aria-hidden="true"
                     />
-                    <span className="text-[11.5px] sm:text-xs font-mono text-white font-medium">
+                    <span className="text-[11.5px] font-mono text-white font-semibold truncate">
                       {currentStep.locationLine}
                     </span>
                   </div>
-
-                  <div className="hidden md:flex items-center gap-3 min-w-[230px]">
-                    <span className="text-[11px] font-mono text-[#cbd5e1]">
-                      {activeCorridor.origin}
-                    </span>
-                    <svg
-                      viewBox="0 0 180 24"
-                      className="w-32 h-5 overflow-visible"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M 6 18 Q 90 2 174 18"
-                        fill="none"
-                        stroke="rgba(255,255,255,0.22)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M 6 18 Q 90 2 174 18"
-                        fill="none"
-                        stroke="#f0642d"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        pathLength="100"
-                        strokeDasharray="100"
-                        strokeDashoffset={100 - currentStep.progressPct}
-                      />
-                      <circle
-                        cx={6 + (168 * currentStep.progressPct) / 100}
-                        cy={18 - Math.sin((currentStep.progressPct / 100) * Math.PI) * 8}
-                        r="4"
-                        fill="#ffffff"
-                      />
-                    </svg>
-                    <span className="text-[11px] font-mono text-white font-semibold">Vridi</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-                  <h2
-                    data-sc-cue="-0.2"
-                    className="text-[16px] sm:text-[20px] font-semibold text-white tracking-tight"
-                  >
-                    Un clic met à jour tout le conteneur à la fois
-                  </h2>
-                  <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#cbd5e1]">
-                    Lot #CG-402 · 42 colis groupés
+                  <span className="text-[11px] font-mono text-[#38bdf8] shrink-0">
+                    {currentStep.progressPct} %
                   </span>
                 </div>
 
-                {/* 4 boutons d'étapes interactives */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-[#94a3b8]">
+                    Lot #CG-402 · 42 colis groupés
+                  </span>
+                  <h2 className="text-[18px] sm:text-[22px] font-bold text-white leading-[1.2] tracking-tight">
+                    Un seul geste met à jour tout l&apos;arrivage
+                  </h2>
+                </div>
+
+                {/* Liste verticale / grille 2x2 des 4 jalons avec sélection directe de la scène HD */}
+                <div className="grid grid-cols-2 gap-2">
                   {BATCH_STEPS.map((step, idx) => {
                     const selected = idx === activeStepIndex;
                     return (
                       <button
                         key={step.id}
                         type="button"
-                        onClick={() => setActiveStepIndex(idx)}
-                        className={`rounded-full px-3 py-2 text-left text-[12px] font-semibold transition-[background-color,color,border-color] duration-150 cursor-pointer truncate ${
+                        onClick={() => handleSelectBatchStep(idx)}
+                        className={`rounded-[14px] px-3 py-2.5 text-left transition-[background-color,border-color,transform] duration-150 cursor-pointer border ${
                           selected
-                            ? "bg-gradient-to-b from-[#d44811] to-[#b83b09] text-white shadow-xs border border-white/20"
-                            : "bg-white/10 text-[#e2e8f0] hover:bg-white/18 border border-transparent"
+                            ? "bg-gradient-to-br from-[#ef5316] to-[#c83d09] text-white border-white/30 shadow-md"
+                            : "bg-white/8 text-[#cbd5e1] hover:bg-white/14 border-white/10"
                         }`}
                       >
-                        {step.buttonLabel}
+                        <span
+                          className={`block text-[10px] font-mono uppercase ${
+                            selected ? "text-white/90" : "text-[#38bdf8]"
+                          }`}
+                        >
+                          Étape {step.code}
+                        </span>
+                        <span className="block text-[12.5px] font-semibold truncate mt-0.5">
+                          {step.buttonLabel}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Aperçu WhatsApp & Wave en langage simple (zéro icône de marque) */}
-                <div className="rounded-[12px] bg-white/8 border border-white/14 px-3 py-2 sm:px-3.5 sm:py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <p className="text-[12px] sm:text-[13px] text-[#f1f5f9] leading-[1.45]">
-                    {currentStep.whatsappSample}
+                {/* Aperçu de la notification envoyée aux 42 clients (zéro icône de marque) */}
+                <div className="rounded-[14px] bg-[#0a192f]/95 border border-white/14 p-3.5 space-y-2">
+                  <p className="text-[12.5px] sm:text-[13px] text-[#f8fafc] leading-[1.5]">
+                    « {currentStep.whatsappSample} »
                   </p>
-                  <span className="text-[11px] font-mono text-[#fde68a] shrink-0">
-                    {currentStep.waveState}
-                  </span>
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px] font-mono text-[#fde68a]">
+                    <span>{currentStep.waveState}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -735,7 +808,7 @@ export default function HomePage() {
         >
           <div
             data-sc-stage
-            className="sc-stage tc-stage-below-nav bg-[#0f1724] overflow-hidden"
+            className="sc-stage tc-stage-below-nav bg-[#050d1a] overflow-hidden"
           >
             <div className="tc-rail-track" data-sc-pan="0.04">
               <div className="tc-rail-lead">
@@ -743,8 +816,8 @@ export default function HomePage() {
                   Un seul outil pour vos quatre lignes d&apos;activité.
                 </h2>
                 <p className="text-[15px] text-[#cbd5e1] leading-[1.6] max-w-[34ch]">
-                  Faites défiler pour voir comment votre équipe suit chaque trajet de la Chine, de
-                  Dubaï ou de la Turquie jusqu&apos;à la remise au client.
+                  Faites défiler pour parcourir vos corridors aériens et maritimes jusqu&apos;à la
+                  remise au client à Abidjan.
                 </p>
               </div>
 
@@ -761,7 +834,7 @@ export default function HomePage() {
                       : undefined
                   }
                 >
-                  <div className="h-44 sm:h-52 w-full overflow-hidden bg-[#1e2d45]">
+                  <div className="h-48 sm:h-54 w-full overflow-hidden bg-[#122847]">
                     <img
                       src={card.image}
                       alt={card.alt}
@@ -770,13 +843,13 @@ export default function HomePage() {
                       className="w-full h-full object-cover object-center block group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <div className="p-4 sm:p-6 flex flex-col justify-between flex-1 gap-3">
+                  <div className="p-5 sm:p-6 flex flex-col justify-between flex-1 gap-3">
                     <div className="space-y-2.5">
-                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/12 text-[11.5px] font-mono text-[#9eb0c9]">
+                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/12 text-[11.5px] font-mono text-[#94a3b8]">
                         <span className="uppercase tracking-wider">{card.billing}</span>
-                        <span className="text-[#fde68a]">{card.timing}</span>
+                        <span className="text-[#38bdf8] font-semibold">{card.timing}</span>
                       </div>
-                      <h3 className="text-[18px] sm:text-[20px] font-bold text-white tracking-tight">
+                      <h3 className="text-[19px] sm:text-[21px] font-bold text-white tracking-tight">
                         {card.city}
                       </h3>
                       <p className="text-[13.5px] sm:text-[14px] text-[#cbd5e1] leading-[1.55]">
@@ -792,7 +865,11 @@ export default function HomePage() {
                   src="/media/v5-ship-golden-map.webp"
                   alt=""
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-22 mix-blend-screen"
+                  className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-35"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050d1a] via-[#050d1a]/65 to-transparent"
+                  aria-hidden="true"
                 />
                 <div className="relative z-10 space-y-3">
                   <h3 className="text-[22px] sm:text-[24px] font-bold text-white leading-[1.15]">
@@ -804,10 +881,7 @@ export default function HomePage() {
                   </p>
                 </div>
                 <div className="relative z-10 pt-4">
-                  <Link
-                    href="/register"
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#11161f] font-bold text-[14px] px-5 py-3 hover:bg-[#f4f1ea] transition-colors shadow-md"
-                  >
+                  <Link href="/register" className="tc-btn-primary w-full text-center">
                     <span>Ouvrir mon agence</span>
                     <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
                   </Link>
@@ -819,36 +893,36 @@ export default function HomePage() {
 
         {/* =================================================================
             ACTE 6 — Preuve en Direct (/api/track), Tarifs FCFA, FAQ & Clôture
-            (flow, zéro fausse fenêtre navigateur, FAQ en filets, clôture 2-col)
+            (flow, zéro fausse fenêtre navigateur, FAQ en filets, clôture Constellation)
            ================================================================= */}
         <section id="act-engagement" data-sc-act="flow" className="sc-act tc-daylight-band">
           {/* 6A. Banc d'essai client en direct — SEULE section avec BrandLogo */}
           <div
             id="portail-live"
-            className="scroll-mt-20 pt-12 sm:pt-18 pb-12 sm:pb-16 border-b border-[#11161f]/12"
+            className="scroll-mt-20 pt-14 sm:pt-20 pb-14 sm:pb-18 border-b border-[#0b1324]/10"
           >
             <div className="sc-wrap max-w-5xl space-y-7">
               <div data-sc-in="up" className="max-w-2xl space-y-3">
-                <p className="text-[11.5px] font-mono font-bold uppercase tracking-[0.1em] text-[#c8430e]">
+                <p className="text-[11.5px] font-mono font-bold uppercase tracking-[0.1em] text-[#d9460f]">
                   Démonstration interactive en direct
                 </p>
-                <h2 className="sc-display sc-display--lg text-[#11161f]">
+                <h2 className="sc-display sc-display--lg text-[#0b1324]">
                   Essayez le suivi exact que voit votre client.
                 </h2>
-                <p className="text-[15px] sm:text-[15.5px] text-[#4e5969] leading-[1.6]">
+                <p className="text-[15px] sm:text-[16px] text-[#475569] leading-[1.6]">
                   Cliquez sur l&apos;un des codes ci-dessous pour consulter la position du lot, le
                   pass QR de retrait et le règlement Wave ou Orange Money.
                 </p>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#11161f]/12 px-3 py-1 text-[12px] font-medium text-[#11161f] shadow-2xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0b1324]/12 px-3 py-1 text-[12px] font-medium text-[#0b1324] shadow-2xs">
                     <BrandLogo brand="whatsapp" size="xs" decorative />
                     <span>Alertes WhatsApp</span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#11161f]/12 px-3 py-1 text-[12px] font-medium text-[#11161f] shadow-2xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0b1324]/12 px-3 py-1 text-[12px] font-medium text-[#0b1324] shadow-2xs">
                     <BrandLogo brand="wave" size="xs" decorative />
                     <span>Wave</span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#11161f]/12 px-3 py-1 text-[12px] font-medium text-[#11161f] shadow-2xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0b1324]/12 px-3 py-1 text-[12px] font-medium text-[#0b1324] shadow-2xs">
                     <BrandLogo brand="orange-money" size="xs" withWhiteSurface={false} decorative />
                     <span>Orange Money</span>
                   </span>
@@ -864,17 +938,17 @@ export default function HomePage() {
           {/* 6B. Registre Tarifaire FCFA (zéro icône de marque dans l'en-tête) */}
           <div
             id="tarifs"
-            className="scroll-mt-20 py-12 sm:py-16 border-b border-[#11161f]/12"
+            className="scroll-mt-20 py-14 sm:py-18 border-b border-[#0b1324]/10"
           >
             <div className="sc-wrap max-w-5xl">
               <div data-sc-in="up" className="max-w-2xl mb-8 sm:mb-10 space-y-2.5">
-                <p className="text-[11.5px] font-mono font-bold uppercase tracking-[0.1em] text-[#c8430e]">
+                <p className="text-[11.5px] font-mono font-bold uppercase tracking-[0.1em] text-[#d9460f]">
                   Forfaits mensuels fixes
                 </p>
-                <h2 className="sc-display sc-display--lg text-[#11161f]">
+                <h2 className="sc-display sc-display--lg text-[#0b1324]">
                   Des tarifs fixes en FCFA, sans commission sur vos encaissements.
                 </h2>
-                <p className="text-[15px] sm:text-[15.5px] text-[#4e5969]">
+                <p className="text-[15px] sm:text-[16px] text-[#475569]">
                   Chaque forfait démarre avec 14 jours d&apos;essai complet sans engagement. Vos
                   encaissements arrivent directement sur vos comptes marchands habituels.
                 </p>
@@ -888,23 +962,23 @@ export default function HomePage() {
                 {PLANS.map((plan) => (
                   <div
                     key={plan.name}
-                    className={`relative rounded-[20px] p-6 sm:p-7 flex flex-col justify-between gap-6 transition-transform duration-200 ${
+                    className={`relative rounded-[22px] p-6 sm:p-7 flex flex-col justify-between gap-6 transition-transform duration-200 ${
                       plan.featured
-                        ? "bg-[#0f1724] text-white border border-white/15 shadow-[0_28px_60px_-16px_rgba(15,23,36,0.34)] md:-translate-y-1"
-                        : "bg-white text-[#11161f] border border-[#11161f]/12 shadow-[var(--sc-e1)]"
+                        ? "bg-[#050d1a] text-white border border-white/15 shadow-[0_28px_60px_-16px_rgba(5,13,26,0.4)] md:-translate-y-1"
+                        : "bg-white text-[#0b1324] border border-[#0b1324]/12 shadow-[var(--sc-e1)]"
                     }`}
                   >
                     <div className="space-y-4">
                       <div className="space-y-2">
                         {plan.featured && (
-                          <span className="inline-flex items-center rounded-full bg-[#c8430e] text-white text-[11px] font-mono font-bold uppercase tracking-[0.06em] px-3 py-0.5">
+                          <span className="inline-flex items-center rounded-full bg-[#d9460f] text-white text-[11px] font-mono font-bold uppercase tracking-[0.06em] px-3 py-0.5">
                             Le plus choisi à Abidjan
                           </span>
                         )}
                         <h3 className="text-[20px] font-bold tracking-tight">{plan.name}</h3>
                         <p
                           className={`mt-1 text-[13.5px] leading-[1.5] ${
-                            plan.featured ? "text-[#cbd5e1]" : "text-[#4e5969]"
+                            plan.featured ? "text-[#cbd5e1]" : "text-[#475569]"
                           }`}
                         >
                           {plan.description}
@@ -926,8 +1000,8 @@ export default function HomePage() {
                             <span
                               className={`mt-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center shrink-0 ${
                                 plan.featured
-                                  ? "bg-[#f0642d]/20 text-[#ff966b]"
-                                  : "bg-[#fff4ee] text-[#c8430e]"
+                                  ? "bg-[#38bdf8]/20 text-[#38bdf8]"
+                                  : "bg-[#fff4ee] text-[#d9460f]"
                               }`}
                               aria-hidden="true"
                             >
@@ -955,21 +1029,21 @@ export default function HomePage() {
           </div>
 
           {/* 6C. Questions fréquentes en filets architecturaux (zéro boîtes) */}
-          <div id="faq" className="py-12 sm:py-16">
+          <div id="faq" className="py-14 sm:py-18">
             <div data-sc-in="up" className="sc-wrap max-w-4xl">
-              <h2 className="sc-display sc-display--lg text-[#11161f] mb-6">
+              <h2 className="sc-display sc-display--lg text-[#0b1324] mb-6">
                 Questions fréquentes
               </h2>
-              <div className="border-y border-[#11161f]/14 divide-y divide-[#11161f]/12">
+              <div className="border-y border-[#0b1324]/14 divide-y divide-[#0b1324]/12">
                 {FAQS.map((item) => (
                   <details key={item.q} className="group py-4 sm:py-5">
-                    <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-[15px] sm:text-[16.5px] font-semibold text-[#11161f]">
+                    <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-[15px] sm:text-[16.5px] font-semibold text-[#0b1324]">
                       <span>{item.q}</span>
-                      <span className="h-7 w-7 rounded-full border border-[#11161f]/16 text-[#c8430e] font-mono text-[18px] inline-flex items-center justify-center shrink-0 group-open:rotate-45 group-open:bg-[#fff4ee] transition-transform">
+                      <span className="h-7 w-7 rounded-full border border-[#0b1324]/16 text-[#d9460f] font-mono text-[18px] inline-flex items-center justify-center shrink-0 group-open:rotate-45 group-open:bg-[#fff4ee] transition-transform">
                         +
                       </span>
                     </summary>
-                    <p className="mt-2.5 text-[14.5px] text-[#4e5969] leading-[1.6] max-w-[66ch]">
+                    <p className="mt-2.5 text-[14.5px] text-[#475569] leading-[1.6] max-w-[66ch]">
                       {item.a}
                     </p>
                   </details>
@@ -979,15 +1053,15 @@ export default function HomePage() {
           </div>
 
           {/* 6D. Clôture Manifeste Asymétrique 2-Colonnes + Toile de fond Constellation */}
-          <div id="act-cloture" className="tc-slate-band relative overflow-hidden py-14 sm:py-20">
+          <div id="act-cloture" className="tc-slate-band relative overflow-hidden py-16 sm:py-22">
             <img
               src="/media/v5-ship-golden-map.webp"
               alt=""
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-18"
+              className="pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-28"
             />
             <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0f1724] via-[#0f1724]/88 to-[#0f1724]/75"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#050d1a] via-[#050d1a]/88 to-[#050d1a]/70"
               aria-hidden="true"
             />
             <div className="sc-wrap relative z-10 max-w-5xl">
@@ -1018,7 +1092,7 @@ export default function HomePage() {
                 <div className="lg:col-span-5 border-y border-white/14 divide-y divide-white/12">
                   {ONBOARDING_STEPS.map((step) => (
                     <div key={step.num} className="py-3.5 flex items-baseline gap-3.5">
-                      <span className="font-mono text-xs font-bold text-[#ff966b] w-6 shrink-0">
+                      <span className="font-mono text-xs font-bold text-[#38bdf8] w-6 shrink-0">
                         {step.num}.
                       </span>
                       <div className="space-y-1">
