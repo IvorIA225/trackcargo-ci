@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import ContainerStage3D, { type CorridorId } from "@/components/ContainerStage3D";
+import GlobeStage3D from "@/components/GlobeStage3D";
 import Navbar from "@/components/Navbar";
 import ParcelShowcase3D from "@/components/ParcelShowcase3D";
 import ScrollCraftRunner from "@/components/ScrollCraftRunner";
@@ -106,36 +107,36 @@ const CORRIDOR_CARDS = [
     timing: "5 à 8 jours",
     billing: "Au kilogramme",
     detail:
-      "Pesée exacte à l'entrepôt en Chine, code TC attribué et solde en FCFA prêt avant même l'atterrissage à Abidjan.",
-    image: "/media/v2-lane-air.webp",
-    alt: "Soute fret aérien sur piste en plein jour entre Guangzhou et Abidjan",
+      "Pesée exacte à l'entrepôt en Chine, code TC attribué et solde en FCFA prêt avant même l'atterrissage à l'aéroport FHB d'Abidjan.",
+    image: "/media/v5-air-horizon.webp",
+    alt: "Cargo aérien survolant la courbure lumineuse du globe entre Guangzhou et Abidjan",
   },
   {
     city: "Yiwu · Maritime",
     timing: "42 à 50 jours",
     billing: "CBM et carton",
     detail:
-      "Un seul changement sur le lot met à jour quarante clients ensemble au moment où le conteneur quitte Ningbo puis entre à Vridi.",
-    image: "/media/v2-lane-sea.webp",
-    alt: "Porte-conteneurs au mouillage en eau claire vers le port d'Abidjan",
+      "Un seul changement sur le lot met à jour quarante clients ensemble au moment où le porte-conteneurs quitte Ningbo puis accoste à Vridi.",
+    image: "/media/v5-ship-constellation.webp",
+    alt: "Porte-conteneurs en haute mer relié aux arcs lumineux de la carte mondiale vers Abidjan",
   },
   {
     city: "Istanbul & Dubaï",
     timing: "6 à 12 jours",
     billing: "Sac et valeur",
     detail:
-      "Chaque commande est associée au numéro WhatsApp de la cliente pour éviter les erreurs de sacs à la remise.",
-    image: "/media/v2-lane-istanbul.webp",
-    alt: "Entrepôt d'exportation textile et palettes organisées pour l'Afrique de l'Ouest",
+      "Chaque commande est associée au numéro WhatsApp de la cliente pour éviter les erreurs de sacs et de colis à la remise.",
+    image: "/media/v5-drone-corridor.webp",
+    alt: "Vue aérienne d'un avion cargo survolant un canal portuaire bordé de conteneurs",
   },
   {
-    city: "Comptoir Abidjan",
+    city: "Terminal & Comptoir Abidjan",
     timing: "Retrait rapide",
     billing: "Pass QR & Mobile Money",
     detail:
-      "Votre équipe saisit le code TC ou scanne le QR client, vérifie le solde exact et imprime le bon de sortie.",
-    image: "/media/v2-lane-abidjan.webp",
-    alt: "Comptoir logistique d'accueil des clients à Abidjan",
+      "Votre équipe saisit le code TC ou scanne le QR client dès le dépotage, vérifie le solde exact et imprime le bon de sortie.",
+    image: "/media/v5-yard-tropical.webp",
+    alt: "Conteneurs maritimes multicolores alignés sous un grand ciel bleu tropical au terminal",
   },
 ];
 
@@ -211,44 +212,30 @@ const ONBOARDING_STEPS = [
   {
     num: "I",
     title: "Activez votre portail /a/votre-agence",
-    detail: "Renseignez le nom de votre agence, votre numéro WhatsApp et vos tarifs au kilo ou au CBM.",
+    detail:
+      "Renseignez le nom de votre agence, votre numéro WhatsApp et vos tarifs au kilo ou au CBM.",
   },
   {
     num: "II",
     title: "Enregistrez ou importez votre lot en cours",
-    detail: "Créez un conteneur ou un vol et générez automatiquement les codes TC et pass QR de chaque client.",
+    detail:
+      "Créez un conteneur ou un vol et générez automatiquement les codes TC et pass QR de chaque client.",
   },
   {
     num: "III",
     title: "Diffusez sur WhatsApp et encaissez sans appel",
-    detail: "Vos clients suivent l'arrivée à Vridi et règlent leur solde Wave ou Orange Money avant de passer au comptoir.",
+    detail:
+      "Vos clients suivent l'arrivée à Vridi et règlent leur solde Wave ou Orange Money avant de passer au comptoir.",
   },
 ];
 
 export default function HomePage() {
   const [corridor, setCorridor] = useState<CorridorId>("yiwu_sea");
+  const [heroStageMode, setHeroStageMode] = useState<"globe" | "unit">("globe");
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
-  const [isCompactViewport, setIsCompactViewport] = useState(false);
 
   const activeCorridor = CORRIDORS[corridor];
   const currentStep = BATCH_STEPS[activeStepIndex] ?? BATCH_STEPS[0];
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const syncViewport = () => {
-      setIsCompactViewport(mq.matches);
-      requestAnimationFrame(() => {
-        const inst = window.ScrollCraft?.instances?.[0];
-        if (inst) {
-          inst.layout();
-          inst.read();
-        }
-      });
-    };
-    syncViewport();
-    mq.addEventListener("change", syncViewport);
-    return () => mq.removeEventListener("change", syncViewport);
-  }, []);
 
   // Synchronize Peak scrub progress (--sc-p) with the 4-stage batch console
   useEffect(() => {
@@ -262,7 +249,10 @@ export default function HomePage() {
           const rawP = getComputedStyle(quayEl).getPropertyValue("--sc-p").trim();
           const p = parseFloat(rawP);
           if (!Number.isNaN(p) && p > 0) {
-            const idx = Math.min(BATCH_STEPS.length - 1, Math.floor(p * BATCH_STEPS.length));
+            const idx = Math.min(
+              BATCH_STEPS.length - 1,
+              Math.floor(p * BATCH_STEPS.length)
+            );
             setActiveStepIndex((prev) => (prev === idx ? prev : idx));
           }
         }
@@ -287,15 +277,28 @@ export default function HomePage() {
 
       <main>
         {/* =================================================================
-            ACTE 1 — Reconnaissance : Manifeste Asymétrique & Scène 3D 3-Plans
-            (flow, 4 éléments texte stricts à gauche + fenêtre 3-plans à droite)
+            ACTE 1 — Reconnaissance : Globe 3D Constellation & Canal Air-Mer
+            (flow, 4 éléments texte stricts à gauche + Théâtre 3D multi-plans à droite)
            ================================================================= */}
         <section
           id="act-ouverture"
           data-sc-act="flow"
-          className="sc-act tc-daylight-band relative min-h-[calc(100svh-4rem)] flex items-center py-6 sm:py-10 lg:py-12 border-b border-[#11161f]/12"
+          className="sc-act tc-daylight-band relative min-h-[calc(100svh-4rem)] flex items-center py-6 sm:py-10 lg:py-12 border-b border-[#11161f]/12 overflow-hidden"
         >
-          <div className="sc-wrap w-full">
+          {/* Plan d'ambiance aérien plein soleil (canal maritime + avion cargo) masqué vers la gauche */}
+          <div
+            className="tc-hero-ambient-photo"
+            data-sc-parallax="-0.14"
+            aria-hidden="true"
+          >
+            <img
+              src="/media/v5-air-sea-canal.webp"
+              alt=""
+              className="w-full h-full object-cover object-center opacity-35"
+            />
+          </div>
+
+          <div className="sc-wrap relative z-10 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
               {/* Colonne gauche : exactement 4 éléments (h1, p, sélecteur, CTAs) */}
               <div className="lg:col-span-6 space-y-4 sm:space-y-6">
@@ -303,12 +306,12 @@ export default function HomePage() {
                   Chaque colis suivi en direct. Zéro appel au comptoir.
                 </h1>
 
-                <p className="text-[15px] sm:text-[17px] leading-[1.6] text-[#334155] max-w-[46ch]">
+                <p className="text-[15px] sm:text-[17px] leading-[1.6] text-[#243247] max-w-[46ch]">
                   Attribuez un code TC dès la pesée, prévenez tout un conteneur sur WhatsApp et
                   encaissez par Wave ou Orange Money à Abidjan.
                 </p>
 
-                {/* Élément 3 : Sélecteur tactile de corridor synchronisé au modèle 3D */}
+                {/* Élément 3 : Sélecteur tactile de corridor synchronisé au Globe 3D & à l'Unité 3D */}
                 <div
                   role="group"
                   aria-label="Choisir une ligne logistique"
@@ -352,48 +355,87 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Colonne droite : Fenêtre Spatiale 3-Plans (hero-depth.md) */}
+              {/* Colonne droite : Théâtre 3D Multi-Plans (Globe Constellation 3D + Conteneur/ULD 3D) */}
               <div className="lg:col-span-6">
                 <div className="tc-hero-viewport">
-                  {/* Plan 1 (Arrière) : Port de Vridi avec parallaxe et masque doux */}
-                  <div className="tc-hero-rear-plate" data-sc-parallax="-0.12" aria-hidden="true">
-                    <picture className="block w-full h-full">
-                      <source media="(max-width: 860px)" srcSet="/media/v2-hero-day-m.webp" />
-                      <img
-                        src="/media/v2-hero-day.webp"
-                        alt=""
-                        className="w-full h-full object-cover object-center opacity-55"
-                      />
-                    </picture>
-                  </div>
-
-                  {/* Plan 2 (Médian) : Grille de coordonnées & arc d'acheminement */}
-                  <div className="tc-hero-mid-grid" aria-hidden="true" />
-
-                  {/* Plan 3 (Premier plan) : Unité de fret 3D WebGL PBR ancrée */}
-                  <div className="relative z-10 h-[230px] sm:h-[330px] lg:h-[420px] w-full">
-                    <ContainerStage3D
-                      corridor={corridor}
-                      activeStep={currentStep.id}
-                      className="w-full h-full"
+                  {/* Plan 1 (Arrière) : Carte mondiale des routes lumineuses & navires en parallaxe */}
+                  <div
+                    className="tc-hero-rear-plate"
+                    data-sc-parallax="-0.12"
+                    aria-hidden="true"
+                  >
+                    <img
+                      src="/media/v5-world-routes.webp"
+                      alt=""
+                      className="w-full h-full object-cover object-center opacity-45"
                     />
                   </div>
 
-                  {/* Barre de lecture technique en filet 1px sous la scène */}
-                  <div className="relative z-20 border-t border-[#11161f]/12 bg-white/94 backdrop-blur-md px-3.5 sm:px-5 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-3 sm:divide-x divide-[#11161f]/12 text-[11.5px] font-mono">
+                  {/* Plan 2 (Médian) : Grille de coordonnées océanique */}
+                  <div className="tc-hero-mid-grid" aria-hidden="true" />
+
+                  {/* Sélecteur de caméra 3D (Globe Corridors 3D vs Unité de Fret 3D) */}
+                  <div className="absolute top-3 right-3 z-30 inline-flex items-center gap-1 rounded-full bg-[#07162c]/85 backdrop-blur-md p-1 border border-white/16">
+                    <button
+                      type="button"
+                      onClick={() => setHeroStageMode("globe")}
+                      aria-pressed={heroStageMode === "globe"}
+                      className={`rounded-full px-3 py-1 text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                        heroStageMode === "globe"
+                          ? "bg-[#c8430e] text-white"
+                          : "text-[#cbd5e1] hover:text-white"
+                      }`}
+                    >
+                      Globe 3D
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeroStageMode("unit")}
+                      aria-pressed={heroStageMode === "unit"}
+                      className={`rounded-full px-3 py-1 text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                        heroStageMode === "unit"
+                          ? "bg-[#c8430e] text-white"
+                          : "text-[#cbd5e1] hover:text-white"
+                      }`}
+                    >
+                      Unité 3D
+                    </button>
+                  </div>
+
+                  {/* Plan 3 (Premier plan) : Scène WebGL 3D Interactive */}
+                  <div className="relative z-10 h-[250px] sm:h-[360px] lg:h-[440px] w-full">
+                    {heroStageMode === "globe" ? (
+                      <GlobeStage3D
+                        corridor={corridor}
+                        activeStep={currentStep.id}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <ContainerStage3D
+                        corridor={corridor}
+                        activeStep={currentStep.id}
+                        className="w-full h-full"
+                      />
+                    )}
+                  </div>
+
+                  {/* Barre de lecture technique en filet 1px sous la scène 3D */}
+                  <div className="relative z-20 border-t border-white/14 bg-[#07162c]/92 backdrop-blur-md px-3.5 sm:px-5 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-3 sm:divide-x divide-white/12 text-[11.5px] font-mono text-white">
                     <div className="truncate">
-                      <span className="text-[#4e5969]">Trajet : </span>
-                      <strong className="text-[#11161f] font-semibold">
+                      <span className="text-[#9eb0c9]">Trajet : </span>
+                      <strong className="text-white font-semibold">
                         {activeCorridor.origin} → Abidjan
                       </strong>
                     </div>
                     <div className="sm:pl-3 truncate">
-                      <span className="text-[#4e5969]">Délai : </span>
-                      <strong className="text-[#11161f] font-semibold">{activeCorridor.eta}</strong>
+                      <span className="text-[#9eb0c9]">Délai : </span>
+                      <strong className="text-[#fde68a] font-semibold">
+                        {activeCorridor.eta}
+                      </strong>
                     </div>
                     <div className="sm:pl-3 truncate">
-                      <span className="text-[#4e5969]">Mode : </span>
-                      <strong className="text-[#c8430e] font-semibold">
+                      <span className="text-[#9eb0c9]">Mode : </span>
+                      <strong className="text-[#ff966b] font-semibold">
                         {activeCorridor.rateLabel}
                       </strong>
                     </div>
@@ -405,19 +447,22 @@ export default function HomePage() {
         </section>
 
         {/* =================================================================
-            ACTE 2 — Tension & Bascule : Registre en Filets & Carton 3D Macro
-            (pin 1.60vh, zéro cartes imbriquées, séparation en filets 1px)
+            ACTE 2 — Tension & Bascule : Triptyque Multimodal & Scanner 3D QR
+            (pin 1.65vh, registre en filets 1px + scan laser 3D du colis TC-8841)
            ================================================================= */}
         <section
           id="act-comptoir"
           data-sc-act="pin"
-          data-sc-span="1.60"
+          data-sc-span="1.65"
           className="sc-act tc-daylight-band border-b border-[#11161f]/12"
         >
-          <div data-sc-stage className="sc-stage tc-stage-below-nav bg-[#f4f1ea] flex items-center">
+          <div
+            data-sc-stage
+            className="sc-stage tc-stage-below-nav bg-[#f4f1ea] flex items-center"
+          >
             <div className="sc-wrap w-full">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-center">
-                <div className="lg:col-span-6 space-y-4 sm:space-y-6">
+                <div className="lg:col-span-6 space-y-4 sm:space-y-5">
                   <h2 className="sc-display sc-display--lg tc-act2-title text-[#11161f]">
                     Fini les captures Wave perdues et les appels à 22 heures.
                   </h2>
@@ -429,7 +474,7 @@ export default function HomePage() {
 
                   {/* Registre comparatif en filets 1px (zéro cartes imbriquées) */}
                   <div className="border-y border-[#11161f]/14 divide-y divide-[#11161f]/12">
-                    <div className="py-3 sm:py-4 grid grid-cols-1 sm:grid-cols-12 gap-1.5 sm:gap-4 items-baseline">
+                    <div className="py-3 sm:py-3.5 grid grid-cols-1 sm:grid-cols-12 gap-1.5 sm:gap-4 items-baseline">
                       <span className="sm:col-span-4 text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#4e5969]">
                         Avant · Sans registre
                       </span>
@@ -438,7 +483,7 @@ export default function HomePage() {
                         Money se mélangent dans les groupes WhatsApp.
                       </p>
                     </div>
-                    <div className="py-3 sm:py-4 grid grid-cols-1 sm:grid-cols-12 gap-1.5 sm:gap-4 items-baseline">
+                    <div className="py-3 sm:py-3.5 grid grid-cols-1 sm:grid-cols-12 gap-1.5 sm:gap-4 items-baseline">
                       <span className="sm:col-span-4 text-[11px] font-mono font-bold uppercase tracking-[0.08em] text-[#c8430e]">
                         Avec TrackCargo CI
                       </span>
@@ -448,18 +493,46 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Bandeau photographique multimodal Mer · Route · Air */}
+                  <div className="hidden sm:grid grid-cols-12 gap-3 items-center pt-1">
+                    <div className="col-span-5 h-20 rounded-[12px] overflow-hidden border border-[#11161f]/12">
+                      <img
+                        src="/media/v5-multimodal-triptych.webp"
+                        alt="Triptyque aérien du fret maritime, routier et aérien"
+                        className="w-full h-full object-cover object-center"
+                      />
+                    </div>
+                    <p className="col-span-7 text-xs font-mono text-[#4e5969] leading-[1.5]">
+                      <strong className="text-[#11161f] block">
+                        Suivi multimodal Mer · Air · Comptoir
+                      </strong>
+                      Facturation automatique au CBM (maritime) ou au kilogramme (aérien) dès
+                      l&apos;enregistrement du lot.
+                    </p>
+                  </div>
                 </div>
 
-                {/* Scène 3D macro encadrée : carton TC-8841 cerclé sur palette bois */}
+                {/* Scène 3D macro avec faisceau de scan laser QR + vignette grappin portuaire */}
                 <div className="lg:col-span-6">
                   <div className="rounded-[20px] bg-white border border-[#11161f]/12 overflow-hidden shadow-[var(--sc-e2)]">
-                    <div className="relative h-[160px] sm:h-[250px] lg:h-[380px] w-full bg-gradient-to-b from-[#faf8f4] to-[#eae5da]/55">
+                    <div className="relative h-[165px] sm:h-[260px] lg:h-[380px] w-full bg-gradient-to-b from-[#faf8f4] to-[#eae5da]/60">
                       <ParcelShowcase3D className="w-full h-full" />
+                      {/* Vignette photo réaliste du grappin portuaire en médaillon discret */}
+                      <div className="hidden sm:block absolute top-3 right-3 w-20 h-24 rounded-[10px] overflow-hidden border border-[#11161f]/16 shadow-md pointer-events-none">
+                        <img
+                          src="/media/v5-crane-hoist.webp"
+                          alt="Levage d'un conteneur par portique à l'heure dorée"
+                          className="w-full h-full object-cover object-center"
+                        />
+                      </div>
                     </div>
                     <div className="border-t border-[#11161f]/10 bg-white px-4 py-2.5 flex items-center justify-between gap-2 text-[11.5px] font-mono text-[#11161f]">
-                      <span className="font-semibold">Colis TC-8841 · 14,5 kg</span>
-                      <span className="text-[#4e5969] truncate">
-                        Cerclage &amp; Pass QR synchronisés
+                      <span className="font-semibold">
+                        Scanner 3D · Colis TC-8841 (14,5 kg)
+                      </span>
+                      <span className="text-[#c8430e] font-semibold truncate">
+                        Pass QR &amp; Cerclage vérifiés
                       </span>
                     </div>
                   </div>
@@ -471,7 +544,8 @@ export default function HomePage() {
 
         {/* =================================================================
             ACTE 3 — Silence Maîtrisé (Authored Silence avant le Pic)
-            Une seule photographie grand angle, zéro badge dessus, une légende sobre
+            Diptyque photographique grand angle (Portiques dorés + Cour tropicale)
+            Zéro badge sur les photos, une seule légende architecturale en filet 1px
            ================================================================= */}
         <section
           id="act-entrepot"
@@ -484,21 +558,32 @@ export default function HomePage() {
               data-sc-reveal-at="0.06 0.62"
               className="space-y-3"
             >
-              <div className="overflow-hidden rounded-[20px] border border-[#11161f]/12 bg-[#eae5da] shadow-[var(--sc-e2)]">
-                <img
-                  src="/media/v2-warehouse-day.webp"
-                  alt="Baie de pesée et palettes rangées dans l'entrepôt clair de Treichville"
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-[36svh] sm:h-[50svh] lg:h-[58svh] object-cover object-center block"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-7 overflow-hidden rounded-[20px] border border-[#11161f]/12 bg-[#eae5da] shadow-[var(--sc-e2)]">
+                  <img
+                    src="/media/v5-quay-golden.webp"
+                    alt="Portiques à conteneurs géants et opérateurs sur le quai à l'heure dorée"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-[36svh] sm:h-[50svh] lg:h-[58svh] object-cover object-center block"
+                  />
+                </div>
+                <div className="md:col-span-5 overflow-hidden rounded-[20px] border border-[#11161f]/12 bg-[#eae5da] shadow-[var(--sc-e2)]">
+                  <img
+                    src="/media/v5-yard-tropical.webp"
+                    alt="Conteneurs maritimes alignés sous un ciel bleu tropical éclatant"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-[32svh] sm:h-[50svh] lg:h-[58svh] object-cover object-center block"
+                  />
+                </div>
               </div>
-              <figcaption className="pt-2 border-t border-[#11161f]/12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs sm:text-[13px] font-mono text-[#4e5969]">
+              <figcaption className="pt-2.5 border-t border-[#11161f]/12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 text-xs sm:text-[13px] font-mono text-[#4e5969]">
                 <span className="text-[#11161f] font-semibold">
-                  Baie de réception et pesée · Treichville, Abidjan
+                  Terminal à conteneurs &amp; Baie de dépotage · Port de Vridi, Abidjan
                 </span>
                 <span>
-                  De la balance au pass QR en moins de dix secondes, sans ressaisie.
+                  Du déchargement sous portique au retrait client en un seul registre synchronisé.
                 </span>
               </figcaption>
             </figure>
@@ -516,10 +601,13 @@ export default function HomePage() {
           data-sc-dwell="0.35"
           className="sc-act tc-slate-band"
         >
-          <div data-sc-stage className="sc-stage tc-stage-below-nav bg-[#0f1724] overflow-hidden">
+          <div
+            data-sc-stage
+            className="sc-stage tc-stage-below-nav bg-[#0f1724] overflow-hidden"
+          >
             <img
-              src={isCompactViewport ? "/media/v2-quay-poster-p.webp" : "/media/v2-quay-poster.webp"}
-              alt="Terminal à conteneurs du port d'Abidjan en plein jour"
+              src="/media/v5-quay-golden.webp"
+              alt="Terminal à conteneurs du port d'Abidjan sous le soleil"
               className="sc-stage__poster"
             />
             <video
@@ -529,7 +617,7 @@ export default function HomePage() {
               muted
               playsInline
               preload="none"
-              poster={isCompactViewport ? "/media/v2-quay-poster-p.webp" : "/media/v2-quay-poster.webp"}
+              poster="/media/v5-quay-golden.webp"
               className="w-full h-full object-cover object-center"
             />
 
@@ -542,7 +630,10 @@ export default function HomePage() {
                 {/* Ligne supérieure : statut direct + tracé SVG d'itinéraire */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-white/12">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-[#f0642d] shrink-0" aria-hidden="true" />
+                    <span
+                      className="h-2 w-2 rounded-full bg-[#f0642d] shrink-0"
+                      aria-hidden="true"
+                    />
                     <span className="text-[11.5px] sm:text-xs font-mono text-white font-medium">
                       {currentStep.locationLine}
                     </span>
@@ -552,7 +643,11 @@ export default function HomePage() {
                     <span className="text-[11px] font-mono text-[#cbd5e1]">
                       {activeCorridor.origin}
                     </span>
-                    <svg viewBox="0 0 180 24" className="w-32 h-5 overflow-visible" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 180 24"
+                      className="w-32 h-5 overflow-visible"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M 6 18 Q 90 2 174 18"
                         fill="none"
@@ -629,24 +724,27 @@ export default function HomePage() {
         </section>
 
         {/* =================================================================
-            ACTE 5 — Ampleur : Les 4 Corridors (pan 1.75vh desktop & mobile)
-            Continuité du chapitre ardoise, photos 100 % pures sans badges ni logos
+            ACTE 5 — Ampleur : Les 4 Corridors (pan 1.80vh desktop & mobile)
+            Photographies HD grand spectacle 100 % pures sans badges ni logos
            ================================================================= */}
         <section
           id="act-lignes"
           data-sc-act="pan"
-          data-sc-span="1.75"
+          data-sc-span="1.80"
           className="sc-act tc-slate-band scroll-mt-16 border-t border-white/10"
         >
-          <div data-sc-stage className="sc-stage tc-stage-below-nav bg-[#0f1724] overflow-hidden">
+          <div
+            data-sc-stage
+            className="sc-stage tc-stage-below-nav bg-[#0f1724] overflow-hidden"
+          >
             <div className="tc-rail-track" data-sc-pan="0.04">
               <div className="tc-rail-lead">
                 <h2 className="sc-display sc-display--lg text-white mb-4">
                   Un seul outil pour vos quatre lignes d&apos;activité.
                 </h2>
                 <p className="text-[15px] text-[#cbd5e1] leading-[1.6] max-w-[34ch]">
-                  Faites défiler pour voir comment votre équipe suit chaque trajet de la Chine ou
-                  de la Turquie jusqu&apos;à la remise au client.
+                  Faites défiler pour voir comment votre équipe suit chaque trajet de la Chine, de
+                  Dubaï ou de la Turquie jusqu&apos;à la remise au client.
                 </p>
               </div>
 
@@ -689,8 +787,14 @@ export default function HomePage() {
                 </article>
               ))}
 
-              <div className="tc-rail-end">
-                <div className="space-y-3">
+              <div className="tc-rail-end relative overflow-hidden">
+                <img
+                  src="/media/v5-ship-golden-map.webp"
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-22 mix-blend-screen"
+                />
+                <div className="relative z-10 space-y-3">
                   <h3 className="text-[22px] sm:text-[24px] font-bold text-white leading-[1.15]">
                     Configurez vos propres lignes en cinq minutes.
                   </h3>
@@ -699,7 +803,7 @@ export default function HomePage() {
                     au mètre cube.
                   </p>
                 </div>
-                <div className="pt-4">
+                <div className="relative z-10 pt-4">
                   <Link
                     href="/register"
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#11161f] font-bold text-[14px] px-5 py-3 hover:bg-[#f4f1ea] transition-colors shadow-md"
@@ -874,10 +978,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 6D. Clôture Manifeste Asymétrique 2-Colonnes + Colophon */}
+          {/* 6D. Clôture Manifeste Asymétrique 2-Colonnes + Toile de fond Constellation */}
           <div id="act-cloture" className="tc-slate-band relative overflow-hidden py-14 sm:py-20">
+            <img
+              src="/media/v5-ship-golden-map.webp"
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-18"
+            />
             <div
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(240,100,45,0.16)_0%,transparent_60%)]"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0f1724] via-[#0f1724]/88 to-[#0f1724]/75"
               aria-hidden="true"
             />
             <div className="sc-wrap relative z-10 max-w-5xl">

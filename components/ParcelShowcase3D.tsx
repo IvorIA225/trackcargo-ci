@@ -256,6 +256,44 @@ export default function ParcelShowcase3D({
         sideLabel.castShadow = true;
         parcelRig.add(sideLabel);
 
+        // 3D Volumetric Laser Scan Frame & Telemetry Ring
+        const scanRingGeo = new THREE.RingGeometry(1.42, 1.46, 64);
+        const scanRingMat = new THREE.MeshBasicMaterial({
+          color: 0xff6b2b,
+          transparent: true,
+          opacity: 0.75,
+          side: THREE.DoubleSide,
+        });
+        const scanPlaneGeo = new THREE.PlaneGeometry(2.35, 1.85);
+        const scanPlaneMat = new THREE.MeshBasicMaterial({
+          color: 0xff6b2b,
+          transparent: true,
+          opacity: 0.11,
+          side: THREE.DoubleSide,
+        });
+        disposables.push(scanRingGeo, scanRingMat, scanPlaneGeo, scanPlaneMat);
+
+        const scanLaserRing = new THREE.Mesh(scanRingGeo, scanRingMat);
+        scanLaserRing.rotation.x = Math.PI / 2;
+        parcelRig.add(scanLaserRing);
+
+        const scanLaserSheet = new THREE.Mesh(scanPlaneGeo, scanPlaneMat);
+        scanLaserSheet.rotation.x = Math.PI / 2;
+        parcelRig.add(scanLaserSheet);
+
+        const baseHaloGeo = new THREE.RingGeometry(1.52, 1.545, 64);
+        const baseHaloMat = new THREE.MeshBasicMaterial({
+          color: 0x0e7490,
+          transparent: true,
+          opacity: 0.36,
+          side: THREE.DoubleSide,
+        });
+        disposables.push(baseHaloGeo, baseHaloMat);
+        const baseHalo = new THREE.Mesh(baseHaloGeo, baseHaloMat);
+        baseHalo.rotation.x = Math.PI / 2;
+        baseHalo.position.y = -0.87;
+        parcelRig.add(baseHalo);
+
         container.addEventListener("pointermove", onPointerMove, { passive: true });
         container.addEventListener("pointerleave", onPointerLeave, { passive: true });
 
@@ -293,6 +331,12 @@ export default function ParcelShowcase3D({
           parcelRig.rotation.y = baseYaw + curX * 0.18;
           parcelRig.rotation.x = 0.02 - curY * 0.08;
           parcelRig.position.y = prefersReduced ? 0 : Math.sin(t * 0.9) * 0.015;
+
+          const scanY = prefersReduced
+            ? 0.14
+            : Math.sin(t * 1.65 + p * Math.PI * 2) * 0.56;
+          scanLaserRing.position.y = scanY;
+          scanLaserSheet.position.y = scanY;
 
           renderer.render(scene, camera);
         };
