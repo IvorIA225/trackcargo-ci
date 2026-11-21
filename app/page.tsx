@@ -58,7 +58,10 @@ type BatchStep = {
   buttonLabel: string;
   progressPct: number;
   videoFraction: number;
+  poster: string;
   locationLine: string;
+  processTitle: string;
+  processDetail: string;
   whatsappSample: string;
   waveState: string;
 };
@@ -67,46 +70,62 @@ const BATCH_STEPS: BatchStep[] = [
   {
     id: "RECUE_ORIGINE",
     code: "01",
-    buttonLabel: "Embarquement & Pesée",
-    progressPct: 18,
-    videoFraction: 0.1,
-    locationLine: "Guangzhou & Yiwu · 42 colis pesés et scellés",
+    buttonLabel: "Réception & Pesée",
+    progressPct: 22,
+    videoFraction: 0.08,
+    poster: "/media/v7-stage1-weighing.webp",
+    locationLine: "Entrepôt d'origine (Chine / Dubaï / Turquie) · Réception & Pesée",
+    processTitle: "1. Réception, pesée digitale et étiquetage QR au dépôt d'origine",
+    processDetail:
+      "Chaque colis déposé au magasin d'origine est pesé au kilo ou mesuré au CBM. Le système génère son code TC-8841, son Pass QR et verrouille le montant exact en FCFA.",
     whatsappSample:
-      "Bonjour Aminata, votre colis TC-8841 (14,5 kg) est bien enregistré au départ. Suivez son trajet en direct sans appeler le comptoir.",
-    waveState: "Montant fixé à 48 000 FCFA · Lien prêt dès le départ",
+      "Bonjour Aminata, votre colis TC-8841 (14,5 kg) a été réceptionné et pesé à notre dépôt de départ. Suivez son acheminement en direct ici.",
+    waveState: "Tarif calculé à 48 000 FCFA · Bordereau QR créé à la pesée",
   },
   {
     id: "EN_TRANSIT",
     code: "02",
-    buttonLabel: "Traversée Air & Mer",
-    progressPct: 52,
-    videoFraction: 0.38,
-    locationLine: "Lot #CG-402 · En transit direct vers Abidjan",
+    buttonLabel: "Embarquement & Transit",
+    progressPct: 54,
+    videoFraction: 0.36,
+    poster: "/media/v7-stage2-transit.webp",
+    locationLine: "Lot #CG-402 · Embarquement groupé & traversée vers Abidjan",
+    processTitle: "2. Groupage dans l'arrivage (#CG-402) et départ Air ou Mer",
+    processDetail:
+      "Les 42 colis sont rattachés au conteneur ou à la palette aérienne. Dès l'embarquement, un seul clic met à jour tout l'arrivage et notifie chaque client sur WhatsApp.",
     whatsappSample:
-      "Le lot #CG-402 qui contient votre colis TC-8841 est en route vers Abidjan. Arrivée estimée dans 9 jours.",
-    waveState: "Prépaiement Wave ou Orange Money ouvert 24h/24",
+      "Votre colis TC-8841 a embarqué dans l'arrivage #CG-402 en direction d'Abidjan. Arrivée estimée sous 9 jours.",
+    waveState: "Lien de prépaiement Wave & Orange Money actif pendant le transit",
   },
   {
     id: "ARRIVEE_ABIDJAN",
     code: "03",
-    buttonLabel: "Accostage Quai de Vridi",
-    progressPct: 82,
+    buttonLabel: "Arrivée Port de Vridi",
+    progressPct: 84,
     videoFraction: 0.66,
-    locationLine: "Port de Vridi · Déchargement sous portique",
+    poster: "/media/v7-stage3-vridi.webp",
+    locationLine: "Port de Vridi / Fret FHB, Abidjan · Déchargement de l'arrivage",
+    processTitle: "3. Accostage à Abidjan, passage sous portique et appel au règlement",
+    processDetail:
+      "À l'arrivée du navire à Vridi ou du vol à l'aéroport FHB, le lot passe en « Arrivé à Abidjan ». Les 42 destinataires sont prévenus pour régler leur fret avant le dépotage.",
     whatsappSample:
-      "Bonne nouvelle, le lot #CG-402 vient d'accoster au terminal de Vridi. Vous serez alertée dès l'ouverture du retrait.",
-    waveState: "42 invitations de règlement générées automatiquement",
+      "Bonne nouvelle, l'arrivage #CG-402 vient d'arriver à Abidjan (Port de Vridi). Préparez votre règlement Wave ou Orange Money pour un retrait rapide.",
+    waveState: "42 invitations de paiement Mobile Money envoyées sans commission",
   },
   {
     id: "PRET_RETRAIT",
     code: "04",
-    buttonLabel: "Disponible à Abidjan",
+    buttonLabel: "Dépotage & Retrait",
     progressPct: 100,
-    videoFraction: 0.92,
-    locationLine: "Treichville · Prêt contre code TC ou Pass QR",
+    videoFraction: 0.94,
+    poster: "/media/v7-stage4-pickup.webp",
+    locationLine: "Comptoir d'Abidjan (Treichville) · Dépotage terminé & remise QR",
+    processTitle: "4. Tri au magasin d'Abidjan et remise express contre Pass QR",
+    processDetail:
+      "Une fois le conteneur dépoté au comptoir, le client présente son Pass QR sur smartphone. L'équipe valide le solde Wave ou Orange Money et remet le colis en 10 secondes.",
     whatsappSample:
-      "Votre colis TC-8841 est disponible au comptoir de Treichville. Réglez les 48 000 FCFA par Wave ou Orange Money et présentez votre QR.",
-    waveState: "Bon de sortie délivré dès confirmation du règlement",
+      "Votre colis TC-8841 est prêt au comptoir de Treichville. Réglez les 48 000 FCFA par Wave ou Orange Money et présentez votre Pass QR à l'accueil.",
+    waveState: "Bon de sortie certifié délivré dès validation du Pass QR",
   },
 ];
 
@@ -514,22 +533,22 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Fresque asymétrique : Grande photo Canal Air-Mer à gauche + Grappin Doré & Pass TC-8841 à droite */}
+            {/* Fresque asymétrique : Grande photo 16:9 Avion en entier + Navire à gauche, Grappin Doré + Canal Air-Mer & Pass TC-8841 à droite */}
             <div
               data-sc-in="up"
               className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
             >
-              {/* Colonne gauche (7 col) : Photographie grand angle Air + Mer + Comparatif Avant/Avec intégré */}
-              <div className="lg:col-span-7 relative rounded-[24px] overflow-hidden border border-[#0b1324]/12 bg-[#050d1a] shadow-[var(--sc-e3)] flex flex-col justify-end min-h-[420px] sm:min-h-[520px]">
+              {/* Colonne gauche (7 col) : Photographie grand angle 16:9 où l'avion cargo en entier et le porte-conteneurs sont 100% visibles */}
+              <div className="lg:col-span-7 relative rounded-[24px] overflow-hidden border border-[#0b1324]/12 bg-[#050d1a] shadow-[var(--sc-e3)] flex flex-col justify-end min-h-[430px] sm:min-h-[540px]">
                 <img
-                  src="/media/v5-air-sea-canal.webp"
-                  alt="Avion cargo décollant au-dessus d'un canal maritime et d'un porte-conteneurs sous un ciel bleu éclatant"
+                  src="/media/v7-stage2-transit.webp"
+                  alt="Avion cargo blanc en plein vol au-dessus d'un porte-conteneurs sur l'océan Atlantique en plein soleil"
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  className="absolute inset-0 w-full h-full object-cover object-[86%_12%]"
                 />
                 <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050d1a]/95 via-[#050d1a]/45 to-transparent"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050d1a]/95 via-[#050d1a]/30 to-transparent"
                   aria-hidden="true"
                 />
 
@@ -557,11 +576,11 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Colonne droite (5 col) : Diptyque photo HD (Grappin doré + Triptyque multimodal) & Billet de Fret TC-8841 */}
+              {/* Colonne droite (5 col) : Diptyque vertical (Grappin doré + Avion Canal vertical 100% entier) & Billet de Fret TC-8841 */}
               <div className="lg:col-span-5 flex flex-col justify-between gap-6">
-                {/* Duo photographique réaliste : Levage sous portique + Triptyque Mer / Route / Air */}
+                {/* Duo photographique en format portrait adapté aux deux images verticales (zéro coupure de l'avion) */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="relative h-48 sm:h-52 rounded-[20px] overflow-hidden border border-[#0b1324]/12 shadow-[var(--sc-e2)] bg-[#050d1a]">
+                  <div className="relative h-52 sm:h-56 rounded-[20px] overflow-hidden border border-[#0b1324]/12 shadow-[var(--sc-e2)] bg-[#050d1a]">
                     <img
                       src="/media/v5-crane-hoist.webp"
                       alt="Grappin jaune de portique soulevant un conteneur maritime à l'heure dorée"
@@ -570,13 +589,13 @@ export default function HomePage() {
                       className="w-full h-full object-cover object-center"
                     />
                   </div>
-                  <div className="relative h-48 sm:h-52 rounded-[20px] overflow-hidden border border-[#0b1324]/12 shadow-[var(--sc-e2)] bg-[#050d1a]">
+                  <div className="relative h-52 sm:h-56 rounded-[20px] overflow-hidden border border-[#0b1324]/12 shadow-[var(--sc-e2)] bg-[#050d1a]">
                     <img
-                      src="/media/v5-multimodal-triptych.webp"
-                      alt="Vue aérienne multimodale combinant porte-conteneurs, camion et avion cargo"
+                      src="/media/v5-air-sea-canal.webp"
+                      alt="Avion cargo entier survolant le canal portuaire turquoise et un porte-conteneurs"
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover object-center"
+                      className="w-full h-full object-cover object-[50%_22%]"
                     />
                   </div>
                 </div>
@@ -688,8 +707,8 @@ export default function HomePage() {
         </section>
 
         {/* =================================================================
-            ACTE 4 — LE PIC : Odyssée HD en 4 Étapes & HUD de Commande Latéral
-            (scrub 2.85vh sur v6-odyssey.mp4 encodé depuis vos 4 photos HD)
+            ACTE 4 — LE PIC : Processus Complet d'Arrivage en 4 Étapes & Vidéo HD 16:9
+            (scrub 2.85vh sur v7-odyssey-hd.mp4 : Réception/Pesée -> Transit -> Vridi -> Retrait)
            ================================================================= */}
         <section
           id="act-quai"
@@ -703,38 +722,38 @@ export default function HomePage() {
             className="sc-stage tc-stage-below-nav bg-[#050d1a] overflow-hidden"
           >
             <img
-              src="/media/v5-quay-golden.webp"
-              alt="Portiques et porte-conteneurs au terminal maritime à l'heure dorée"
+              src={currentStep.poster}
+              alt="Étapes du processus d'embarquement, de pesée et d'arrivée à Abidjan"
               className="sc-stage__poster"
             />
             <video
               data-sc-scrub
-              data-sc-src="/media/v6-odyssey.mp4"
-              data-sc-src-mobile="/media/v6-odyssey-m.mp4"
+              data-sc-src="/media/v7-odyssey-hd.mp4"
+              data-sc-src-mobile="/media/v7-odyssey-hd-m.mp4"
               muted
               playsInline
               preload="none"
-              poster="/media/v5-quay-golden.webp"
+              poster={currentStep.poster}
               className="w-full h-full object-cover object-center"
             />
 
-            {/* Voile directionnel à gauche laissant toute la partie droite de l'image HD libre */}
+            {/* Voile directionnel à gauche laissant les 65% droits de la vidéo HD totalement nets */}
             <div className="tc-odyssey-scrim" aria-hidden="true" />
 
-            {/* HUD de Commande Latéral Asymétrique (remplace l'ancien bloc rectangulaire du bas) */}
+            {/* HUD de Commande Latéral détaillant les 4 étapes de l'arrivage (de la pesée au retrait à Abidjan) */}
             <div className="relative z-20 h-full sc-wrap flex items-end md:items-center pb-4 sm:pb-6 md:pb-0">
               <div
                 data-sc-cue="-0.2"
-                className="w-full md:max-w-[30rem] rounded-[24px] bg-[#050d1a]/92 text-white backdrop-blur-2xl border border-white/18 p-4 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_32px_72px_-12px_rgba(0,0,0,0.75)] space-y-4"
+                className="w-full md:max-w-[33rem] rounded-[24px] bg-[#050d1a]/92 text-white backdrop-blur-2xl border border-white/18 p-4 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_32px_72px_-12px_rgba(0,0,0,0.75)] space-y-3.5"
               >
-                {/* En-tête du HUD avec arc SVG de progression */}
-                <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/12">
+                {/* En-tête du HUD avec localisation de l'étape et progression */}
+                <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-white/12">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className="h-2 w-2 rounded-full bg-[#38bdf8] shrink-0"
                       aria-hidden="true"
                     />
-                    <span className="text-[11.5px] font-mono text-white font-semibold truncate">
+                    <span className="text-[11px] sm:text-[11.5px] font-mono text-white font-semibold truncate">
                       {currentStep.locationLine}
                     </span>
                   </div>
@@ -745,14 +764,14 @@ export default function HomePage() {
 
                 <div className="space-y-1">
                   <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-[#94a3b8]">
-                    Lot #CG-402 · 42 colis groupés
+                    Arrivage #CG-402 · 42 colis groupés · De l&apos;origine à Abidjan
                   </span>
                   <h2 className="text-[18px] sm:text-[22px] font-bold text-white leading-[1.2] tracking-tight">
                     Un seul geste met à jour tout l&apos;arrivage
                   </h2>
                 </div>
 
-                {/* Liste verticale / grille 2x2 des 4 jalons avec sélection directe de la scène HD */}
+                {/* Grille 2x2 des 4 étapes du processus (de la réception/pesée à l'arrivée à Abidjan) */}
                 <div className="grid grid-cols-2 gap-2">
                   {BATCH_STEPS.map((step, idx) => {
                     const selected = idx === activeStepIndex;
@@ -761,7 +780,7 @@ export default function HomePage() {
                         key={step.id}
                         type="button"
                         onClick={() => handleSelectBatchStep(idx)}
-                        className={`rounded-[14px] px-3 py-2.5 text-left transition-[background-color,border-color,transform] duration-150 cursor-pointer border ${
+                        className={`rounded-[14px] px-3 py-2 text-left transition-[background-color,border-color,transform] duration-150 cursor-pointer border ${
                           selected
                             ? "bg-gradient-to-br from-[#ef5316] to-[#c83d09] text-white border-white/30 shadow-md"
                             : "bg-white/8 text-[#cbd5e1] hover:bg-white/14 border-white/10"
@@ -782,12 +801,22 @@ export default function HomePage() {
                   })}
                 </div>
 
+                {/* Détail opérationnel de l'étape active (Pesée -> Embarquement -> Port Vridi -> Retrait) */}
+                <div className="rounded-[14px] bg-white/8 border border-white/14 p-3 space-y-1">
+                  <div className="text-[12px] font-semibold text-[#38bdf8]">
+                    {currentStep.processTitle}
+                  </div>
+                  <p className="text-[12px] text-[#e2e8f0] leading-[1.48]">
+                    {currentStep.processDetail}
+                  </p>
+                </div>
+
                 {/* Aperçu de la notification envoyée aux 42 clients (zéro icône de marque) */}
-                <div className="rounded-[14px] bg-[#0a192f]/95 border border-white/14 p-3.5 space-y-2">
-                  <p className="text-[12.5px] sm:text-[13px] text-[#f8fafc] leading-[1.5]">
+                <div className="rounded-[14px] bg-[#0a192f]/95 border border-white/14 p-3 space-y-1.5">
+                  <p className="text-[12px] text-[#f8fafc] leading-[1.45]">
                     « {currentStep.whatsappSample} »
                   </p>
-                  <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px] font-mono text-[#fde68a]">
+                  <div className="pt-1.5 border-t border-white/10 flex items-center justify-between gap-2 text-[10.5px] font-mono text-[#fde68a]">
                     <span>{currentStep.waveState}</span>
                   </div>
                 </div>
