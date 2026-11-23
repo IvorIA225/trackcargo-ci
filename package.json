@@ -15,7 +15,7 @@
     "setup:env": "node scripts/init-local-env.mjs"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.2.0",
+    "@neondatabase/serverless": "^1.2.1",
     "@types/three": "^0.187.0",
     "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.70.0",
